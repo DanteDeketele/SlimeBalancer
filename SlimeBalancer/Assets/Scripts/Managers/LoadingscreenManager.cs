@@ -5,8 +5,6 @@ public class LoadingscreenManager : BaseManager
     public GameObject LoadingScreenPrefab;
     private GameObject _loadingScreenInstance;
 
-    private float progress;
-    private string message;
     private LoadingscreenUI _loadingScreenUI;
 
     public void ShowLoadingScreen()
@@ -17,13 +15,12 @@ public class LoadingscreenManager : BaseManager
             _loadingScreenUI = _loadingScreenInstance.GetComponent<LoadingscreenUI>();
         }
         _loadingScreenInstance.SetActive(true);
+        _loadingScreenUI.SetProgress(0f);
+        _loadingScreenUI.SetMessage("Loading...");
     }
 
     public void UpdateLoadingScreen(float progress, string message)
     {
-        this.progress = progress;
-        this.message = message;
-
         Debug.Log($"Loading Screen Update - Progress: {progress * 100}%, Message: {message}");
         if (_loadingScreenUI != null)
         {
