@@ -1,23 +1,35 @@
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.InputSystem;
 
 public class InputManager : BaseManager
 {
-    public UnityAction<Vector2> OnDirectionreceived;
-    private Vector2 _lastDirection;
-
-    public void Update()
-    {
-        Vector2 direction = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-        if (direction != _lastDirection)
+    public Vector2 Input{
+        get
         {
-            _lastDirection = direction;
-            OnDirectionreceived?.Invoke(direction);
+            return GetInput();
         }
     }
 
-    public void AddInputListner(UnityAction<Vector2> listener)
+    private Vector2 GetInput()
     {
-        OnDirectionreceived += listener;
+        Vector2 input = Vector2.zero;
+        if (Keyboard.current.wKey.isPressed)
+        {
+            input.y += 1;
+        }
+        if (Keyboard.current.sKey.isPressed)
+        {
+            input.y -= 1;
+        }
+        if (Keyboard.current.aKey.isPressed)
+        {
+            input.x -= 1;
+        }
+        if (Keyboard.current.dKey.isPressed)
+        {
+            input.x += 1;
+        }
+        return input.normalized;
     }
 }
