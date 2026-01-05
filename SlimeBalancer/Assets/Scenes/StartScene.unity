@@ -153,6 +153,7 @@ Transform:
   - {fileID: 1878294887}
   - {fileID: 790449842}
   - {fileID: 1161109633}
+  - {fileID: 794121537}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &615848477
@@ -244,6 +245,55 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LoadingscreenManager
   LoadingScreenPrefab: {fileID: 366702107498892922, guid: ddc6a75eb710ab64bbc98018648f15cf, type: 3}
+--- !u!1 &794121536
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 794121537}
+  - component: {fileID: 794121538}
+  m_Layer: 0
+  m_Name: CountdownManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &794121537
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794121536}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 520691384}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &794121538
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 794121536}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 134a665c7244592488b5cb84d5708573, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CountdownManager
+  CountdownTime: 3
+  OnCountdownFinished:
+    m_PersistentCalls:
+      m_Calls: []
+  CountdownUI: {fileID: 7565150218056704245, guid: 658b10769e85db749926493fa0e8ef72, type: 3}
 --- !u!1 &1161109632
 GameObject:
   m_ObjectHideFlags: 0
@@ -289,8 +339,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneManager
   MainMenuSceneName: MainMenu
-  GameScenes:
-  - {fileID: 102900000, guid: 90c0f77b5bfc70042a8ff0e69096c794, type: 3}
 --- !u!1 &1506595059
 GameObject:
   m_ObjectHideFlags: 0

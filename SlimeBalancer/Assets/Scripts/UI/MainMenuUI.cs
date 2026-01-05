@@ -15,6 +15,6 @@ public class MainMenuUI : MonoBehaviour
     private void OnSkiButtonClicked()
     {
         Debug.Log("Ski Button Clicked!");
-        GameManager.SceneManager.LoadScene("Skie");
+        GameManager.Instance.LoadGame("Skie");
     }
 }

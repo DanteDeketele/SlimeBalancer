@@ -347,6 +347,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1548650034}
+  - component: {fileID: 1548650035}
   m_Layer: 0
   m_Name: SkiGame
   m_TagString: Untagged
@@ -369,6 +370,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1548650035
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1548650033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0653b23714b71084a87a44a6033ace37, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SkiGame
+  gameName: Base Game
+  Player: {fileID: 1686904219}
 --- !u!1 &1686904215
 GameObject:
   m_ObjectHideFlags: 0

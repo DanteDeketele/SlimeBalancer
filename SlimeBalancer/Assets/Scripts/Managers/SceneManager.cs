@@ -10,10 +10,10 @@ public class SceneManager : BaseManager
 
     public void LoadScene(string sceneName)
     {
-        StartCoroutine(LoadSceneFlow(sceneName));
+        StartCoroutine(LoadSceneCoroutine(sceneName));
     }
 
-    private IEnumerator LoadSceneFlow(string sceneName)
+    public IEnumerator LoadSceneCoroutine(string sceneName)
     {
         GameManager.LoadingscreenManager.ShowLoadingScreen();
 
@@ -45,5 +45,6 @@ public class SceneManager : BaseManager
 
         // Hide loading screen
         GameManager.LoadingscreenManager.HideLoadingScreen();
+        Debug.Log($"Scene '{sceneName}' loaded successfully.");
     }
 }

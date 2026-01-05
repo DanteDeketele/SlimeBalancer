@@ -1,7 +1,10 @@
+using System.Collections;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    private BaseGame _currentGame;
+
     public static ScoreManager ScoreManager 
     {
         get {
@@ -46,6 +49,16 @@ public class GameManager : MonoBehaviour
         }
     }
     private static SceneManager _sceneManager;
+    public CountdownManager CountdownManager {
+        get {
+            if (_countdownManager == null)
+            {
+                Debug.LogError("CountdownManager is not initialized!");
+            }
+            return _countdownManager; 
+        }
+    }
+    private CountdownManager _countdownManager;
     public static GameManager Instance { get; private set; }
     private void Awake()
     {
@@ -78,6 +91,9 @@ public class GameManager : MonoBehaviour
                 case SceneManager sceneManager:
                     _sceneManager = sceneManager;
                     break;
+                case CountdownManager countdownManager:
+                    _countdownManager = countdownManager;
+                    break;
                 default:
                     Debug.LogWarning($"Unknown manager type: {manager.GetType().Name}");
                     break;
@@ -88,6 +104,33 @@ public class GameManager : MonoBehaviour
         Debug.Log("GameManager initialized.");
 
         SceneManager.LoadScene(SceneManager.MainMenuSceneName);
+    }
+
+    public void LoadGame(string sceneName)
+    {
+        StartCoroutine(LoadGameCoroutine(sceneName));
+    }
+
+    public IEnumerator LoadGameCoroutine(string sceneName)
+    {
+        yield return SceneManager.LoadSceneCoroutine(sceneName);
+
+        _currentGame = FindFirstObjectByType<BaseGame>();
+        if (_currentGame == null)
+        {
+            Debug.LogError("No BaseGame found in the loaded scene!");
+            yield break;
+        }
+        yield return CountdownManager.CountdownCoroutine();
+        _currentGame.StartGame();
+    }
+
+    private void Update()
+    {
+        if (_currentGame != null)
+        {
+            _currentGame.UpdateGame();
+        }
     }
 
 }
