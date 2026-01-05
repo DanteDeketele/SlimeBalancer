@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public ScoreManager ScoreManager 
+    public static ScoreManager ScoreManager 
     {
         get {
             if (_scoreManager == null)
@@ -12,8 +12,8 @@ public class GameManager : MonoBehaviour
             return _scoreManager; 
         }
     }
-    private ScoreManager _scoreManager;
-    public InputManager InputManager
+    private static ScoreManager _scoreManager;
+    public static InputManager InputManager
     {
         get {
             if (_inputManager == null)
@@ -23,7 +23,29 @@ public class GameManager : MonoBehaviour
             return _inputManager; 
         }
     }
-    private InputManager _inputManager;
+    private static InputManager _inputManager;
+    public static LoadingscreenManager LoadingscreenManager
+    {
+        get {
+            if (_loadingscreenManager == null)
+            {
+                Debug.LogError("LoadingscreenManager is not initialized!");
+            }
+            return _loadingscreenManager; 
+        }
+    }
+    private static LoadingscreenManager _loadingscreenManager;
+    public static SceneManager SceneManager
+    {
+        get {
+            if (_sceneManager == null)
+            {
+                Debug.LogError("SceneManager is not initialized!");
+            }
+            return _sceneManager; 
+        }
+    }
+    private static SceneManager _sceneManager;
     public static GameManager Instance { get; private set; }
     private void Awake()
     {
@@ -50,6 +72,12 @@ public class GameManager : MonoBehaviour
                 case InputManager inputManager:
                     _inputManager = inputManager;
                     break;
+                case LoadingscreenManager loadingscreenManager:
+                    _loadingscreenManager = loadingscreenManager;
+                    break;
+                case SceneManager sceneManager:
+                    _sceneManager = sceneManager;
+                    break;
                 default:
                     Debug.LogWarning($"Unknown manager type: {manager.GetType().Name}");
                     break;
@@ -58,6 +86,8 @@ public class GameManager : MonoBehaviour
         }
 
         Debug.Log("GameManager initialized.");
+
+        SceneManager.LoadScene(SceneManager.MainMenuSceneName);
     }
 
 }
