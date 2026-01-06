@@ -78,7 +78,7 @@ public class MainMenuUI : MonoBehaviour
             var selectedGame = _availableGames[_selectedIndex];
             Debug.Log($"[MainMenuUI] Loading game: {selectedGame.GameName} (Scene: {selectedGame.SceneName})");
             // Here you would typically call your scene manager to load the scene
-            GameManager.SceneManager.LoadScene(selectedGame.SceneName);
+            GameManager.Instance.LoadGame(selectedGame.SceneName);
         };
 
         _navigateAction.Enable();
