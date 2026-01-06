@@ -1,9 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
 using UnityEngine.InputSystem;
 
+[RequireComponent(typeof(UIDocument))]
 public class MainMenuUI : MonoBehaviour
 {
     [System.Serializable]
@@ -17,76 +17,73 @@ public class MainMenuUI : MonoBehaviour
     [Header("Data")]
     [SerializeField] private List<GameData> _availableGames;
 
-    [Header("Layout Settings (Must match USS)")]
-    [Tooltip("Width of an unselected card")]
-    [SerializeField] private float _normalWidth = 220f;
+    [Header("Layout Settings")]
+    [SerializeField] private float _normalWidth = 260f;
+    [SerializeField] private float _selectedWidth = 360f + 8f;
+    [SerializeField] private float _spacing = 16f;
+    [SerializeField] private int _startPos = 60; // List starts 10% from left
 
-    [Tooltip("Width of the selected card")]
-    [SerializeField] private float _selectedWidth = 340f; // Not used in math, but good for ref
-
-    [Tooltip("Gap between unselected cards")]
-    [SerializeField] private float _spacing = 12f;
-
-    [Tooltip("Screen position X where the carousel starts")]
-    [SerializeField] private float _leftAnchor = 80f;
-
-    // Components
-    private VisualElement _carouselContent;
+    // Refs
+    private VisualElement _root;
+    private VisualElement _carouselContainer;
+    private VisualElement _infoBox;
     private Label _titleLabel;
     private List<VisualElement> _cards = new List<VisualElement>();
 
-    // State
     private int _selectedIndex = 0;
 
-    // Input
+    // Inputs
     private InputAction _navigateAction;
     private InputAction _submitAction;
 
-    private void OnEnable()
+    private void Awake()
     {
-        _navigateAction = new InputAction("Navigate", type: InputActionType.Button);
-        _navigateAction.AddBinding("<Keyboard>/a");
-        _navigateAction.AddBinding("<Keyboard>/leftArrow");
-        _navigateAction.AddBinding("<Keyboard>/d");
-        _navigateAction.AddBinding("<Keyboard>/rightArrow");
+        var uiDoc = GetComponent<UIDocument>();
+        _root = uiDoc.rootVisualElement;
+
+        _carouselContainer = _root.Q<VisualElement>("CarouselContainer");
+        _infoBox = _root.Q<VisualElement>("InfoBox");
+        _titleLabel = _root.Q<Label>("GameTitle");
+
+        SetupInputs();
+        CreateCards();
+
+        // Wait for layout calculation
+        _root.RegisterCallback<GeometryChangedEvent>(OnLayoutReady);
+    }
+
+    private void OnLayoutReady(GeometryChangedEvent evt)
+    {
+        _root.UnregisterCallback<GeometryChangedEvent>(OnLayoutReady);
+        UpdateSelection(0);
+    }
+
+    private void SetupInputs()
+    {
+        _navigateAction = new InputAction("Navigate", type: InputActionType.Value, expectedControlType: "Vector2");
+        _navigateAction.AddCompositeBinding("2DVector")
+            .With("Left", "<Keyboard>/a").With("Left", "<Keyboard>/leftArrow")
+            .With("Right", "<Keyboard>/d").With("Right", "<Keyboard>/rightArrow");
+
+        _navigateAction.performed += ctx => {
+            float x = ctx.ReadValue<Vector2>().x;
+            if (x < -0.5f) ChangeSelection(-1);
+            else if (x > 0.5f) ChangeSelection(1);
+        };
 
         _submitAction = new InputAction("Submit", type: InputActionType.Button);
-        _submitAction.AddBinding("<Keyboard>/space");
         _submitAction.AddBinding("<Keyboard>/enter");
+        _submitAction.performed += ctx => Debug.Log($"Load: {_availableGames[_selectedIndex].SceneName}");
 
-        _navigateAction.performed += OnNavigate;
-        _submitAction.performed += OnSubmit;
         _navigateAction.Enable();
         _submitAction.Enable();
     }
 
-    private void OnDisable()
-    {
-        _navigateAction.Disable();
-        _submitAction.Disable();
-    }
-
-    private void Awake()
-    {
-        var root = GetComponent<UIDocument>().rootVisualElement;
-        _carouselContent = root.Q<VisualElement>("CarouselContent");
-        _titleLabel = root.Q<Label>("GameTitle");
-
-        CreateCards();
-
-        // Wait one frame for UI Layout to calculate
-        StartCoroutine(InitialSetup());
-    }
-
-    private IEnumerator InitialSetup()
-    {
-        yield return null;
-        UpdateSelection(0);
-    }
+    private void OnDisable() { _navigateAction.Disable(); _submitAction.Disable(); }
 
     private void CreateCards()
     {
-        _carouselContent.Clear();
+        _carouselContainer.Clear();
         _cards.Clear();
 
         for (int i = 0; i < _availableGames.Count; i++)
@@ -94,60 +91,48 @@ public class MainMenuUI : MonoBehaviour
             var data = _availableGames[i];
             var card = new VisualElement();
             card.AddToClassList("game-card");
+            if (data.GameLogo != null) card.style.backgroundImage = new StyleBackground(data.GameLogo);
 
-            if (data.GameLogo != null)
-                card.style.backgroundImage = new StyleBackground(data.GameLogo);
-
-            _carouselContent.Add(card);
+            _carouselContainer.Add(card);
             _cards.Add(card);
-
-            int index = i;
-            card.RegisterCallback<ClickEvent>(evt => UpdateSelection(index));
         }
     }
 
-    private void OnNavigate(InputAction.CallbackContext ctx)
+    private void ChangeSelection(int dir)
     {
-        string path = ctx.control.path;
-        int direction = (path.Contains("left") || path.Contains("/a")) ? -1 : 1;
-
-        int newIndex = Mathf.Clamp(_selectedIndex + direction, 0, _availableGames.Count - 1);
-        UpdateSelection(newIndex);
-    }
-
-    private void OnSubmit(InputAction.CallbackContext ctx)
-    {
-        var game = _availableGames[_selectedIndex];
-        Debug.Log($"Loading {game.GameName}");
+        int newIndex = Mathf.Clamp(_selectedIndex + dir, 0, _availableGames.Count - 1);
+        if (newIndex != _selectedIndex) UpdateSelection(newIndex);
     }
 
     private void UpdateSelection(int index)
     {
         _selectedIndex = index;
 
-        // 1. Update Visuals
+        // 1. Visuals
         for (int i = 0; i < _cards.Count; i++)
         {
             if (i == index) _cards[i].AddToClassList("game-card--selected");
             else _cards[i].RemoveFromClassList("game-card--selected");
         }
 
-        // 2. Update Text
-        if (index < _availableGames.Count)
-            _titleLabel.text = _availableGames[index].GameName;
+        // 2. Text
+        _titleLabel.text = _availableGames[index].GameName;
 
-        // 3. Move Carousel
-        // We want the SELECTED card to sit at _leftAnchor.
-        // So we shift Left by the sum of all PREVIOUS cards' widths.
-        // Since previous cards are unselected, they are _normalWidth.
+        // 3. Carousel Position (Left to Right)
+        float screenWidth = _root.layout.width;
+        if (float.IsNaN(screenWidth) || screenWidth < 1) screenWidth = 1920f;
 
-        float shiftAmount = 0f;
-        for (int i = 0; i < index; i++)
-        {
-            shiftAmount += (_normalWidth + _spacing);
-        }
+        float anchorPos = _startPos;
 
-        // Apply the negative shift + the anchor offset
-        _carouselContent.style.left = _leftAnchor - shiftAmount;
+        // Calculate shift: Sum of width+spacing for all PREVIOUS items
+        float shift = index * (_normalWidth + _spacing);
+
+        // Move the carousel
+        _carouselContainer.style.left = anchorPos - shift;
+
+        // 4. Info Box Position (Horizontal Lock)
+        // It should start at: Anchor + SelectedCardWidth + Gap
+        float textLeftPos = anchorPos + _selectedWidth + _spacing;
+        _infoBox.style.left = textLeftPos;
     }
 }
