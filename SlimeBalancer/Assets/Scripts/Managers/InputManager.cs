@@ -4,6 +4,13 @@ using UnityEngine.InputSystem;
 
 public class InputManager : BaseManager
 {
+    public InputAction MoveInput;
+
+    private void Awake()
+    {
+        MoveInput = InputSystem.actions.FindAction("Move");
+    }
+
     public Vector2 Input{
         get
         {
@@ -13,23 +20,10 @@ public class InputManager : BaseManager
 
     private Vector2 GetInput()
     {
-        Vector2 input = Vector2.zero;
-        if (Keyboard.current.wKey.isPressed)
+        if (MoveInput != null)
         {
-            input.y += 1;
+            return MoveInput.ReadValue<Vector2>();
         }
-        if (Keyboard.current.sKey.isPressed)
-        {
-            input.y -= 1;
-        }
-        if (Keyboard.current.aKey.isPressed)
-        {
-            input.x -= 1;
-        }
-        if (Keyboard.current.dKey.isPressed)
-        {
-            input.x += 1;
-        }
-        return input.normalized;
+        return Vector2.zero;
     }
 }
