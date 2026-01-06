@@ -40,3 +40,123 @@ VisualElement {
     border-bottom-right-radius: 16px;
     border-bottom-left-radius: 16px;
 }
+
+.countdown-container {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.2); /* Optional: Slight dark overlay */
+}
+
+.countdown-label {
+    font-size: 100px;
+    color: rgb(255, 255, 255);
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    
+    /* Animation Properties */
+    scale: 1 1;
+    transition-property: scale, color;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out-elastic;
+}
+
+.countdown-label.pulse {
+    scale: 1.5 1.5;
+    color: rgb(255, 215, 0); /* Gold color on beat */
+}
+
+.countdown-label.go-state {
+    color: rgb(50, 205, 50); /* Lime Green */
+    font-size: 120px;
+}
+
+/* --- 1. GLOBAL ROOT --- */
+.main-container {
+    flex-grow: 1;
+    background-color: rgb(235, 235, 235);
+    flex-direction: column;
+    justify-content: space-between; /* Pushes Header to top, Footer to bottom */
+}
+
+/* --- 2. HEADER --- */
+.header-bar {
+    height: 100px; /* Fixed height */
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 50px;
+    padding-right: 50px;
+    background-color: white; /* Optional: distinct header bg */
+}
+
+/* --- 3. MIDDLE AREA (Holds Carousel + Floating Text) --- */
+.content-area {
+    flex-grow: 1; /* Takes all remaining space */
+    position: relative; /* Anchor for absolute children */
+    overflow: hidden; /* Clean clipping */
+    flex-direction: column;
+    justify-content: flex-end; /* Aligns the carousel to the bottom of this area */
+}
+
+/* --- 4. THE FLOATING TEXT (Fixes your issue) --- */
+.info-container {
+    position: absolute; /* Floats on top of everything */
+    top: 20%; /* Move it down from the top of content area */
+    left: 480px; /* FIXED LEFT POSITION: Anchor + Card Width + Gap */
+    right: 50px; /* Stretch to right edge */
+    height: 200px;
+    justify-content: center;
+}
+
+.game-title-big {
+    font-size: 50px;
+    color: rgb(40, 40, 40);
+    -unity-font-style: normal;
+    white-space: normal;
+}
+
+/* --- 5. CAROUSEL STRIP --- */
+.carousel-content {
+    flex-direction: row;
+    position: absolute;
+    left: 0px; 
+    bottom: 60px; /* Push up slightly from the footer */
+    height: 400px; 
+    align-items: flex-end; /* Bottom Align */
+    transition-property: left;
+    transition-duration: 0.3s;
+    transition-timing-function: ease-out-cubic;
+}
+
+/* --- 6. CARDS --- */
+.game-card {
+    width: 220px;
+    height: 220px;
+    margin-right: 12px;
+    background-color: rgb(180, 180, 180);
+    border-radius: 8px;
+    transition-property: width, height, margin-right, border-width;
+    transition-duration: 0.2s;
+    transition-timing-function: ease-out-back;
+}
+
+.game-card--selected {
+    width: 340px;
+    height: 340px;
+    margin-right: 40px; 
+    background-color: white;
+    border-width: 0px; 
+}
+
+/* --- 7. FOOTER (Fixed Visibility) --- */
+.footer-bar {
+    height: 80px; /* strictly fixed height */
+    border-top-width: 1px;
+    border-top-color: rgb(200, 200, 200);
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 50px;
+    background-color: rgb(245, 245, 245);
+}
