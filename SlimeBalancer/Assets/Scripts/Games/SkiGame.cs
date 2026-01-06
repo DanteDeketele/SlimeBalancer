@@ -10,7 +10,7 @@ public class SkiGame : BaseGame
 
     public override void UpdateGame()
     {
-        Vector2 input = GameManager.InputManager.Input;
+        Vector2 input = GameManager.InputManager.InputVector;
         Player.Translate(Vector3.right * input.x * Time.deltaTime * 5f);
     }
 

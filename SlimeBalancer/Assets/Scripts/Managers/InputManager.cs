@@ -1,29 +1,38 @@
 using UnityEngine;
-using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class InputManager : BaseManager
 {
-    public InputAction MoveInput;
+    private string actionMapName = "Player";
+
+    private InputAction moveAction;
+    private Vector2 inputVector;
+    public Vector2 InputVector => inputVector;
 
     private void Awake()
     {
-        MoveInput = InputSystem.actions.FindAction("Move");
-    }
-
-    public Vector2 Input{
-        get
+        // 3. Find the specific map, then the specific action
+        InputActionMap map = InputSystem.actions.FindActionMap(actionMapName);
+        if (map == null)
         {
-            return GetInput();
+            Debug.LogError($"[InputManager] Could not find Action Map: {actionMapName}");
+            return;
+        }
+
+        moveAction = map.FindAction("Move");
+        if (moveAction == null)
+        {
+            Debug.LogError("[InputManager] Could not find 'Move' action.");
         }
     }
 
     private Vector2 GetInput()
     {
-        if (MoveInput != null)
-        {
-            return MoveInput.ReadValue<Vector2>();
-        }
-        return Vector2.zero;
+        return moveAction.ReadValue<Vector2>();
+    }
+
+    private void Update()
+    {
+        inputVector = GetInput();
     }
 }
