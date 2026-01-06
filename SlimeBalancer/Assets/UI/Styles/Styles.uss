@@ -1,46 +1,52 @@
-VisualElement {
-}
-
+/* 1. Full Screen Background */
 .c-loadingscreen__background {
-    background-color: rgb(74, 189, 200);
-    top: auto;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    padding-top: 8px;
-    padding-right: 8px;
-    padding-bottom: 8px;
-    padding-left: 8px;
+    flex-grow: 1;
+    background-color: rgb(20, 20, 20); /* Deep Charcoal */
+    align-items: center;     /* Horizontal Center */
+    justify-content: center; /* Vertical Center */
 }
 
-.c-loadingscreen__bar {
-    background-color: rgb(0, 0, 0);
-    height: 27px;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    border-bottom-right-radius: 16px;
-    border-bottom-left-radius: 16px;
-    bottom: 0;
-    justify-content: flex-end;
-    align-content: auto;
-    background-position-y: bottom 0;
-    -unity-background-scale-mode: stretch-to-fill;
-    flex-direction: column-reverse;
-    align-items: auto;
-    align-self: auto;
-    -unity-slice-type: tiled;
+/* 2. Container to hold the bar and text together */
+.c-loadingscreen__content {
+    width: 60%; /* Occupy 60% of screen width */
+    max-width: 500px; /* But don't get too wide on 4k screens */
+    flex-direction: column;
 }
 
-.c-loadingscreen__fill {
-    background-color: rgb(255, 255, 255);
-    width: 0%;
-    overflow: hidden;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    border-bottom-right-radius: 16px;
-    border-bottom-left-radius: 16px;
+/* 3. The Text */
+.c-loadingscreen__text {
+    color: rgb(150, 150, 150); /* Soft Grey */
+    font-size: 12px;
+    margin-bottom: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    letter-spacing: 4px; /* Widens the text for that "Cinematic" look */
+    padding: 0;
 }
 
+/* 4. The Bar Background (The "Rail") */
+.c-loadingscreen__bar-rail {
+    height: 4px; /* Very thin */
+    background-color: rgba(255, 255, 255, 0.1); /* Subtle dark rail */
+    border-radius: 2px;
+    overflow: hidden; /* Ensures the fill doesn't bleed out */
+    justify-content: flex-start; /* Fill starts from left */
+}
+
+/* 5. The Fill */
+.c-loadingscreen__bar-fill {
+    height: 100%;
+    width: 0%; /* C# controls this */
+    background-color: rgb(255, 255, 255); /* Pure White */
+    border-radius: 2px;
+    
+    /* SMOOTH ANIMATION */
+    /* This makes the bar slide instead of jump when C# updates it */
+    transition-property: width;
+    transition-duration: 0.1s; 
+    transition-timing-function: ease-out;
+}
+/*--- COUNTDOWN ---*/
 .container {
     flex-grow: 1;
     align-items: center;

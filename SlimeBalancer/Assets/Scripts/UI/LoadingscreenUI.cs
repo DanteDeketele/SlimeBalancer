@@ -1,35 +1,52 @@
 using UnityEngine;
-using UnityEngine.Assertions;
 using UnityEngine.UIElements;
 
+[RequireComponent(typeof(UIDocument))]
 public class LoadingscreenUI : MonoBehaviour
 {
     private VisualElement _loadingScreen;
-    private TextElement _loadingText;
-    private VisualElement _progressBar;
+    private Label _loadingText; // Changed to Label (more specific than TextElement)
     private VisualElement _progressFill;
+
+    // Optional: Cache opacity for fade out later
+    private VisualElement _root;
 
     public void Awake()
     {
-        var root = GetComponent<UIDocument>().rootVisualElement;
-        _loadingScreen = root.Q<VisualElement>("LoadingScreen");
-        _loadingText = root.Q<TextElement>("LoadingText");
-        _progressBar = root.Q<VisualElement>("ProgressBar");
-        _progressFill = root.Q<VisualElement>("ProgressFill");
-        Assert.IsNotNull(_loadingScreen, "LoadingScreen element not found in UI Document.");
-        Assert.IsNotNull(_loadingText, "LoadingText element not found in UI Document.");
-        Assert.IsNotNull(_progressBar, "ProgressBar element not found in UI Document.");
-        Assert.IsNotNull(_progressFill, "ProgressFill element not found in UI Document.");
+        var doc = GetComponent<UIDocument>();
+        _root = doc.rootVisualElement;
+
+        _loadingScreen = _root.Q<VisualElement>("LoadingScreen");
+        _loadingText = _root.Q<Label>("LoadingText");
+
+        // Note: We don't necessarily need reference to the Bar Rail, just the Fill
+        _progressFill = _root.Q<VisualElement>("ProgressFill");
+
+        // Validate
+        if (_loadingText == null || _progressFill == null)
+        {
+            Debug.LogError("Loading Screen UI: Missing visual elements. Check UXML names.");
+        }
+
+        // Initialize
+        SetProgress(0f);
+        SetMessage("LOADING...");
     }
 
     public void SetMessage(string message)
     {
-        _loadingText.text = message;
+        if (_loadingText != null)
+            _loadingText.text = message.ToUpper(); // Force Uppercase for style
     }
 
     public void SetProgress(float progress)
     {
-        _progressFill.style.width = Length.Percent(Mathf.Clamp01(progress) * 100f);
-    }
+        if (_progressFill == null) return;
 
+        // Clamp 0-1
+        float cleanProgress = Mathf.Clamp01(progress);
+
+        // Convert to percentage
+        _progressFill.style.width = Length.Percent(cleanProgress * 100f);
+    }
 }
