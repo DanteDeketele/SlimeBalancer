@@ -1,0 +1,5 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <ui:VisualElement style="flex-grow: 1;">
+        <ui:Label text="Label" name="CountdownLabel" style="font-size: 63px; -unity-text-align: middle-center;" />
+    </ui:VisualElement>
+</ui:UXML>

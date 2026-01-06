@@ -129,7 +129,8 @@ public class GameManager : MonoBehaviour
     {
         if (_currentGame != null)
         {
-            _currentGame.UpdateGame();
+            if (_currentGame.IsGameActive)
+                _currentGame.UpdateGame();
         }
     }
 

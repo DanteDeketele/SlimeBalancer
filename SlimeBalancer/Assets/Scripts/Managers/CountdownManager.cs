@@ -7,7 +7,7 @@ public class CountdownManager : BaseManager
     public int CountdownTime = 3;
     public UnityEvent OnCountdownFinished;
     public GameObject CountdownUI;
-    private GameObject _countdownUIInstance;
+    private CountdownUI _countdownUIInstance;
     public void StartCountdown()
     {
         StartCoroutine(CountdownCoroutine());
@@ -16,17 +16,21 @@ public class CountdownManager : BaseManager
     {
         if (_countdownUIInstance == null)
         {
-            _countdownUIInstance = Instantiate(CountdownUI, transform);
+            _countdownUIInstance = Instantiate(CountdownUI, transform).GetComponent<CountdownUI>();
         }
-        _countdownUIInstance.SetActive(true);
+        _countdownUIInstance.gameObject.SetActive(true);
 
         for (int i = CountdownTime; i > 0; i--)
         {
             Debug.Log(i);
+            _countdownUIInstance.UpdateCountdown(i);
             yield return new WaitForSeconds(1f);
         }
         Debug.Log("Go!");
+        _countdownUIInstance.UpdateCountdown(0);
+        yield return new WaitForSeconds(1f);
 
-        _countdownUIInstance.SetActive(false);
+
+        _countdownUIInstance.gameObject.SetActive(false);
     }
 }

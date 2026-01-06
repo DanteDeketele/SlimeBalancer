@@ -3,11 +3,13 @@ using UnityEngine;
 
 public abstract class BaseGame : MonoBehaviour
 {
-    public string gameName = "Base Game";
+    public string GameName = "Base Game";
+    public bool IsGameActive = false;
 
     public virtual void StartGame()
     {
-        Debug.Log($"{gameName} has started.");
+        IsGameActive = true;
+        Debug.Log($"{GameName} has started.");
     }
 
     public virtual void UpdateGame()
@@ -16,7 +18,8 @@ public abstract class BaseGame : MonoBehaviour
 
     public virtual void EndGame()
     {
-        Debug.Log($"{gameName} has ended.");
+        IsGameActive = false;
+        Debug.Log($"{GameName} has ended.");
     }
 
 }
