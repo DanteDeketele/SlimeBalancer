@@ -41,59 +41,33 @@ VisualElement {
     border-bottom-left-radius: 16px;
 }
 
-.countdown-container {
+.container {
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.3);
+    /* No dark background, Mario Kart keeps the view clear */
 }
 
-.countdown-label {
+.mario-label {
+    /* TYPOGRAPHY */
     font-size: 150px;
-    color: rgb(255, 255, 255);
-    -unity-font-style: bold-and-italic; /* Italic adds speed/energy */
+    color: rgba(66, 228, 174, 1); /* Mario Kart Yellow/Gold */
     -unity-text-align: middle-center;
     
-    /* CARTOON STYLING */
-    /* Thick black outline */
-    -unity-text-outline-width: 4px; 
+    /* THE OUTLINE (The "Sticker" effect) */
+    -unity-text-outline-width: 4px; /* Very thick */
     -unity-text-outline-color: rgb(0, 0, 0);
-    /* Hard drop shadow for depth */
-    text-shadow: 10px 10px 0px rgba(0, 0, 0, 0.5); 
     
-    /* ANIMATION SETUP */
-    scale: 0 0; /* Start invisible/shrunk */
-    rotate: 0deg;
+    /* Initial State (Hidden) */
     opacity: 0;
-    
-    /* Animate scale, rotation, and opacity */
-    transition-property: scale, rotate, opacity, color;
-    transition-duration: 0.3s;
-    /* Ease-Out-Back makes it overshoot and snap back (The "Pop") */
-    transition-timing-function: ease-out-back; 
+    scale: 0 0;
 }
 
-/* The Active State (When the number is on screen) */
-.countdown-label.animate-in {
-    scale: 1 1;
-    opacity: 1;
-    /* We will set rotation in C# for variety, or default to 0 here */
-}
-
-/* Specific styling for the Pulse (The Beat) */
-.countdown-label.pulse {
-    scale: 1.3 1.3;
-    color: rgb(255, 220, 0); /* Cartoon Yellow */
-}
-
-/* The GO State - Massive and Green */
-.countdown-label.go-state {
-    color: rgb(100, 255, 50); /* Bright Lime */
-    font-size: 180px;
-    rotate: 0deg;
-    scale: 1.5 1.5;
-    transition-timing-function: ease-out-elastic; /* Wiggle effect */
-    transition-duration: 1s;
+/* THE GO STATE (Explosion of color) */
+.mario-label.go-state {
+    color: rgb(0, 255, 255); /* Mario Kart 8 Blue/Greenish */
+    font-size: 250px;
+    scale: 1.25 1.25;
 }
 
 /* --- ROOT --- */

@@ -1,6 +1,6 @@
 <ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
     <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
-    <ui:VisualElement name="Container" class="countdown-container">
-        <ui:Label text="" name="CountdownLabel" class="countdown-label" />
+    <ui:VisualElement name="Container" class="container">
+        <ui:Label name="CountdownLabel" class="mario-label" style="color: rgb(111, 221, 112); -unity-font-definition: url(&quot;project://database/Library/unity%20default%20resources?fileID=10102&amp;guid=0000000000000000e000000000000000&amp;type=0#LegacyRuntime&quot;);" />
     </ui:VisualElement>
 </ui:UXML>

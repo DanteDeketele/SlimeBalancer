@@ -5,76 +5,76 @@ using UnityEngine.UIElements;
 [RequireComponent(typeof(UIDocument))]
 public class CountdownUI : MonoBehaviour
 {
+    private Label _label;
+
     [Header("Settings")]
-    [SerializeField] private int _startCount = 3;
-    [SerializeField] private float _beatDuration = 1.0f; // Time between numbers
-
-    // UI References
-    private Label _countdownLabel;
-
-    // Class Names
-    private const string ClassAnimateIn = "animate-in";
-    private const string ClassGoState = "go-state";
+    [SerializeField] private float _startScale = 3.5f; // Start HUGE
+    [SerializeField] private float _slamDuration = 0.25f; // How fast it hits
+    [SerializeField] private AnimationCurve _slamCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
     private void Awake()
     {
-        var uiDocument = GetComponent<UIDocument>();
-        _countdownLabel = uiDocument.rootVisualElement.Q<Label>("CountdownLabel");
-
-        // Ensure label is clean on start
-        _countdownLabel.text = "";
-        _countdownLabel.RemoveFromClassList(ClassAnimateIn);
+        var doc = GetComponent<UIDocument>();
+        _label = doc.rootVisualElement.Q<Label>("CountdownLabel");
+        _label.text = ""; // Hide on start
     }
 
     public IEnumerator StartCountdown()
     {
-        int count = _startCount;
-
-        while (count > 0)
+        // 3... 2... 1...
+        for (int i = 3; i > 0; i--)
         {
-            // 1. Reset State (Shrink out)
-            _countdownLabel.RemoveFromClassList(ClassAnimateIn);
-            _countdownLabel.text = count.ToString();
+            // 1. Setup the number
+            _label.RemoveFromClassList("go-state"); // Ensure styling is correct
+            _label.text = i.ToString();
+            _label.style.opacity = 1;
 
-            // Wait a tiny frame for the CSS to register the "Shrink" state
-            yield return null;
+            // 2. The "Slam" Animation
+            // We manually animate scale from _startScale down to 1
+            float timer = 0f;
+            while (timer < _slamDuration)
+            {
+                timer += Time.deltaTime;
+                float progress = timer / _slamDuration;
 
-            // 2. Apply Random/Alternating Tilt
-            // "3" tilts left, "2" tilts right, etc.
-            float tiltAngle = (count % 2 == 0) ? 15f : -15f;
-            _countdownLabel.style.rotate = new Rotate(tiltAngle);
+                // Evaluate curve for that "Impact" feel
+                float scaleVal = Mathf.Lerp(_startScale, 1f, _slamCurve.Evaluate(progress));
 
-            // 3. Trigger "Pop In" Animation
-            _countdownLabel.AddToClassList(ClassAnimateIn);
+                _label.style.scale = new Scale(new Vector2(scaleVal, scaleVal));
+                yield return null;
+            }
 
-            // Optional: Play Sound Effect here (e.g., UI_Pop.wav)
+            // Ensure it lands perfectly on 1
+            _label.style.scale = new Scale(Vector2.one);
 
-            // 4. Wait for the beat
-            yield return new WaitForSeconds(_beatDuration);
+            // 3. Wait on screen (The moment of anticipation)
+            yield return new WaitForSeconds(0.6f);
 
-            count--;
+            // 4. Vanish instantly before the next number
+            _label.style.opacity = 0;
+            yield return new WaitForSeconds(0.15f); // Short pause between numbers
         }
 
-        // --- GO STATE ---
+        GameManager.CountdownManager.OnCountdownFinished.Invoke();
 
-        GameManager.CountdownManager.OnCountdownFinished?.Invoke();
+        // --- GO! ---
+        _label.text = "GO!";
+        _label.AddToClassList("go-state");
+        _label.style.opacity = 1;
+        _label.style.scale = new Scale(new Vector2(1.5f, 1.5f)); // Start slightly bigger
 
-        // Reset for the "GO" pop
-        _countdownLabel.RemoveFromClassList(ClassAnimateIn);
-        yield return null;
+        // Optional: Shake the 'GO' text slightly
+        float goTimer = 0;
+        while (goTimer < 1.0f)
+        {
+            goTimer += Time.deltaTime;
+            // Simple wobble
+            float wobble = Mathf.Sin(Time.time * 50) * 5f;
+            _label.style.rotate = new Rotate(wobble);
+            yield return null;
+        }
 
-        _countdownLabel.text = "GO!";
-        _countdownLabel.style.rotate = new Rotate(0); // Straighten it out
-
-        _countdownLabel.AddToClassList(ClassAnimateIn);
-        _countdownLabel.AddToClassList(ClassGoState);
-
-        // Optional: Screen Shake could go here
-
-        // Wait, then cleanup
-        yield return new WaitForSeconds(1.5f);
-        _countdownLabel.text = "";
-        _countdownLabel.RemoveFromClassList(ClassGoState);
-        _countdownLabel.RemoveFromClassList(ClassAnimateIn);
+        // Cleanup
+        _label.style.opacity = 0;
     }
 }
