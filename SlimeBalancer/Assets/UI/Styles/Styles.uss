@@ -71,92 +71,102 @@ VisualElement {
     font-size: 120px;
 }
 
-/* --- 1. GLOBAL ROOT --- */
-.main-container {
+/* --- ROOT --- */
+.screen-root {
     flex-grow: 1;
-    background-color: rgb(235, 235, 235);
+    background-color: #ebebeb;
     flex-direction: column;
-    justify-content: space-between; /* Pushes Header to top, Footer to bottom */
 }
 
-/* --- 2. HEADER --- */
-.header-bar {
-    height: 100px; /* Fixed height */
+/* --- HEADER --- */
+.header-section {
+    height: 15%; /* Keeps the "breathing room" at the top */
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding-left: 50px;
-    padding-right: 50px;
-    background-color: white; /* Optional: distinct header bg */
+    padding-left: 5%;
+    padding-right: 5%;
 }
+.user-icon-red { width: 44px; height: 44px; background-color: #ff4554; border-radius: 50%; margin-right: 15px; }
+.user-icon-grey { width: 44px; height: 44px; background-color: #dddddd; border-radius: 50%; }
 
-/* --- 3. MIDDLE AREA (Holds Carousel + Floating Text) --- */
-.content-area {
-    flex-grow: 1; /* Takes all remaining space */
+/* --- CONTENT AREA --- */
+.body-section {
+    flex-grow: 1;
     position: relative; /* Anchor for absolute children */
-    overflow: hidden; /* Clean clipping */
-    flex-direction: column;
-    justify-content: flex-end; /* Aligns the carousel to the bottom of this area */
+    overflow: hidden;   /* Clip cards sliding off screen */
 }
 
-/* --- 4. THE FLOATING TEXT (Fixes your issue) --- */
-.info-container {
-    position: absolute; /* Floats on top of everything */
-    top: 20%; /* Move it down from the top of content area */
-    left: 480px; /* FIXED LEFT POSITION: Anchor + Card Width + Gap */
-    right: 50px; /* Stretch to right edge */
-    height: 200px;
-    justify-content: center;
-}
-
-.game-title-big {
-    font-size: 50px;
-    color: rgb(40, 40, 40);
-    -unity-font-style: normal;
-    white-space: normal;
-}
-
-/* --- 5. CAROUSEL STRIP --- */
-.carousel-content {
+/* --- CAROUSEL (Moving Strip) --- */
+.carousel-container {
     flex-direction: row;
     position: absolute;
+    
+    /* MOVEMENT LOGIC */
     left: 0px; 
-    bottom: 60px; /* Push up slightly from the footer */
-    height: 400px; 
-    align-items: flex-end; /* Bottom Align */
+    bottom: 60px; /* The "Floor" line */
+    height: 400px; /* Height of the strip */
+    
+    align-items: flex-end; /* All cards sit on the bottom line */
+    
     transition-property: left;
-    transition-duration: 0.3s;
-    transition-timing-function: ease-out-cubic;
+    transition-duration: 0.25s;
+    transition-timing-function: ease-out-circ;
 }
 
-/* --- 6. CARDS --- */
+/* --- CARDS --- */
 .game-card {
-    width: 220px;
-    height: 220px;
-    margin-right: 12px;
-    background-color: rgb(180, 180, 180);
-    border-radius: 8px;
-    transition-property: width, height, margin-right, border-width;
+    width: 260px;
+    height: 260px;
+    margin-right: 16px;
+    background-color: #fdfdfd;
+    border-radius: 4px;
+    -unity-background-scale-mode: scale-to-fill;
+    
     transition-duration: 0.2s;
-    transition-timing-function: ease-out-back;
+    transition-property: width, height, margin-right, border-width;
+    opacity: 0.9;
 }
 
 .game-card--selected {
-    width: 340px;
-    height: 340px;
-    margin-right: 40px; 
+    width: 360px; /* Selected is wider */
+    height: 360px; /* Selected is taller (grows up) */
+    
     background-color: white;
-    border-width: 0px; 
+    opacity: 1.0;
+    border-width: 4px;
+    border-color: #00d2ff;
 }
 
-/* --- 7. FOOTER (Fixed Visibility) --- */
-.footer-bar {
-    height: 80px; /* strictly fixed height */
+/* --- INFO BOX (Absolute, anchored to Floor) --- */
+.info-box {
+    position: absolute;
+    
+    /* VERTICAL LOCK: Card Height (260) + Padding (40) = 300px 
+       This ensures text is ALWAYS above the small cards. */
+    bottom: 300px; 
+    
+    /* Horizontal position is set by C# script to follow selection */
+    /* left: (calculated); */
+    
+    height: 150px;
+    justify-content: flex-end; /* Text aligns to bottom of this box */
+    padding-bottom: 16px;
+}
+
+.game-title {
+    font-size: 50px;
+    color: #2e2e2e;
+    white-space: normal;
+}
+
+/* --- FOOTER --- */
+.footer-section {
+    height: 10%;
     border-top-width: 1px;
-    border-top-color: rgb(200, 200, 200);
+    border-top-color: rgba(0,0,0,0.1);
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
-    padding-right: 50px;
-    background-color: rgb(245, 245, 245);
+    padding-right: 5%;
 }
