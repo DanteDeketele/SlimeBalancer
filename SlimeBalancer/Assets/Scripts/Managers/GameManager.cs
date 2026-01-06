@@ -49,7 +49,7 @@ public class GameManager : MonoBehaviour
         }
     }
     private static SceneManager _sceneManager;
-    public CountdownManager CountdownManager {
+    public static CountdownManager CountdownManager {
         get {
             if (_countdownManager == null)
             {
@@ -58,7 +58,7 @@ public class GameManager : MonoBehaviour
             return _countdownManager; 
         }
     }
-    private CountdownManager _countdownManager;
+    private static CountdownManager _countdownManager;
     public static GameManager Instance { get; private set; }
     private void Awake()
     {
@@ -93,6 +93,7 @@ public class GameManager : MonoBehaviour
                     break;
                 case CountdownManager countdownManager:
                     _countdownManager = countdownManager;
+                    _countdownManager.OnCountdownFinished.AddListener(OnStartGame);
                     break;
                 default:
                     Debug.LogWarning($"Unknown manager type: {manager.GetType().Name}");
@@ -122,7 +123,11 @@ public class GameManager : MonoBehaviour
             yield break;
         }
         yield return CountdownManager.CountdownCoroutine();
-        _currentGame.StartGame();
+    }
+
+    private void OnStartGame()
+    {
+        _currentGame?.StartGame();
     }
 
     private void Update()

@@ -45,30 +45,55 @@ VisualElement {
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    background-color: rgba(0, 0, 0, 0.2); /* Optional: Slight dark overlay */
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .countdown-label {
-    font-size: 100px;
+    font-size: 150px;
     color: rgb(255, 255, 255);
-    -unity-font-style: bold;
+    -unity-font-style: bold-and-italic; /* Italic adds speed/energy */
     -unity-text-align: middle-center;
     
-    /* Animation Properties */
+    /* CARTOON STYLING */
+    /* Thick black outline */
+    -unity-text-outline-width: 4px; 
+    -unity-text-outline-color: rgb(0, 0, 0);
+    /* Hard drop shadow for depth */
+    text-shadow: 10px 10px 0px rgba(0, 0, 0, 0.5); 
+    
+    /* ANIMATION SETUP */
+    scale: 0 0; /* Start invisible/shrunk */
+    rotate: 0deg;
+    opacity: 0;
+    
+    /* Animate scale, rotation, and opacity */
+    transition-property: scale, rotate, opacity, color;
+    transition-duration: 0.3s;
+    /* Ease-Out-Back makes it overshoot and snap back (The "Pop") */
+    transition-timing-function: ease-out-back; 
+}
+
+/* The Active State (When the number is on screen) */
+.countdown-label.animate-in {
     scale: 1 1;
-    transition-property: scale, color;
-    transition-duration: 0.1s;
-    transition-timing-function: ease-out-elastic;
+    opacity: 1;
+    /* We will set rotation in C# for variety, or default to 0 here */
 }
 
+/* Specific styling for the Pulse (The Beat) */
 .countdown-label.pulse {
-    scale: 1.5 1.5;
-    color: rgb(255, 215, 0); /* Gold color on beat */
+    scale: 1.3 1.3;
+    color: rgb(255, 220, 0); /* Cartoon Yellow */
 }
 
+/* The GO State - Massive and Green */
 .countdown-label.go-state {
-    color: rgb(50, 205, 50); /* Lime Green */
-    font-size: 120px;
+    color: rgb(100, 255, 50); /* Bright Lime */
+    font-size: 180px;
+    rotate: 0deg;
+    scale: 1.5 1.5;
+    transition-timing-function: ease-out-elastic; /* Wiggle effect */
+    transition-duration: 1s;
 }
 
 /* --- ROOT --- */

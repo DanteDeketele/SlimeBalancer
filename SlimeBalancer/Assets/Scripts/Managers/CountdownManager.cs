@@ -16,21 +16,12 @@ public class CountdownManager : BaseManager
     {
         if (_countdownUIInstance == null)
         {
-            _countdownUIInstance = Instantiate(CountdownUI, transform).GetComponent<CountdownUI>();
+            GameObject uiInstance = Instantiate(CountdownUI);
+            _countdownUIInstance = uiInstance.GetComponent<CountdownUI>();
         }
         _countdownUIInstance.gameObject.SetActive(true);
 
-        for (int i = CountdownTime; i > 0; i--)
-        {
-            Debug.Log(i);
-            _countdownUIInstance.UpdateCountdown(i);
-            yield return new WaitForSeconds(1f);
-        }
-        Debug.Log("Go!");
-        _countdownUIInstance.UpdateCountdown(0);
-        yield return new WaitForSeconds(1f);
-
-
+        yield return _countdownUIInstance.StartCountdown();
         _countdownUIInstance.gameObject.SetActive(false);
     }
 }

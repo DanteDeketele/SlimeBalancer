@@ -6,102 +6,75 @@ using UnityEngine.UIElements;
 public class CountdownUI : MonoBehaviour
 {
     [Header("Settings")]
-    [Tooltip("Time in seconds for the countdown to start from.")]
     [SerializeField] private int _startCount = 3;
-
-    [Tooltip("Duration of the beat animation in seconds.")]
-    [SerializeField] private float _pulseDuration = 0.1f;
+    [SerializeField] private float _beatDuration = 1.0f; // Time between numbers
 
     // UI References
     private Label _countdownLabel;
-    private const string LabelName = "CountdownLabel";
 
-    // USS Class Names
-    private const string PulseClassName = "pulse";
-    private const string GoStateClassName = "go-state";
+    // Class Names
+    private const string ClassAnimateIn = "animate-in";
+    private const string ClassGoState = "go-state";
 
-    /// <summary>
-    /// Initialization of UI elements from the UIDocument.
-    /// </summary>
     private void Awake()
     {
         var uiDocument = GetComponent<UIDocument>();
-        var root = uiDocument.rootVisualElement;
+        _countdownLabel = uiDocument.rootVisualElement.Q<Label>("CountdownLabel");
 
-        _countdownLabel = root.Q<Label>(LabelName);
-
-        if (_countdownLabel == null)
-        {
-            Debug.LogError($"[CountdownUI] Could not find Label with name '{LabelName}'");
-        }
-        else
-        {
-            // clear text on start
-            _countdownLabel.text = "";
-        }
-    }
-
-    /// <summary>
-    /// For testing purposes: Starts the countdown when the game begins.
-    /// </summary>
-    private void Start()
-    {
-        StartCoroutine(RunCountdownRoutine());
-    }
-
-    /// <summary>
-    /// Updates the label text and triggers a visual pulse effect.
-    /// </summary>
-    /// <param name="time">The current time remaining.</param>
-    public void UpdateCountdown(int time)
-    {
-        if (_countdownLabel == null) return;
-
-        // Update Text
-        if (time > 0)
-        {
-            _countdownLabel.text = time.ToString();
-        }
-        else
-        {
-            _countdownLabel.text = "Go!";
-            _countdownLabel.AddToClassList(GoStateClassName);
-        }
-
-        // Trigger Animation
-        StartCoroutine(PulseEffect());
-    }
-
-    /// <summary>
-    /// Coroutine that handles the timing logic.
-    /// </summary>
-    private IEnumerator RunCountdownRoutine()
-    {
-        int currentTime = _startCount;
-
-        while (currentTime >= 0)
-        {
-            UpdateCountdown(currentTime);
-            yield return new WaitForSeconds(1f);
-            currentTime--;
-        }
-
-        // Optional: Hide after "Go!" finishes
-        yield return new WaitForSeconds(1f);
+        // Ensure label is clean on start
         _countdownLabel.text = "";
+        _countdownLabel.RemoveFromClassList(ClassAnimateIn);
     }
 
-    /// <summary>
-    /// Toggles the USS class to create a scaling animation effect.
-    /// </summary>
-    private IEnumerator PulseEffect()
+    public IEnumerator StartCountdown()
     {
-        // Add class to scale up
-        _countdownLabel.AddToClassList(PulseClassName);
+        int count = _startCount;
 
-        yield return new WaitForSeconds(_pulseDuration);
+        while (count > 0)
+        {
+            // 1. Reset State (Shrink out)
+            _countdownLabel.RemoveFromClassList(ClassAnimateIn);
+            _countdownLabel.text = count.ToString();
 
-        // Remove class to scale back down (transition handled by USS)
-        _countdownLabel.RemoveFromClassList(PulseClassName);
+            // Wait a tiny frame for the CSS to register the "Shrink" state
+            yield return null;
+
+            // 2. Apply Random/Alternating Tilt
+            // "3" tilts left, "2" tilts right, etc.
+            float tiltAngle = (count % 2 == 0) ? 15f : -15f;
+            _countdownLabel.style.rotate = new Rotate(tiltAngle);
+
+            // 3. Trigger "Pop In" Animation
+            _countdownLabel.AddToClassList(ClassAnimateIn);
+
+            // Optional: Play Sound Effect here (e.g., UI_Pop.wav)
+
+            // 4. Wait for the beat
+            yield return new WaitForSeconds(_beatDuration);
+
+            count--;
+        }
+
+        // --- GO STATE ---
+
+        GameManager.CountdownManager.OnCountdownFinished?.Invoke();
+
+        // Reset for the "GO" pop
+        _countdownLabel.RemoveFromClassList(ClassAnimateIn);
+        yield return null;
+
+        _countdownLabel.text = "GO!";
+        _countdownLabel.style.rotate = new Rotate(0); // Straighten it out
+
+        _countdownLabel.AddToClassList(ClassAnimateIn);
+        _countdownLabel.AddToClassList(ClassGoState);
+
+        // Optional: Screen Shake could go here
+
+        // Wait, then cleanup
+        yield return new WaitForSeconds(1.5f);
+        _countdownLabel.text = "";
+        _countdownLabel.RemoveFromClassList(ClassGoState);
+        _countdownLabel.RemoveFromClassList(ClassAnimateIn);
     }
 }
