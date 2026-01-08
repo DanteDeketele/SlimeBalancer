@@ -55,7 +55,7 @@ public class SkiGame : BaseGame
             }
         }
 
-
+        _camera.rotation = GameManager.InputManager.InputRotation;
     }
 
     public override void EndGame()
