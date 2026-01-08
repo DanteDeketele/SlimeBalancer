@@ -71,12 +71,12 @@ public class InputManager : BaseManager
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
             inputVector = new Vector2(xInput, yInput);
 
-            inputRotation = Quaternion.Euler(pitch, 0f, -roll);
+            inputRotation = Quaternion.Euler(pitch, 0f, roll);
         }
         else
         {
             inputVector = GetInput();
-            inputRotation = Quaternion.Euler(inputVector.y * 30f, 0f, -inputVector.x * 30f);
+            inputRotation = Quaternion.Euler(inputVector.y * 30f, 0f, inputVector.x * 30f);
         }
     }
 
