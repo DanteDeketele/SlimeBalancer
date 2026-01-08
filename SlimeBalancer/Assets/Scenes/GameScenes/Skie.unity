@@ -430,6 +430,8 @@ MonoBehaviour:
   GameName: Base Game
   IsGameActive: 0
   Player: {fileID: 1686904219}
+  Floor: {fileID: 1912117775}
+  Speed: 1
 --- !u!1 &1686904215
 GameObject:
   m_ObjectHideFlags: 0
@@ -535,7 +537,7 @@ Transform:
   m_GameObject: {fileID: 1686904215}
   serializedVersion: 2
   m_LocalRotation: {x: 0.2141244, y: -0, z: -0, w: 0.9768064}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0.62, z: 0.29}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -697,7 +699,7 @@ Transform:
   m_GameObject: {fileID: 1912117775}
   serializedVersion: 2
   m_LocalRotation: {x: 0.21655497, y: -0, z: -0, w: 0.9762705}
-  m_LocalPosition: {x: 0, y: -0.55, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 100, y: 100, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
