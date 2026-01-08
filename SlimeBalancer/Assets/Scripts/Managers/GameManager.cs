@@ -1,9 +1,21 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     private BaseGame _currentGame;
+
+    [System.Serializable]
+    public class GameData
+    {
+        public string GameName;
+        public string SceneName;
+        public Texture2D GameLogo;
+    }
+
+    [Header("Data")]
+    [SerializeField] public List<GameData> AvailableGames;
 
     public static ScoreManager ScoreManager 
     {

@@ -6,17 +6,6 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(UIDocument))]
 public class MainMenuUI : MonoBehaviour
 {
-    [System.Serializable]
-    public class GameData
-    {
-        public string GameName;
-        public string SceneName;
-        public Texture2D GameLogo;
-    }
-
-    [Header("Data")]
-    [SerializeField] private List<GameData> _availableGames;
-
     [Header("Layout Settings")]
     [SerializeField] private float _normalWidth = 260f;
     [SerializeField] private float _selectedWidth = 360f + 8f;
@@ -75,7 +64,7 @@ public class MainMenuUI : MonoBehaviour
         _submitAction.AddBinding("<Keyboard>/enter");
         _submitAction.performed += ctx =>
         {
-            var selectedGame = _availableGames[_selectedIndex];
+            var selectedGame = GameManager.Instance.AvailableGames[_selectedIndex];
             Debug.Log($"[MainMenuUI] Loading game: {selectedGame.GameName} (Scene: {selectedGame.SceneName})");
             // Here you would typically call your scene manager to load the scene
             GameManager.Instance.LoadGame(selectedGame.SceneName);
@@ -92,9 +81,9 @@ public class MainMenuUI : MonoBehaviour
         _carouselContainer.Clear();
         _cards.Clear();
 
-        for (int i = 0; i < _availableGames.Count; i++)
+        for (int i = 0; i < GameManager.Instance.AvailableGames.Count; i++)
         {
-            var data = _availableGames[i];
+            var data = GameManager.Instance.AvailableGames[i];
             var card = new VisualElement();
             card.AddToClassList("game-card");
             if (data.GameLogo != null) card.style.backgroundImage = new StyleBackground(data.GameLogo);
@@ -106,7 +95,7 @@ public class MainMenuUI : MonoBehaviour
 
     private void ChangeSelection(int dir)
     {
-        int newIndex = Mathf.Clamp(_selectedIndex + dir, 0, _availableGames.Count - 1);
+        int newIndex = Mathf.Clamp(_selectedIndex + dir, 0, GameManager.Instance.AvailableGames.Count - 1);
         if (newIndex != _selectedIndex) UpdateSelection(newIndex);
     }
 
@@ -122,7 +111,7 @@ public class MainMenuUI : MonoBehaviour
         }
 
         // 2. Text
-        _titleLabel.text = _availableGames[index].GameName;
+        _titleLabel.text = GameManager.Instance.AvailableGames[index].GameName;
 
         // 3. Carousel Position (Left to Right)
         float screenWidth = _root.layout.width;
