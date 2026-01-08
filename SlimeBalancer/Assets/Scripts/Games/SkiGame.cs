@@ -27,7 +27,7 @@ public class SkiGame : BaseGame
     public override void UpdateGame()
     {
         Vector2 input = GameManager.InputManager.InputVector;
-        Player.Translate(Vector3.right * input.x * Time.deltaTime * 5f);
+        Player.Translate(Vector3.right * -input.x * Time.deltaTime * 5f);
 
         Speed += Time.deltaTime * 0.01f;
 
@@ -56,7 +56,7 @@ public class SkiGame : BaseGame
         }
 
         // _camera.rotation = GameManager.InputManager.InputRotation;
-        _camera.rotation = Quaternion.Lerp(_camera.rotation, Quaternion.Euler(GameManager.InputManager.InputRotation.eulerAngles.x - 30, 0, -GameManager.InputManager.InputRotation.eulerAngles.z), Time.deltaTime * 2f);
+        _camera.rotation = Quaternion.Lerp(_camera.rotation, Quaternion.Euler(GameManager.InputManager.InputRotation.eulerAngles.x + 30, 0, GameManager.InputManager.InputRotation.eulerAngles.z), Time.deltaTime * 2f);
     }
 
     public override void EndGame()
