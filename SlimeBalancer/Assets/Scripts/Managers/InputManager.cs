@@ -18,29 +18,45 @@ public class InputManager : BaseManager
         if (map == null)
         {
             Debug.LogError($"[InputManager] Could not find Action Map: {actionMapName}");
-            return;
         }
-
-        moveAction = map.FindAction("Move");
-        if (moveAction == null)
+        else
         {
-            Debug.LogError("[InputManager] Could not find 'Move' action.");
+            moveAction = map.FindAction("Move");
+            if (moveAction == null)
+            {
+                Debug.LogError("[InputManager] Could not find 'Move' action.");
+            }
+            else
+            {
+                // Ensure the action is enabled so ReadValue works
+                moveAction.Enable();
+            }
         }
 
         // Initialize Bluetooth client
         bluetoothClient = gameObject.AddComponent<BluetoothClient>();
     }
 
+    private void OnEnable()
+    {
+        // Make sure the input action stays enabled when this component is active
+        moveAction?.Enable();
+    }
+
+    private void OnDisable()
+    {
+        moveAction?.Disable();
+    }
+
     private Vector2 GetInput()
     {
-        return moveAction.ReadValue<Vector2>();
+        return moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
     }
 
     private void Update()
     {
-        // inputVector = GetInput();
-
-        if (bluetoothClient.IsConnected)
+        // Fallback to standard input when Bluetooth is not connected
+        if (bluetoothClient != null && bluetoothClient.IsConnected)
         {
             float pitch = bluetoothClient.pitch;
             float roll = bluetoothClient.roll;
@@ -52,12 +68,18 @@ public class InputManager : BaseManager
             float xInput = Mathf.Clamp((roll - rollMin) / (rollMax - rollMin) * 2f - 1f, -1f, 1f);
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
             inputVector = new Vector2(xInput, yInput);
-            Debug.Log($"Input Vector from Bluetooth: {inputVector}");
+        }
+        else
+        {
+            inputVector = GetInput();
         }
     }
 
     private void OnDestroy()
     {
-        bluetoothClient.Disconnect();
+        if (bluetoothClient != null)
+        {
+            bluetoothClient.Disconnect();
+        }
     }
 }

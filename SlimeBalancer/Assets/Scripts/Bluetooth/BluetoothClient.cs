@@ -45,7 +45,8 @@ public class BluetoothClient : MonoBehaviour
     {
         if (connectOnStart)
         {
-            TryConnect();
+            // Kick off connection without blocking main thread
+            QueueConnectAttempt();
         }
     }
 
@@ -57,7 +58,7 @@ public class BluetoothClient : MonoBehaviour
         if (!IsConnected && !_connecting && Time.realtimeSinceStartup >= _nextReconnectTime)
         {
             _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
-            TryConnect();
+            QueueConnectAttempt();
         }
     }
 
@@ -71,15 +72,36 @@ public class BluetoothClient : MonoBehaviour
         Disconnect();
     }
 
+    // Schedule a background connection attempt
+    private void QueueConnectAttempt()
+    {
+        if (_connecting || IsConnected) return;
+        _connecting = true;
+        ThreadPool.QueueUserWorkItem(_ =>
+        {
+            try
+            {
+                TryConnect();
+            }
+            finally
+            {
+                _connecting = false;
+                if (!IsConnected && autoReconnect)
+                {
+                    _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
+                }
+            }
+        });
+    }
+
+    // This is now only called on a background worker by QueueConnectAttempt
     public void TryConnect()
     {
         Debug.Log("BluetoothClient: Attempting to connect...");
-        if (IsConnected || _connecting)
+        if (IsConnected)
         {
             return;
         }
-
-        _connecting = true;
 
         try
         {
@@ -121,15 +143,6 @@ public class BluetoothClient : MonoBehaviour
         {
             Debug.LogError($"BluetoothClient: Failed to connect. {ex.GetType().Name}: {ex.Message}");
             SafeDisposePort();
-        }
-        finally
-        {
-            _connecting = false;
-            if (!IsConnected)
-            {
-                // schedule next attempt
-                _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
-            }
         }
     }
 
