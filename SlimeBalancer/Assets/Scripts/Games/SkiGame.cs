@@ -55,7 +55,8 @@ public class SkiGame : BaseGame
             }
         }
 
-        _camera.rotation = GameManager.InputManager.InputRotation;
+        // _camera.rotation = GameManager.InputManager.InputRotation;
+        _camera.rotation = Quaternion.Lerp(_camera.rotation, GameManager.InputManager.InputRotation, Time.deltaTime * 2f);
     }
 
     public override void EndGame()
