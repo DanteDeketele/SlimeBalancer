@@ -1,5 +1,15 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <BluetoothSerial.h>
+
+// Check to ensure Bluetooth is enabled in the ESP32 settings
+#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
+#error Bluetooth is not enabled! Please run 'make menuconfig' and enable it.
+#endif
+
+// Create the Bluetooth Serial object
+BluetoothSerial SerialBT;
+bool connected = false;
 
 const uint8_t MPU_ADDR = 0x68;
 int16_t AcX, AcY, AcZ;
@@ -25,6 +35,17 @@ void mpuReadBytes(uint8_t reg, uint8_t count, uint8_t *dest)
   {
     dest[i] = Wire.read();
   }
+}
+
+void mpuBoot()
+{
+  mpuWrite(0x6B, 0x00); // mpu Wakker maken
+
+  // Config voor balansbord:
+  // low‑pass filter ~20 Hz, gyro ±500 °/s, accel ±2 g
+  mpuWrite(0x1A, 0x04); // CONFIG: DLPF_CFG = 4 → ~21 Hz
+  mpuWrite(0x1B, 0x08); // GYRO_CONFIG: FS_SEL = 1 → ±500 °/s
+  mpuWrite(0x1C, 0x00); // ACCEL_CONFIG: AFS_SEL = 0 → ±2 g
 }
 
 void readMPU()
@@ -53,6 +74,7 @@ void computeAngles()
   float pitchRad = atan2(ax, sqrt(ay * ay + az * az));
   float rollRad = atan2(ay, sqrt(ax * ax + az * az));
 
+  // Omzetting naar graden
   pitch = pitchRad * 180.0 / 3.14159265;
   roll = rollRad * 180.0 / 3.14159265;
   Serial.println("Pitch: " + String(pitch) + " Roll: " + String(roll));
@@ -61,10 +83,8 @@ void computeAngles()
   temperature = (temp / 340.0) + 36.53;
 }
 
-void printBalance()
+void printBalance(float threshold)
 {
-  float threshold = 5.0;
-
   if (fabs(pitch) < threshold && fabs(roll) < threshold)
   {
     Serial.println("BALANCED");
@@ -85,34 +105,61 @@ void printBalance()
   {
     Serial.println("LEFT");
   }
-  
- if (temperature > 30) {
-   Serial.print("It is hot in here! Temperature: " + String(temperature) + "C");
- }
- else {
-   Serial.println("It is " + String(temperature) + "C.");
- }
+}
+
+void sendAngles()
+{
+  SerialBT.print("Mpu_Values: P:");
+  SerialBT.print(pitch);
+  SerialBT.print(",R:");
+  SerialBT.print(roll);
+  SerialBT.print(",T:");
+  SerialBT.print(temperature);
+  SerialBT.println(">>");
 }
 
 void setup()
 {
   Serial.begin(115200);
+  while (!Serial)
+    ;
+  // Bluetooth initialisatie
+  SerialBT.begin("SlimeBalancer");
+
   Wire.begin();
-
-  // Wakker maken
-  mpuWrite(0x6B, 0x00); // PWR_MGMT_1 = 0
-
-  // Config voor balansbord:
-  // low‑pass filter ~20 Hz, gyro ±500 °/s, accel ±2 g
-  mpuWrite(0x1A, 0x04); // CONFIG: DLPF_CFG = 4 → ~21 Hz
-  mpuWrite(0x1B, 0x08); // GYRO_CONFIG: FS_SEL = 1 → ±500 °/s
-  mpuWrite(0x1C, 0x00); // ACCEL_CONFIG: AFS_SEL = 0 → ±2 g
+  mpuWrite(0x6B, 0x40); // mpu in slaapstand houden tot verbinding
 }
 
 void loop()
 {
-  readMPU();
-  computeAngles();
-  printBalance();
-  delay(20); // ~50 Hz
+  // Controleer Bluetooth-verbinding
+  if (SerialBT.hasClient())
+  {
+    // start alles op als de verbinding net gemaakt is
+    if (!connected)
+    {
+      Serial.println(">> Client connected!");
+      connected = true;
+      mpuBoot();
+    }
+    // doe je loops hier
+    readMPU();
+    computeAngles();
+    // printBalance(5.0); // drempel van 5 graden
+    sendAngles();
+    delay(20);
+  }
+
+  // Geen verbinding, wachten op verbinding
+  else
+  {
+    if (connected)
+    {
+      Serial.println("<< Client disconnected.");
+      connected = false;
+      mpuWrite(0x6B, 0x40); // mpu in slaapstand van zodra de verbinding wegvalt
+    }
+    Serial.println("Waiting for client to connect...");
+    delay(1000);
+  }
 }
