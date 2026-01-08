@@ -7,7 +7,9 @@ public class InputManager : BaseManager
 
     private InputAction moveAction;
     private Vector2 inputVector;
+    private Quaternion inputRotation;
     public Vector2 InputVector => inputVector;
+    public Quaternion InputRotation => inputRotation;
 
     private BluetoothClient bluetoothClient;
 
@@ -68,10 +70,13 @@ public class InputManager : BaseManager
             float xInput = Mathf.Clamp((roll - rollMin) / (rollMax - rollMin) * 2f - 1f, -1f, 1f);
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
             inputVector = new Vector2(xInput, yInput);
+
+            inputRotation = Quaternion.Euler(pitch, 0f, -roll);
         }
         else
         {
             inputVector = GetInput();
+            inputRotation = Quaternion.Euler(inputVector.y * 30f, 0f, -inputVector.x * 30f);
         }
     }
 
