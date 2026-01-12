@@ -140,6 +140,8 @@ public class GameManager : MonoBehaviour
     private void OnStartGame()
     {
         _currentGame?.StartGame();
+        ScoreManager.ResetScore();
+        ScoreManager.ShowPoints();
     }
 
     private void Update()
