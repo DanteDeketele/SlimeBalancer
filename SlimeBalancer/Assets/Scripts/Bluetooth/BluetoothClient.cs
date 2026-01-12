@@ -255,6 +255,13 @@ public class BluetoothClient : MonoBehaviour
             {
                 break;
             }
+            catch (System.IO.IOException ex)
+            {
+                // Device removed or IO error; close and break so reconnect can occur
+                Debug.LogWarning($"BluetoothClient: Read error: IOException: {ex.Message}");
+                try { _port?.Close(); } catch { }
+                break;
+            }
             catch (Exception ex)
             {
                 Debug.LogWarning($"BluetoothClient: Read error: {ex.GetType().Name}: {ex.Message}");
