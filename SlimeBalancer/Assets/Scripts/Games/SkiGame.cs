@@ -12,18 +12,65 @@ public class SkiGame : BaseGame
     GameObject _floorClone;
     float _distanceTravelled = 0f;
     public GameObject FlagsPrefab;
+    public float SpawnAheadDistance = 100f; // distance ahead to spawn flags/obstacles
     private float flagDistance= 25;
     List<GameObject> _flags = new List<GameObject>();  
     List<GameObject> _obstacles = new List<GameObject>();
     float flagPositionX= 0f;
     Transform _camera;
     float _prevX;
+
+    public void Start()
+    {        
+        _floorDirection = Floor.transform.forward;
+        _camera = Camera.main.transform;
+
+        // Pre-spawn flags (and obstacles) up to SpawnAheadDistance before the run starts
+        PreSpawnAhead();
+    }
     public override void StartGame()
     {
-        _floorDirection = Floor.transform.forward;
         _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation);
         base.StartGame();
-        _camera = Camera.main.transform;
+    }
+
+    private void PreSpawnAhead()
+    {
+        // Spawn flags every 20m up to SpawnAheadDistance
+        if (FlagsPrefab == null) return;
+
+        int segments = Mathf.FloorToInt(SpawnAheadDistance / 20f);
+        for (int i = 1; i <= segments; i++)
+        {
+            float segDistance = i * 20f;
+            GameObject flag = Object.Instantiate(FlagsPrefab, _floorDirection * segDistance, Quaternion.identity);
+            flag.transform.position += new Vector3(flagPositionX + Random.Range(-10f, 10f), 0, 0);
+            flagPositionX = flag.transform.position.x;
+            _flags.Add(flag);
+
+            // Spawn obstacles around this segment distance
+            if (ObstaclePrefabs != null && ObstaclePrefabs.Length > 0)
+            {
+                int obsCount = Random.Range(5, 100);
+                for (int j = 0; j < obsCount; j++)
+                {
+                    float xpos = Random.Range(-40, 40) + Player.position.x;
+                    if (Mathf.Abs(flagPositionX - xpos) > 15f)
+                    {
+                        var prefab = ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)];
+                        GameObject obstacle = Object.Instantiate(
+                            prefab,
+                        _floorDirection * (segDistance + Random.Range(0, 20)) + Vector3.right * xpos,
+                        Quaternion.identity);
+
+                        _obstacles.Add(obstacle);
+                    }
+                }
+            }
+        }
+
+        // Set next spawn threshold to continue every 20m after the farthest pre-spawned flag
+        flagDistance = (segments+1) * 20f;
     }
 
     public override void UpdateGame()
@@ -34,44 +81,59 @@ public class SkiGame : BaseGame
         Speed += Time.deltaTime * 0.01f;
 
         _distanceTravelled -= Speed * Time.deltaTime;
+        float currentTravel = -_distanceTravelled; // positive distance forward from start
         Floor.transform.position = _floorDirection * (_distanceTravelled % 400);
         _floorClone.transform.position = _floorDirection * ((_distanceTravelled + 200) % 400);
 
-        for (int i = _obstacles.Count - 1; i >= 0; i--)
+        if (ObstaclePrefabs.Length != 0)
         {
-            GameObject obstacle = _obstacles[i];
-            obstacle.transform.position += -_floorDirection * Speed * Time.deltaTime;
-            if (obstacle.transform.position.z < 0f)
+            for (int i = _obstacles.Count - 1; i >= 0; i--)
             {
-                if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < 2f)
+                GameObject obstacle = _obstacles[i];
+                if (obstacle == null)
                 {
-                    // Hit obstacle
-                    GameManager.ScoreManager.RemoveScore(20);
+                    _obstacles.RemoveAt(i);
+                    continue;
                 }
+                obstacle.transform.position += -_floorDirection * Speed * Time.deltaTime;
+                if (obstacle.transform.position.z < 0f)
+                {
+                    if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < 2f)
+                    {
+                        // Hit obstacle
+                        GameManager.ScoreManager.RemoveScore(20);
+                    }
 
-                Destroy(obstacle);
-                _obstacles.Remove(obstacle);
+                    Object.Destroy(obstacle);
+                    _obstacles.Remove(obstacle);
+                }
             }
         }
 
-        if (-_distanceTravelled > flagDistance)
+        // Keep the ahead buffer filled: spawn the next flag when we've travelled enough
+        // so that a new flag at SpawnAheadDistance maintains the 20m cadence.
+        while (currentTravel > (flagDistance - SpawnAheadDistance))
         {
             flagDistance += 20f;
-            GameObject flag = Instantiate(FlagsPrefab, _floorDirection * 20, Quaternion.identity);
+            GameObject flag = Object.Instantiate(FlagsPrefab, _floorDirection * SpawnAheadDistance, Quaternion.identity);
             flag.transform.position += new Vector3(flagPositionX + Random.Range(-10f, 10f), 0, 0);
             flagPositionX = flag.transform.position.x;
             _flags.Add(flag);
 
-            // Spawn obstacles
-            for (int i = 0; i < Random.Range(5, 20); i++)
+            // Spawn obstacles further ahead around the flag spawn distance
+            for (int i = 0; i < Random.Range(5, 100); i++)
             {
-                GameObject obstacle = Instantiate(ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)], _floorDirection * (20 + Random.Range(0, 10)) + Vector3.right * (Random.Range(-50, 50) + Player.position.x), Quaternion.identity);
-                
-                if (flagPositionX - obstacle.transform.position.x < 4f)
+                float xPos = Random.Range(-40, 40) + Player.position.x;
+                if (Mathf.Abs(flagPositionX - xPos) > 15f)
                 {
-                    Destroy(obstacle);
-                }   
-                _obstacles.Add(obstacle);
+                    GameObject obstacle = Object.Instantiate(
+                        ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)],
+                        _floorDirection * (SpawnAheadDistance + Random.Range(0, 20)) + Vector3.right * xPos,
+                        Quaternion.identity);
+                
+                
+                    _obstacles.Add(obstacle);
+                }
             }
         }
 
@@ -92,7 +154,7 @@ public class SkiGame : BaseGame
                     //failed to pass through flag
                 }
 
-                Destroy(flag);
+                Object.Destroy(flag);
                 _flags.Remove(flag);
             }
         }

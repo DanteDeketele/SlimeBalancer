@@ -39,6 +39,7 @@ public class BluetoothClient : MonoBehaviour
     private readonly object _lock = new object();
 
     private volatile bool _connecting;
+    private volatile bool _requestReconnect;
     private float _nextReconnectTime;
 
     void OnEnable()
@@ -53,6 +54,13 @@ public class BluetoothClient : MonoBehaviour
     void Update()
     {
         if (!autoReconnect) return;
+
+        // When a background thread asked for a reconnect, schedule next attempt on main thread
+        if (_requestReconnect)
+        {
+            _requestReconnect = false;
+            _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
+        }
 
         // If not connected and not currently trying, attempt on interval
         if (!IsConnected && !_connecting && Time.realtimeSinceStartup >= _nextReconnectTime)
@@ -88,7 +96,8 @@ public class BluetoothClient : MonoBehaviour
                 _connecting = false;
                 if (!IsConnected && autoReconnect)
                 {
-                    _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
+                    // Ask main thread to schedule the next reconnect attempt
+                    _requestReconnect = true;
                 }
             }
         });
@@ -273,10 +282,10 @@ public class BluetoothClient : MonoBehaviour
         // Ensure port closed on loop exit
         try { _port?.Close(); } catch { }
 
-        // Signal reconnect if enabled
+        // Signal reconnect if enabled (on main thread via Update)
         if (autoReconnect)
         {
-            _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
+            _requestReconnect = true;
         }
     }
 
