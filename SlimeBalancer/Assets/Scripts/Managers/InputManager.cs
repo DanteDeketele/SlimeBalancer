@@ -76,7 +76,7 @@ public class InputManager : BaseManager
         else
         {
             inputVector = GetInput();
-            inputRotation = Quaternion.Euler(inputVector.y * 30f, 0f, inputVector.x * 30f);
+            inputRotation = Quaternion.Euler(inputVector.y * 30f, 0f, -inputVector.x * 30f);
         }
     }
 

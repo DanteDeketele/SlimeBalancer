@@ -1,177 +1,159 @@
-/* 1. Full Screen Background */
 .c-loadingscreen__background {
     flex-grow: 1;
-    background-color: rgb(20, 20, 20); /* Deep Charcoal */
-    align-items: center;     /* Horizontal Center */
-    justify-content: center; /* Vertical Center */
+    background-color: rgb(20, 20, 20);
+    align-items: center;
+    justify-content: center;
 }
 
-/* 2. Container to hold the bar and text together */
 .c-loadingscreen__content {
-    width: 60%; /* Occupy 60% of screen width */
-    max-width: 500px; /* But don't get too wide on 4k screens */
+    width: 60%;
+    max-width: 500px;
     flex-direction: column;
 }
 
-/* 3. The Text */
 .c-loadingscreen__text {
-    color: rgb(150, 150, 150); /* Soft Grey */
+    color: rgb(150, 150, 150);
     font-size: 12px;
     margin-bottom: 10px;
     -unity-font-style: bold;
     -unity-text-align: middle-left;
-    letter-spacing: 4px; /* Widens the text for that "Cinematic" look */
+    letter-spacing: 4px;
     padding: 0;
 }
 
-/* 4. The Bar Background (The "Rail") */
 .c-loadingscreen__bar-rail {
-    height: 4px; /* Very thin */
-    background-color: rgba(255, 255, 255, 0.1); /* Subtle dark rail */
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.1);
     border-radius: 2px;
-    overflow: hidden; /* Ensures the fill doesn't bleed out */
-    justify-content: flex-start; /* Fill starts from left */
+    overflow: hidden;
+    justify-content: flex-start;
 }
 
-/* 5. The Fill */
 .c-loadingscreen__bar-fill {
     height: 100%;
-    width: 0%; /* C# controls this */
-    background-color: rgb(255, 255, 255); /* Pure White */
+    width: 0%;
+    background-color: rgb(255, 255, 255);
     border-radius: 2px;
-    
-    /* SMOOTH ANIMATION */
-    /* This makes the bar slide instead of jump when C# updates it */
     transition-property: width;
-    transition-duration: 0.1s; 
+    transition-duration: 0.1s;
     transition-timing-function: ease-out;
 }
-/*--- COUNTDOWN ---*/
+
 .container {
     flex-grow: 1;
     align-items: center;
     justify-content: center;
-    /* No dark background, Mario Kart keeps the view clear */
 }
 
 .mario-label {
-    /* TYPOGRAPHY */
     font-size: 150px;
-    color: rgba(66, 228, 174, 1); /* Mario Kart Yellow/Gold */
+    color: rgb(66, 228, 174);
     -unity-text-align: middle-center;
-    
-    /* THE OUTLINE (The "Sticker" effect) */
-    -unity-text-outline-width: 4px; /* Very thick */
+    -unity-text-outline-width: 4px;
     -unity-text-outline-color: rgb(0, 0, 0);
-    
-    /* Initial State (Hidden) */
     opacity: 0;
     scale: 0 0;
 }
 
-/* THE GO STATE (Explosion of color) */
 .mario-label.go-state {
-    color: rgb(0, 255, 255); /* Mario Kart 8 Blue/Greenish */
+    color: rgb(0, 255, 255);
     font-size: 250px;
     scale: 1.25 1.25;
 }
 
-/* --- ROOT --- */
 .screen-root {
     flex-grow: 1;
-    background-color: #ebebeb;
+    background-color: rgb(235, 235, 235);
     flex-direction: column;
 }
 
-/* --- HEADER --- */
 .header-section {
-    height: 15%; /* Keeps the "breathing room" at the top */
+    height: 15%;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
     padding-left: 5%;
     padding-right: 5%;
 }
-.user-icon-red { width: 44px; height: 44px; background-color: #ff4554; border-radius: 50%; margin-right: 15px; }
-.user-icon-grey { width: 44px; height: 44px; background-color: #dddddd; border-radius: 50%; }
 
-/* --- CONTENT AREA --- */
-.body-section {
-    flex-grow: 1;
-    position: relative; /* Anchor for absolute children */
-    overflow: hidden;   /* Clip cards sliding off screen */
+.user-icon-red {
+    width: 44px;
+    height: 44px;
+    background-color: rgb(255, 69, 84);
+    border-radius: 50%;
+    margin-right: 15px;
 }
 
-/* --- CAROUSEL (Moving Strip) --- */
+.user-icon-grey {
+    width: 44px;
+    height: 44px;
+    background-color: rgb(221, 221, 221);
+    border-radius: 50%;
+}
+
+.body-section {
+    flex-grow: 1;
+    position: relative;
+    overflow: hidden;
+}
+
 .carousel-container {
     flex-direction: row;
     position: absolute;
-    
-    /* MOVEMENT LOGIC */
-    left: 0px; 
-    bottom: 60px; /* The "Floor" line */
-    height: 400px; /* Height of the strip */
-    
-    align-items: flex-end; /* All cards sit on the bottom line */
-    
+    left: 0;
+    bottom: 60px;
+    height: 400px;
+    align-items: flex-end;
     transition-property: left;
     transition-duration: 0.25s;
     transition-timing-function: ease-out-circ;
 }
 
-/* --- CARDS --- */
 .game-card {
     width: 260px;
     height: 260px;
     margin-right: 16px;
-    background-color: #fdfdfd;
+    background-color: rgb(253, 253, 253);
     border-radius: 4px;
     -unity-background-scale-mode: scale-to-fill;
-    
     transition-duration: 0.2s;
     transition-property: width, height, margin-right, border-width;
     opacity: 0.9;
 }
 
 .game-card--selected {
-    width: 360px; /* Selected is wider */
-    height: 360px; /* Selected is taller (grows up) */
-    
+    width: 360px;
+    height: 360px;
     background-color: white;
-    opacity: 1.0;
+    opacity: 1;
     border-width: 4px;
-    border-color: #00d2ff;
+    border-color: rgb(0, 210, 255);
 }
 
-/* --- INFO BOX (Absolute, anchored to Floor) --- */
 .info-box {
     position: absolute;
-    
-    /* VERTICAL LOCK: Card Height (260) + Padding (40) = 300px 
-       This ensures text is ALWAYS above the small cards. */
-    bottom: 300px; 
-    
-    /* Horizontal position is set by C# script to follow selection */
-    /* left: (calculated); */
-    
+    bottom: 300px;
     height: 150px;
-    justify-content: flex-end; /* Text aligns to bottom of this box */
+    justify-content: flex-end;
     padding-bottom: 16px;
 }
 
 .game-title {
     font-size: 50px;
-    color: #2e2e2e;
+    color: rgb(46, 46, 46);
     white-space: normal;
 }
 
-/* --- FOOTER --- */
 .footer-section {
     height: 10%;
     border-top-width: 1px;
-    border-top-color: rgba(0,0,0,0.1);
+    border-top-color: rgba(0, 0, 0, 0.1);
     flex-direction: row;
     align-items: center;
     justify-content: flex-end;
     padding-right: 5%;
+}
+
+* {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Lexend-VariableFont_wght.ttf?fileID=12800000&guid=b671a7e6b5c1b744a979a4b4a695717a&type=3#Lexend-VariableFont_wght");
 }
