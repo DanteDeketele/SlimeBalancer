@@ -6,6 +6,7 @@ using USM = UnityEngine.SceneManagement.SceneManager;
 public class SceneManager : BaseManager
 {
     public string MainMenuSceneName = "MainMenu";
+    public string EndScreen = "EndScene";
     private string activeSceneName;
 
     public void LoadScene(string sceneName)

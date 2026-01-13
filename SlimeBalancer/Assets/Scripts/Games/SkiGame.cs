@@ -30,7 +30,7 @@ public class SkiGame : BaseGame
     }
     public override void StartGame()
     {
-        _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation);
+        _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation, transform);
         base.StartGame();
     }
 
@@ -43,7 +43,7 @@ public class SkiGame : BaseGame
         for (int i = 1; i <= segments; i++)
         {
             float segDistance = i * 20f;
-            GameObject flag = Instantiate(FlagsPrefab, _floorDirection * segDistance, Quaternion.identity);
+            GameObject flag = Instantiate(FlagsPrefab, _floorDirection * segDistance, Quaternion.identity, transform);
             flag.transform.position += new Vector3(flagPositionX + Random.Range(-10f, 10f), 0, 0);
             flagPositionX = flag.transform.position.x;
             _flags.Add(flag);
@@ -61,7 +61,7 @@ public class SkiGame : BaseGame
                         GameObject obstacle = Instantiate(
                             prefab,
                         _floorDirection * (segDistance + Random.Range(0, 20)) + Vector3.right * xpos,
-                        Quaternion.Euler(0, Random.Range(0, 360), 0));
+                        Quaternion.Euler(0, Random.Range(0, 360), 0), transform);
 
                         _obstacles.Add(obstacle);
                     }
@@ -115,7 +115,7 @@ public class SkiGame : BaseGame
         while (currentTravel > (flagDistance - SpawnAheadDistance))
         {
             flagDistance += 20f;
-            GameObject flag = Instantiate(FlagsPrefab, _floorDirection * SpawnAheadDistance, Quaternion.identity);
+            GameObject flag = Instantiate(FlagsPrefab, _floorDirection * SpawnAheadDistance, Quaternion.identity, transform);
             flag.transform.position += new Vector3(flagPositionX + Random.Range(-10f, 10f), 0, 0);
             flagPositionX = flag.transform.position.x;
             _flags.Add(flag);
@@ -129,7 +129,7 @@ public class SkiGame : BaseGame
                     GameObject obstacle = Instantiate(
                         ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)],
                         _floorDirection * (SpawnAheadDistance + Random.Range(0, 20)) + Vector3.right * xPos,
-                        Quaternion.identity);
+                        Quaternion.identity, transform);
                 
                 
                     _obstacles.Add(obstacle);
