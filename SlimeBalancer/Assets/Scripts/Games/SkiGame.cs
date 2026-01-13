@@ -43,7 +43,7 @@ public class SkiGame : BaseGame
         for (int i = 1; i <= segments; i++)
         {
             float segDistance = i * 20f;
-            GameObject flag = Object.Instantiate(FlagsPrefab, _floorDirection * segDistance, Quaternion.identity);
+            GameObject flag = Instantiate(FlagsPrefab, _floorDirection * segDistance, Quaternion.identity);
             flag.transform.position += new Vector3(flagPositionX + Random.Range(-10f, 10f), 0, 0);
             flagPositionX = flag.transform.position.x;
             _flags.Add(flag);
@@ -55,13 +55,13 @@ public class SkiGame : BaseGame
                 for (int j = 0; j < obsCount; j++)
                 {
                     float xpos = Random.Range(-40, 40) + Player.position.x;
-                    if (Mathf.Abs(flagPositionX - xpos) > 15f)
+                    if (Mathf.Abs(flagPositionX - xpos) > 8f)
                     {
                         var prefab = ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)];
-                        GameObject obstacle = Object.Instantiate(
+                        GameObject obstacle = Instantiate(
                             prefab,
                         _floorDirection * (segDistance + Random.Range(0, 20)) + Vector3.right * xpos,
-                        Quaternion.identity);
+                        Quaternion.Euler(0, Random.Range(0, 360), 0));
 
                         _obstacles.Add(obstacle);
                     }
@@ -71,6 +71,22 @@ public class SkiGame : BaseGame
 
         // Set next spawn threshold to continue every 20m after the farthest pre-spawned flag
         flagDistance = (segments+1) * 20f;
+    }
+
+    private static void HideVisuals(GameObject go)
+    {
+        // Disable rendering and shadows
+        var renderers = go.GetComponentsInChildren<Renderer>();
+        foreach (var r in renderers)
+        {
+            r.enabled = false;
+        }
+        // Disable colliders to avoid interactions after hiding
+        var colliders = go.GetComponentsInChildren<Collider>();
+        foreach (var c in colliders)
+        {
+            c.enabled = false;
+        }
     }
 
     public override void UpdateGame()
@@ -104,7 +120,9 @@ public class SkiGame : BaseGame
                         GameManager.ScoreManager.RemoveScore(20);
                     }
 
-                    Object.Destroy(obstacle);
+                    // Hide visuals immediately to avoid stationary visible objects, destroy after delay
+                    HideVisuals(obstacle);
+                    Destroy(obstacle, 2);
                     _obstacles.Remove(obstacle);
                 }
             }
@@ -115,7 +133,7 @@ public class SkiGame : BaseGame
         while (currentTravel > (flagDistance - SpawnAheadDistance))
         {
             flagDistance += 20f;
-            GameObject flag = Object.Instantiate(FlagsPrefab, _floorDirection * SpawnAheadDistance, Quaternion.identity);
+            GameObject flag = Instantiate(FlagsPrefab, _floorDirection * SpawnAheadDistance, Quaternion.identity);
             flag.transform.position += new Vector3(flagPositionX + Random.Range(-10f, 10f), 0, 0);
             flagPositionX = flag.transform.position.x;
             _flags.Add(flag);
@@ -124,9 +142,9 @@ public class SkiGame : BaseGame
             for (int i = 0; i < Random.Range(5, 100); i++)
             {
                 float xPos = Random.Range(-40, 40) + Player.position.x;
-                if (Mathf.Abs(flagPositionX - xPos) > 15f)
+                if (Mathf.Abs(flagPositionX - xPos) > 8f)
                 {
-                    GameObject obstacle = Object.Instantiate(
+                    GameObject obstacle = Instantiate(
                         ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)],
                         _floorDirection * (SpawnAheadDistance + Random.Range(0, 20)) + Vector3.right * xPos,
                         Quaternion.identity);
@@ -154,7 +172,8 @@ public class SkiGame : BaseGame
                     //failed to pass through flag
                 }
 
-                Object.Destroy(flag);
+                HideVisuals(flag);
+                Destroy(flag, 2);
                 _flags.Remove(flag);
             }
         }
