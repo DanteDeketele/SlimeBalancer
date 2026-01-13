@@ -26,9 +26,9 @@ public class TiltGame : BaseGame
 
     }
 
-    public override void EndGame()
+    public override void EndGame(bool won = false)
     {
-        base.EndGame();
+        base.EndGame(won);
     }
 
 }
