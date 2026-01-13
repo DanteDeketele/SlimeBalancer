@@ -19,8 +19,9 @@ public abstract class BaseGame : MonoBehaviour
     public virtual void EndGame(bool won = false)
     {
         IsGameActive = false;
+        GameManager.ScoreManager.HidePoints();
         Debug.Log($"{GameName} has ended.");
-        GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
+        GameManager.SceneManager.LoadScene(GameManager.SceneManager.EndScreen);
     }
 
 }

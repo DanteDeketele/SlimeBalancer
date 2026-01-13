@@ -2,7 +2,28 @@ using UnityEngine;
 
 public class ScoreManager : BaseManager
 {
-    public int Score = 0;
+    private int _score = 0;
+    public int Score
+    {
+        get { return _score; }
+        set
+        {
+            _score = value;
+            if (_score > HighScore)
+            {
+                HighScore = _score;
+            }
+        }
+    }
+    public int HighScore
+    {
+        get { 
+            return PlayerPrefs.GetInt("HighScore_"+GameManager.Instance.CurrentGameData.SceneName, 0); 
+        }
+        set { 
+            PlayerPrefs.SetInt("HighScore_"+GameManager.Instance.CurrentGameData.SceneName, value);
+        }
+    }
     public GameObject scoreUIPrefab;
     private ScoreUI scoreUIInstance;
 

@@ -5,6 +5,8 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     private BaseGame _currentGame;
+    private GameData _currentGameData;
+    public GameData CurrentGameData => _currentGameData;
 
     [System.Serializable]
     public class GameData
@@ -129,6 +131,7 @@ public class GameManager : MonoBehaviour
         yield return SceneManager.LoadSceneCoroutine(sceneName);
 
         _currentGame = FindFirstObjectByType<BaseGame>();
+        _currentGameData = AvailableGames.Find(g => g.SceneName == sceneName);
         if (_currentGame == null)
         {
             Debug.LogError("No BaseGame found in the loaded scene!");
