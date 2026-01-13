@@ -12,7 +12,7 @@ public class SkiGame : BaseGame
     GameObject _floorClone;
     float _distanceTravelled = 0f;
     public GameObject FlagsPrefab;
-    public float SpawnAheadDistance = 100f; // distance ahead to spawn flags/obstacles
+    public float SpawnAheadDistance = 120f; // distance ahead to spawn flags/obstacles
     private float flagDistance= 25;
     List<GameObject> _flags = new List<GameObject>();  
     List<GameObject> _obstacles = new List<GameObject>();
@@ -54,8 +54,8 @@ public class SkiGame : BaseGame
                 int obsCount = Random.Range(5, 100);
                 for (int j = 0; j < obsCount; j++)
                 {
-                    float xpos = Random.Range(-40, 40) + Player.position.x;
-                    if (Mathf.Abs(flagPositionX - xpos) > 8f)
+                    float xpos = Random.Range(-60, 60) + Player.position.x;
+                    if (Mathf.Abs(flagPositionX - xpos) > 13f)
                     {
                         var prefab = ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)];
                         GameObject obstacle = Instantiate(
@@ -73,26 +73,10 @@ public class SkiGame : BaseGame
         flagDistance = (segments+1) * 20f;
     }
 
-    private static void HideVisuals(GameObject go)
-    {
-        // Disable rendering and shadows
-        var renderers = go.GetComponentsInChildren<Renderer>();
-        foreach (var r in renderers)
-        {
-            r.enabled = false;
-        }
-        // Disable colliders to avoid interactions after hiding
-        var colliders = go.GetComponentsInChildren<Collider>();
-        foreach (var c in colliders)
-        {
-            c.enabled = false;
-        }
-    }
-
     public override void UpdateGame()
     {
         Vector2 input = GameManager.InputManager.InputVector;
-        Player.Translate(Vector3.right * -input.x * Time.deltaTime * 5f);
+        Player.Translate(Vector3.right * input.x * Time.deltaTime * 5f);
 
         Speed += Time.deltaTime * 0.01f;
 
@@ -120,9 +104,7 @@ public class SkiGame : BaseGame
                         GameManager.ScoreManager.RemoveScore(20);
                     }
 
-                    // Hide visuals immediately to avoid stationary visible objects, destroy after delay
-                    HideVisuals(obstacle);
-                    Destroy(obstacle, 2);
+                    Destroy(obstacle);
                     _obstacles.Remove(obstacle);
                 }
             }
@@ -141,8 +123,8 @@ public class SkiGame : BaseGame
             // Spawn obstacles further ahead around the flag spawn distance
             for (int i = 0; i < Random.Range(5, 100); i++)
             {
-                float xPos = Random.Range(-40, 40) + Player.position.x;
-                if (Mathf.Abs(flagPositionX - xPos) > 8f)
+                float xPos = Random.Range(-60, 60) + Player.position.x;
+                if (Mathf.Abs(flagPositionX - xPos) > 13f)
                 {
                     GameObject obstacle = Instantiate(
                         ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)],
@@ -172,8 +154,7 @@ public class SkiGame : BaseGame
                     //failed to pass through flag
                 }
 
-                HideVisuals(flag);
-                Destroy(flag, 2);
+                Destroy(flag);
                 _flags.Remove(flag);
             }
         }
