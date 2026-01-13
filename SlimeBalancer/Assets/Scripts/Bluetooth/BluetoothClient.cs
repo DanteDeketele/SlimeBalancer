@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.IO.Ports;
+using System.Linq;
 using System.Threading;
 using UnityEngine;
 
@@ -44,6 +45,9 @@ public class BluetoothClient : MonoBehaviour
 
     void OnEnable()
     {
+        // Initialize next reconnect time to avoid immediate tight-loop attempts
+        _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
+
         if (connectOnStart)
         {
             // Kick off connection without blocking main thread
@@ -103,6 +107,20 @@ public class BluetoothClient : MonoBehaviour
         });
     }
 
+    private static bool PortExists(string name)
+    {
+        if (string.IsNullOrEmpty(name)) return false;
+        try
+        {
+            var ports = SerialPort.GetPortNames();
+            return ports != null && ports.Contains(name, StringComparer.OrdinalIgnoreCase);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     // This is now only called on a background worker by QueueConnectAttempt
     public void TryConnect()
     {
@@ -117,6 +135,12 @@ public class BluetoothClient : MonoBehaviour
             // If a specific port is set, try it first; otherwise scan available ports
             if (!string.IsNullOrEmpty(portName))
             {
+                if (!PortExists(portName))
+                {
+                    // Port not present on this machine; skip opening and let keyboard fallback be used
+                    Debug.LogWarning($"BluetoothClient: Configured port '{portName}' not found. Using fallback input. Will retry later.");
+                    return;
+                }
                 OpenPort(portName);
             }
             else
@@ -150,7 +174,7 @@ public class BluetoothClient : MonoBehaviour
         }
         catch (Exception ex)
         {
-            Debug.LogError($"BluetoothClient: Failed to connect. {ex.GetType().Name}: {ex.Message}");
+            Debug.LogWarning($"BluetoothClient: Failed to connect. {ex.GetType().Name}: {ex.Message}");
             SafeDisposePort();
         }
     }
