@@ -15,8 +15,13 @@ EditorBuildSettings:
     path: Assets/Scenes/GameScenes/Skie.unity
     guid: 90c0f77b5bfc70042a8ff0e69096c794
   - enabled: 1
+<<<<<<< HEAD
     path: Assets/Scenes/GameScenes/Tilt_It.unity
     guid: c418d3fb1363e6e43908184b8906b691
+=======
+    path: Assets/Scenes/EndScene.unity
+    guid: 3c6304432f94d734984953ad915b2d5e
+>>>>>>> origin/develop
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
