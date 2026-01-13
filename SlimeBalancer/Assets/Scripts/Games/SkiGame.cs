@@ -101,7 +101,7 @@ public class SkiGame : BaseGame
                     if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < 2f)
                     {
                         // Hit obstacle
-                        GameManager.ScoreManager.RemoveScore(20);
+                        EndGame(false);
                     }
 
                     Destroy(obstacle);
@@ -163,9 +163,9 @@ public class SkiGame : BaseGame
         _camera.rotation = Quaternion.Lerp(_camera.rotation, Quaternion.Euler(GameManager.InputManager.InputRotation.eulerAngles.x + 30, 0, GameManager.InputManager.InputRotation.eulerAngles.z), Time.deltaTime * 2f);
     }
 
-    public override void EndGame()
+    public override void EndGame(bool won = false)
     {
-        base.EndGame();
+        base.EndGame(won);
     }
 
 

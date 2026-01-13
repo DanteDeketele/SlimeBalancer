@@ -16,10 +16,11 @@ public abstract class BaseGame : MonoBehaviour
     {
     }
 
-    public virtual void EndGame()
+    public virtual void EndGame(bool won = false)
     {
         IsGameActive = false;
         Debug.Log($"{GameName} has ended.");
+        GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
     }
 
 }
