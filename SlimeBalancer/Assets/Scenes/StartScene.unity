@@ -203,7 +203,10 @@ MonoBehaviour:
   AvailableGames:
   - GameName: Skiegame
     SceneName: skie
-    GameLogo: {fileID: 2800000, guid: f5cc9aeb654c9304dbe40c54f4008305, type: 3}
+    GameLogo: {fileID: 2800000, guid: 6fb958974304d184a89ef4f3e618d585, type: 3}
+  - GameName: Tilt it
+    SceneName: Tilt_It
+    GameLogo: {fileID: 2800000, guid: 4262dd58c984184459ef726818a5daf4, type: 3}
 --- !u!1 &790449841
 GameObject:
   m_ObjectHideFlags: 0
