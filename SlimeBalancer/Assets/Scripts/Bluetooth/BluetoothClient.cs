@@ -365,10 +365,10 @@ public class BluetoothClient : MonoBehaviour
 
     public enum BoardSide
     {
-        Left = 4,
-        Right = 2,
-        Top = 1,
-        Bottom = 3,
+        Left = 1,
+        Right = 3,
+        Top = 4,
+        Bottom = 2,
         All = 0
     }
 
