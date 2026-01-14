@@ -32,54 +32,30 @@ public class EndSceneUI : MonoBehaviour
         // Initially focus on the restart button
         restartButton.Focus();
 
-    }
-
-    // Input handling
-    public void Update()
-    {
-        Vector2 navigation = GameManager.InputManager.InputVector;
-        Vector2 nav = Vector2.zero;
-        if (navigation.y > 0.75f)
-            nav.y = 1;
-        else if (navigation.y < -0.75f)
-            nav.y = -1;
-        if (navigation.x > 0.75f)
-            nav.x = 1;
-        else if (navigation.x < -0.75f)
-            nav.x = -1;
-
-        if (nav != lastInput)
+        GameManager.InputManager.OnLeft.AddListener(() =>
         {
-            if (nav.x == 1)
+            restartButton.Focus();
+            restartSelected = true;
+        });
+        GameManager.InputManager.OnRight.AddListener(() =>
+        {
+            mainMenuButton.Focus();
+            restartSelected = false;
+        });
+        GameManager.InputManager.OnDown.AddListener(() =>
+        {
+            if (restartSelected)
             {
-                if (restartSelected)
-                {
-                    restartButton.Blur();
-                    mainMenuButton.Focus();
-                    restartSelected = false;
-                }
+                OnRestartButtonClicked();
             }
-            else if (nav.x == -1)
+            else
             {
-                if (!restartSelected)
-                {
-                    mainMenuButton.Blur();
-                    restartButton.Focus();
-                    restartSelected = true;
-                }
+                OnMainMenuButtonClicked();
             }
-            else if (nav.y == -1)
-            {
-                // use selected button
-                if (restartSelected)
-                    OnRestartButtonClicked();
-                else
-                    OnMainMenuButtonClicked();
-            }
-            lastInput = nav;
-        }
+        });
 
     }
+
 
     private void OnDisable()
     {
@@ -89,13 +65,11 @@ public class EndSceneUI : MonoBehaviour
 
     private void OnRestartButtonClicked()
     {
-        // Logic to restart the game
         GameManager.Instance.LoadGame(GameManager.Instance.CurrentGameData.SceneName);
     }
 
     private void OnMainMenuButtonClicked()
     {
-        // Logic to return to main menu
         GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
     }
 }

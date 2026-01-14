@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using USM = UnityEngine.SceneManagement.SceneManager;
@@ -9,6 +10,8 @@ public class SceneManager : BaseManager
     public string EndScreen = "EndScene";
     public string InfoSceneName = "InfoScene";
     private string activeSceneName;
+
+    private List<string> _additiveScenes = new List<string>();
 
     public void LoadScene(string sceneName)
     {
@@ -29,7 +32,19 @@ public class SceneManager : BaseManager
                 GameManager.LoadingscreenManager.UpdateLoadingScreen(progress, "Unloading...");
                 yield return null;
             }
+            
         }
+        foreach (string additiveScene in _additiveScenes)
+        {
+            AsyncOperation asyncUnloadAdditive = USM.UnloadSceneAsync(additiveScene);
+            while (!asyncUnloadAdditive.isDone)
+            {
+                float progress = Mathf.Clamp01(asyncUnloadAdditive.progress / 0.9f);
+                GameManager.LoadingscreenManager.UpdateLoadingScreen(progress, "Unloading Additive...");
+                yield return null;
+            }
+        }
+        _additiveScenes.Clear();
 
         // Start loading the scene asynchronously
         AsyncOperation asyncLoad = USM.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
@@ -48,5 +63,12 @@ public class SceneManager : BaseManager
         // Hide loading screen
         GameManager.LoadingscreenManager.HideLoadingScreen();
         Debug.Log($"Scene '{sceneName}' loaded successfully.");
+    }
+
+
+    public void LoadSceneOnTop(string sceneName)
+    {
+        USM.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+        _additiveScenes.Add(sceneName);
     }
 }

@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
 public class InputManager : BaseManager
@@ -12,6 +13,18 @@ public class InputManager : BaseManager
     public Quaternion InputRotation => inputRotation;
 
     private BluetoothClient bluetoothClient;
+
+    public UnityEvent OnUp;
+    public UnityEvent OnDown;
+    public UnityEvent OnLeft;
+    public UnityEvent OnRight;
+    private Vector2 lastInputVector;
+
+    public bool IsIdle;
+    private float lastInputTime;
+    public float IdleTime = 60f;
+    public UnityEvent OnIdle;
+    public UnityEvent OnActive;
 
     private void Awake()
     {
@@ -60,23 +73,66 @@ public class InputManager : BaseManager
         // Fallback to standard input when Bluetooth is not connected
         if (bluetoothClient != null && bluetoothClient.IsConnected)
         {
-            float pitch = bluetoothClient.pitch;
-            float roll = bluetoothClient.roll;
+            float pitch = -bluetoothClient.pitch;
+            float roll = -bluetoothClient.roll;
 
-            float pitchMin = -30f;
-            float pitchMax = 30f;
-            float rollMin = -30f;
-            float rollMax = 30f;
+            float pitchMin = -15f;
+            float pitchMax = 15f;
+            float rollMin = -15f;
+            float rollMax = 15f;
             float xInput = Mathf.Clamp((roll - rollMin) / (rollMax - rollMin) * 2f - 1f, -1f, 1f);
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
-            inputVector = new Vector2(xInput, yInput);
+            inputVector = new Vector2(-xInput, yInput);
+            Debug.Log($"Bluetooth Input - Pitch: {pitch}, Roll: {roll}, Mapped Input: {inputVector}");
 
             inputRotation = Quaternion.Euler(pitch, 0f, roll);
         }
         else
         {
             inputVector = GetInput();
-            inputRotation = Quaternion.Euler(inputVector.y * 30f, 0f, -inputVector.x * 30f);
+            inputRotation = Quaternion.Euler(inputVector.y * 15f, 0f, inputVector.x * 15f);
+        }
+
+        // Detect directional changes and invoke events
+        if (inputVector != lastInputVector)
+        {
+            if (inputVector.y > 0.5f && lastInputVector.y <= 0.5f)
+            {
+                OnUp?.Invoke();
+                Debug.Log("Up input detected");
+            }
+            else if (inputVector.y < -0.5f && lastInputVector.y >= -0.5f)
+            {
+                OnDown?.Invoke();
+                Debug.Log("Down input detected");
+            }
+            if (inputVector.x > 0.5f && lastInputVector.x <= 0.5f)
+            {
+                OnRight?.Invoke();
+                Debug.Log("Right input detected");
+            }
+            else if (inputVector.x < -0.5f && lastInputVector.x >= -0.5f)
+            {
+                OnLeft?.Invoke();
+                Debug.Log("Left input detected");
+            }
+
+            // Update idle status
+            lastInputTime = Time.time;
+
+            lastInputVector = inputVector;
+        }
+
+        // Check for idle state
+        if (Time.time - lastInputTime >= IdleTime)
+        {
+            IsIdle = true;
+            OnIdle?.Invoke();
+        }
+        else
+        {
+            IsIdle = false;
+            OnActive?.Invoke();
         }
     }
 
