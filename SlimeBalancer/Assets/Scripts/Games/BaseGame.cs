@@ -21,7 +21,7 @@ public abstract class BaseGame : MonoBehaviour
         IsGameActive = false;
         GameManager.ScoreManager.HidePoints();
         Debug.Log($"{GameName} has ended.");
-        GameManager.SceneManager.LoadScene(GameManager.SceneManager.EndScreen);
+        GameManager.SceneManager.LoadSceneOnTop(GameManager.SceneManager.EndScreen);
     }
 
 }

@@ -73,8 +73,8 @@ public class InputManager : BaseManager
         // Fallback to standard input when Bluetooth is not connected
         if (bluetoothClient != null && bluetoothClient.IsConnected)
         {
-            float pitch = bluetoothClient.pitch;
-            float roll = bluetoothClient.roll;
+            float pitch = -bluetoothClient.pitch;
+            float roll = -bluetoothClient.roll;
 
             float pitchMin = -15f;
             float pitchMax = 15f;
@@ -82,14 +82,15 @@ public class InputManager : BaseManager
             float rollMax = 15f;
             float xInput = Mathf.Clamp((roll - rollMin) / (rollMax - rollMin) * 2f - 1f, -1f, 1f);
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
-            inputVector = new Vector2(xInput, yInput);
+            inputVector = new Vector2(-xInput, yInput);
+            Debug.Log($"Bluetooth Input - Pitch: {pitch}, Roll: {roll}, Mapped Input: {inputVector}");
 
             inputRotation = Quaternion.Euler(pitch, 0f, roll);
         }
         else
         {
             inputVector = GetInput();
-            inputRotation = Quaternion.Euler(inputVector.y * 15f, 0f, -inputVector.x * 15f);
+            inputRotation = Quaternion.Euler(inputVector.y * 15f, 0f, inputVector.x * 15f);
         }
 
         // Detect directional changes and invoke events
