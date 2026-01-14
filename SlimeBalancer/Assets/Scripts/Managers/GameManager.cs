@@ -128,11 +128,13 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator LoadGameCoroutine(string sceneName)
     {
+        InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.blue);
         yield return SceneManager.LoadSceneCoroutine(SceneManager.InfoSceneName);
 
         yield return new WaitForSeconds(2f);
 
         yield return SceneManager.LoadSceneCoroutine(sceneName);
+
 
         _currentGame = FindFirstObjectByType<BaseGame>();
         _currentGameData = AvailableGames.Find(g => g.SceneName == sceneName);

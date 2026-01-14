@@ -362,4 +362,77 @@ public class BluetoothClient : MonoBehaviour
             return false;
         }
     }
+
+    public enum BoardSide
+    {
+        Left = 1,
+        Right = 3,
+        Top = 4,
+        Bottom = 2,
+        All = 0
+    }
+
+    public void SendColor(Color color, BoardSide side)
+    {
+        if (!IsConnected) return;
+        try
+        {
+            // Format: "“R: 255, G: 127, B: 0, Side: 1>>”
+
+            int r = Mathf.Clamp(Mathf.RoundToInt(color.r * 255f), 0, 255);
+            int g = Mathf.Clamp(Mathf.RoundToInt(color.g * 255f), 0, 255);
+            int b = Mathf.Clamp(Mathf.RoundToInt(color.b * 255f), 0, 255);
+            string cmd = $"R: {r},G: {g},B: {b},Side: {(int)side}";
+            _port.WriteLine(cmd);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"BluetoothClient: SendColor error: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    public void SendRainbow()
+    {
+        if (!IsConnected) return;
+        try
+        {
+            // Format: “Rainbow>>”
+            string cmd = "Rainbow";
+            _port.WriteLine(cmd);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"BluetoothClient: SendRainbow error: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    public void SendOff()
+    {
+        if (!IsConnected) return;
+        try
+        {
+            // Format: “Off>>”
+            string cmd = "Off";
+            _port.WriteLine(cmd);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"BluetoothClient: off error: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    public void SendIdle()
+    {
+        if (!IsConnected) return;
+        try
+        {
+            // Format: “Idle>>”
+            string cmd = "Idle";
+            _port.WriteLine(cmd);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"BluetoothClient: idle error: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
 }
