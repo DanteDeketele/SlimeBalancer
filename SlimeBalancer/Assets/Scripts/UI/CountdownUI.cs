@@ -22,6 +22,7 @@ public class CountdownUI : MonoBehaviour
     public IEnumerator StartCountdown()
     {
         // 3... 2... 1...
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         for (int i = 3; i > 0; i--)
         {
             // 1. Setup the number
