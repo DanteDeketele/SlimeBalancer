@@ -33,7 +33,7 @@ CRGB leds[NUM_LEDS];
 uint8_t startColor = 0;
 const uint8_t colorStep = 6;
 unsigned long previousTimeLEDs = 0;
-const unsigned long timeStepLEDs = 100;
+const unsigned long timeStepLEDs = 50;
 unsigned long previousTimeBT = 0;
 const unsigned long timeStepBT = 25;
 bool rainbowMode = false;
@@ -74,7 +74,6 @@ void readMPU()
   uint8_t buf[14];
   mpuReadBytes(0x3B, 14, buf); // vanaf ACCEL_XOUT_H
 
-  Serial.println();
   AcX = (buf[0] << 8) | buf[1];
   AcY = (buf[2] << 8) | buf[3];
   AcZ = (buf[4] << 8) | buf[5];
@@ -98,7 +97,7 @@ void computeAngles()
   // Omzetting naar graden
   pitch = pitchRad * 180.0 / 3.14159265;
   roll = rollRad * 180.0 / 3.14159265;
-  Serial.println("Pitch: " + String(pitch) + " Roll: " + String(roll));
+  // Serial.println("Pitch: " + String(pitch) + " Roll: " + String(roll));
 
   // Temperatuur in graden Celsius
   temperature = (temp / 340.0) + 36.53;
@@ -141,6 +140,7 @@ void sendAngles()
 
 void rainbow()
 {
+  Serial.println("Starting rainbow mode...");
   unsigned long currentTime = millis();
   if (currentTime - previousTimeLEDs >= timeStepLEDs)
   {
@@ -213,7 +213,6 @@ void loop()
           FastLED.show();
         }
       }
-
       if (SerialBT.available())
       {
         rainbowMode = false;
@@ -223,57 +222,74 @@ void loop()
         // vb2: "Off>>"
         // vb3: "Rainbow>>"
         // vb4: "Idle>>"
-        if (incoming.startsWith("Off"))
-        {
-          fill_solid(leds, NUM_LEDS, CRGB::Black); // Turn off all LEDs
-          FastLED.show();
-        }
-        else if (incoming.startsWith("Rainbow"))
-        {
-          rainbowMode = true;
-        }
-        else if (incoming.startsWith("Idle"))
-        {
-          fill_solid(leds, NUM_LEDS, CRGB::Black);
-          FastLED.show();
-          mpuWrite(0x6B, 0x40); // mpu in slaapstand
-        }
-        else
-        {
-          int rIndex = incoming.indexOf("R: ");
-          int gIndex = incoming.indexOf("G: ");
-          int bIndex = incoming.indexOf("B: ");
-          int sideIndex = incoming.indexOf("Side: ");
+        // vb5: "R: 0, G: 0, B: 255, Side: 0>>Raindbow>>Idle>>R: 255, G: 255, B: 255, Side: 2>>R: 0, G: 255, B: 0, Side: 3>>"
 
-          if (rIndex != -1 && gIndex != -1 && bIndex != -1 && sideIndex != -1)
+        // split de string op de plaats van >> en steek de verschillende delen in een array (zie vb 5)
+        String incomingParts[10]; // max 10 commands per keer
+        int partIndex = 0;
+        int startIndex = 0;
+        int endIndex = incoming.indexOf(">>");
+        while (endIndex != -1 && partIndex < 10)
+        {
+          incomingParts[partIndex] = incoming.substring(startIndex, endIndex);
+          partIndex++;
+          startIndex = endIndex + 2;
+          endIndex = incoming.indexOf(">>", startIndex);
+        }
+
+        for (int i = 0; i < partIndex; i++)
+        {
+          if (incomingParts[i].startsWith("Off"))
           {
-            r = incoming.substring(rIndex + 3, incoming.indexOf(",", rIndex)).toInt();
-            g = incoming.substring(gIndex + 3, incoming.indexOf(",", gIndex)).toInt();
-            b = incoming.substring(bIndex + 3, incoming.indexOf(",", bIndex)).toInt();
-            side = incoming.substring(sideIndex + 6).toInt();
-
-            Serial.println("Parsed values - R: " + String(r) + " G: " + String(g) + " B: " + String(b) + " Side: " + String(side));
-
-            // Update LED colors based on side
-            if (side == 0) // all sides
-            {
-              fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
-            }
-            else
-            {
-              for (int i = (NUM_LEDS * (side-1))/4; i < (NUM_LEDS * side)/4; i++)
-              {
-                leds[i] = CRGB(r, g, b);
-              }
-            }
+            fill_solid(leds, NUM_LEDS, CRGB::Black); // Turn off all LEDs
             FastLED.show();
           }
-        }
+          else if (incomingParts[i].startsWith("Rainbow"))
+          {
+            rainbowMode = true;
+          }
+          else if (incomingParts[i].startsWith("Idle"))
+          {
+            fill_solid(leds, NUM_LEDS, CRGB::Black);
+            FastLED.show();
+            mpuWrite(0x6B, 0x40); // mpu in slaapstand
+          }
+          else
+          {
+            int rIndex = incomingParts[i].indexOf("R: ");
+            int gIndex = incomingParts[i].indexOf("G: ");
+            int bIndex = incomingParts[i].indexOf("B: ");
+            int sideIndex = incomingParts[i].indexOf("Side: ");
 
-        if (rainbowMode)
-        {
-          rainbow();
+            if (rIndex != -1 && gIndex != -1 && bIndex != -1 && sideIndex != -1)
+            {
+              r = incomingParts[i].substring(rIndex + 3, incomingParts[i].indexOf(",", rIndex)).toInt();
+              g = incomingParts[i].substring(gIndex + 3, incomingParts[i].indexOf(",", gIndex)).toInt();
+              b = incomingParts[i].substring(bIndex + 3, incomingParts[i].indexOf(",", bIndex)).toInt();
+              side = incomingParts[i].substring(sideIndex + 6).toInt();
+
+              Serial.println("Parsed values - R: " + String(r) + " G: " + String(g) + " B: " + String(b) + " Side: " + String(side));
+
+              // Update LED colors based on side
+              if (side == 0) // all sides
+              {
+                fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
+              }
+              else
+              {
+                for (int i = (NUM_LEDS * (side - 1)) / 4; i < (NUM_LEDS * side) / 4; i++)
+                {
+                  leds[i] = CRGB(r, g, b);
+                }
+              }
+              FastLED.show();
+            }
+          }
         }
+      }
+      if (rainbowMode)
+      {
+        rainbow();
       }
     }
     else
