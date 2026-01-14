@@ -239,7 +239,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -8198715159852925607, guid: 775393930a35a5f419ec13f6f9903d5f, type: 3}
+    - target: {fileID: 851530158548095456, guid: 775393930a35a5f419ec13f6f9903d5f, type: 3}
+      propertyPath: slimeColor
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
       propertyPath: slimeColor
       value: 1
       objectReference: {fileID: 0}
@@ -304,7 +308,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -8198715159852925607, guid: 775393930a35a5f419ec13f6f9903d5f, type: 3}
+    - target: {fileID: 851530158548095456, guid: 775393930a35a5f419ec13f6f9903d5f, type: 3}
+      propertyPath: slimeColor
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
       propertyPath: slimeColor
       value: 3
       objectReference: {fileID: 0}
@@ -607,7 +615,11 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: -8198715159852925607, guid: 775393930a35a5f419ec13f6f9903d5f, type: 3}
+    - target: {fileID: 851530158548095456, guid: 775393930a35a5f419ec13f6f9903d5f, type: 3}
+      propertyPath: slimeColor
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 0}
       propertyPath: slimeColor
       value: 2
       objectReference: {fileID: 0}

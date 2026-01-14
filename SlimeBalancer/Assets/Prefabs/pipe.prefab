@@ -237,9 +237,6 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2fcd16f3220d8dd46bec98b6b6664666, type: 3}
       insertIndex: -1
       addedObject: {fileID: 8598706426703492179}
-    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 2fcd16f3220d8dd46bec98b6b6664666, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: -8198715159852925607}
   m_SourcePrefab: {fileID: 100100000, guid: 2fcd16f3220d8dd46bec98b6b6664666, type: 3}
 --- !u!4 &2327352575752898478 stripped
 Transform:
@@ -273,16 +270,3 @@ MeshCollider:
   m_Convex: 0
   m_CookingOptions: 30
   m_Mesh: {fileID: 2534964839176971238, guid: 2fcd16f3220d8dd46bec98b6b6664666, type: 3}
---- !u!114 &-8198715159852925607
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3100651904341368084}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bd8e1738259885c4482fc91721f419ee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PipeTrigger
-  slimeColor: 0

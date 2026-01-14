@@ -13,7 +13,11 @@ public class TiltGame : BaseGame
     public override void StartGame()
     {
         base.StartGame();
-        SpawnSlimesEveryMinute();
+
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.red, BluetoothClient.BoardSide.Left);
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.green, BluetoothClient.BoardSide.Bottom);
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.blue, BluetoothClient.BoardSide.Right);
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.yellow, BluetoothClient.BoardSide.Top);
     }
 
     public void Update()
@@ -31,7 +35,7 @@ public class TiltGame : BaseGame
         timer += Time.deltaTime;
         if (timer >= Delay)
         {
-            SpawnSlimesEveryMinute();
+            spawnSlime();
             timer = 0f;
         }
 
@@ -55,14 +59,6 @@ public class TiltGame : BaseGame
             playerposition.z + Random.Range(-2.5f, 2.5f)
         );
         Instantiate(PrefabSlime[Random.Range(0, PrefabSlime.Length)], spawnPoint, Quaternion.identity, transform);
-    }
-
-    private void SpawnSlimesEveryMinute()
-    {
-
-        spawnSlime();
-
-
     }
 
     public void Correct()
