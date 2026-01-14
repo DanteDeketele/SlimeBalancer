@@ -143,4 +143,34 @@ public class InputManager : BaseManager
             bluetoothClient.Disconnect();
         }
     }
+
+    public enum LightingEffect
+    {
+        Off,
+        Rainbow,
+        Idle,
+        Custom
+    }
+
+    public void SetLightingEffect(LightingEffect effect, Color customColor = default, BluetoothClient.BoardSide side = 0)
+    {
+        if (bluetoothClient != null && bluetoothClient.IsConnected)
+        {
+            switch (effect)
+            {
+                case LightingEffect.Off:
+                    bluetoothClient.SendOff();
+                    break;
+                case LightingEffect.Rainbow:
+                    bluetoothClient.SendRainbow();
+                    break;
+                case LightingEffect.Idle:
+                    bluetoothClient.SendIdle();
+                    break;
+                case LightingEffect.Custom:
+                    bluetoothClient.SendColor(customColor, side);
+                    break;
+            }
+        }
+    }
 }

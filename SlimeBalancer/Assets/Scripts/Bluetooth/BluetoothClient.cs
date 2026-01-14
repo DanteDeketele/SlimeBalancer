@@ -382,7 +382,7 @@ public class BluetoothClient : MonoBehaviour
             int r = Mathf.Clamp(Mathf.RoundToInt(color.r * 255f), 0, 255);
             int g = Mathf.Clamp(Mathf.RoundToInt(color.g * 255f), 0, 255);
             int b = Mathf.Clamp(Mathf.RoundToInt(color.b * 255f), 0, 255);
-            string cmd = $"R:{r},G:{g},B:{b},Side:{(int)side}";
+            string cmd = $"R: {r},G: {g},B: {b},Side: {(int)side}";
             _port.WriteLine(cmd);
         }
         catch (Exception ex)
@@ -406,7 +406,7 @@ public class BluetoothClient : MonoBehaviour
         }
     }
 
-    public void Off()
+    public void SendOff()
     {
         if (!IsConnected) return;
         try
@@ -418,6 +418,21 @@ public class BluetoothClient : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogWarning($"BluetoothClient: off error: {ex.GetType().Name}: {ex.Message}");
+        }
+    }
+
+    public void SendIdle()
+    {
+        if (!IsConnected) return;
+        try
+        {
+            // Format: “Idle>>”
+            string cmd = "Idle";
+            _port.WriteLine(cmd);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"BluetoothClient: idle error: {ex.GetType().Name}: {ex.Message}");
         }
     }
 }

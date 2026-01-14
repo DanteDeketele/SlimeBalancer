@@ -31,6 +31,7 @@ public class SkiGame : BaseGame
     public override void StartGame()
     {
         _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation, transform);
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.white);
         base.StartGame();
     }
 
