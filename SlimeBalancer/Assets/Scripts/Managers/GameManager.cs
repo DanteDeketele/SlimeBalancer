@@ -128,6 +128,10 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator LoadGameCoroutine(string sceneName)
     {
+        yield return SceneManager.LoadSceneCoroutine(SceneManager.InfoSceneName);
+
+        yield return new WaitForSeconds(2f);
+
         yield return SceneManager.LoadSceneCoroutine(sceneName);
 
         _currentGame = FindFirstObjectByType<BaseGame>();

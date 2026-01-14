@@ -7,6 +7,7 @@ public class SceneManager : BaseManager
 {
     public string MainMenuSceneName = "MainMenu";
     public string EndScreen = "EndScene";
+    public string InfoSceneName = "InfoScene";
     private string activeSceneName;
 
     public void LoadScene(string sceneName)
