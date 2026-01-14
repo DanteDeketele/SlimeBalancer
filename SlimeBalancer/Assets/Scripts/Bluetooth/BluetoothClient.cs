@@ -132,42 +132,42 @@ public class BluetoothClient : MonoBehaviour
 
         try
         {
-            // If a specific port is set, try it first; otherwise scan available ports
-            if (!string.IsNullOrEmpty(portName))
+            string[] ports = SerialPort.GetPortNames();
+
+            // If a specific port is set but missing, fall back to scanning all ports
+            if (!string.IsNullOrEmpty(portName) && !PortExists(portName))
             {
-                if (!PortExists(portName))
-                {
-                    // Port not present on this machine; skip opening and let keyboard fallback be used
-                    Debug.LogWarning($"BluetoothClient: Configured port '{portName}' not found. Using fallback input. Will retry later.");
-                    return;
-                }
-                OpenPort(portName);
+                Debug.LogWarning($"BluetoothClient: Configured port '{portName}' not found. Scanning available ports.");
+            }
+
+            // Prefer configured port if present; else try all available ports
+            var candidates = ports ?? Array.Empty<string>();
+            if (!string.IsNullOrEmpty(portName) && PortExists(portName))
+            {
+                candidates = new[] { portName }.Concat(candidates.Where(p => !string.Equals(p, portName, StringComparison.OrdinalIgnoreCase))).ToArray();
+            }
+
+            if (candidates.Length == 0)
+            {
+                Debug.LogWarning("BluetoothClient: No COM ports found. Ensure the device is paired and a COM port exists.");
             }
             else
             {
-                string[] ports = SerialPort.GetPortNames();
-                if (ports == null || ports.Length == 0)
+                foreach (var p in candidates)
                 {
-                    Debug.LogWarning("BluetoothClient: No COM ports found. Ensure the device is paired and a COM port exists.");
-                }
-                else
-                {
-                    foreach (var p in ports)
+                    try
                     {
-                        try
+                        OpenPort(p);
+                        if (IsConnected)
                         {
-                            OpenPort(p);
-                            if (IsConnected)
-                            {
-                                portName = p; // adopt discovered port
-                                break;
-                            }
+                            portName = p; // adopt discovered port
+                            break;
                         }
-                        catch (Exception ex)
-                        {
-                            Debug.LogWarning($"BluetoothClient: Could not open {p}. {ex.GetType().Name}: {ex.Message}");
-                            SafeDisposePort();
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Debug.LogWarning($"BluetoothClient: Could not open {p}. {ex.GetType().Name}: {ex.Message}");
+                        SafeDisposePort();
                     }
                 }
             }
