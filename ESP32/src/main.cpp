@@ -1,21 +1,42 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <BluetoothSerial.h>
+#include <FastLED.h>
 
 // Check to ensure Bluetooth is enabled in the ESP32 settings
 #if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
 #error Bluetooth is not enabled! Please run 'make menuconfig' and enable it.
 #endif
 
-// Create the Bluetooth Serial object
+// variabelen voor Bluetooth
 BluetoothSerial SerialBT;
 bool connected = false;
 
+// variabelen voor MPU6050
 const uint8_t MPU_ADDR = 0x68;
 int16_t AcX, AcY, AcZ;
 int16_t GyX, GyY, GyZ;
 int16_t temp;
 float pitch, roll, temperature;
+bool toHot = false;
+
+// variabelen voor ledstrip
+#define LED_PIN 4
+#define NUM_LEDS 44
+#define BRIGHTNESS 100
+#define LED_TYPE WS2812B
+#define COLOR_ORDER GRB
+byte r, g, b, side;
+
+CRGB leds[NUM_LEDS];
+
+uint8_t startColor = 0;
+const uint8_t colorStep = 6;
+unsigned long previousTimeLEDs = 0;
+const unsigned long timeStepLEDs = 100;
+unsigned long previousTimeBT = 0;
+const unsigned long timeStepBT = 25;
+bool rainbowMode = false;
 
 void mpuWrite(uint8_t reg, uint8_t val)
 {
@@ -109,13 +130,36 @@ void printBalance(float threshold)
 
 void sendAngles()
 {
-  SerialBT.print("Mpu_Values: P:");
+  SerialBT.print("Mpu_Values: P: ");
   SerialBT.print(pitch);
-  SerialBT.print(",R:");
+  SerialBT.print(", R: ");
   SerialBT.print(roll);
-  SerialBT.print(",T:");
+  SerialBT.print(", T: ");
   SerialBT.print(temperature);
   SerialBT.println(">>");
+}
+
+void rainbow()
+{
+  unsigned long currentTime = millis();
+  if (currentTime - previousTimeLEDs >= timeStepLEDs)
+  {
+    previousTimeLEDs = currentTime;
+
+    // Shift all LEDs one step to the right
+    for (int i = NUM_LEDS - 1; i > 0; i--)
+    {
+      leds[i] = leds[i - 1];
+    }
+
+    // Insert new hue at the front
+    leds[0] = CHSV(startColor, 255, 255);
+
+    // Advance to the next hue
+    startColor += colorStep;
+
+    FastLED.show();
+  }
 }
 
 void setup()
@@ -128,6 +172,11 @@ void setup()
 
   Wire.begin();
   mpuWrite(0x6B, 0x40); // mpu in slaapstand houden tot verbinding
+
+  FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(BRIGHTNESS);
+  fill_solid(leds, NUM_LEDS, CRGB::Red); // Initialize all LEDs to off
+  FastLED.show();
 }
 
 void loop()
@@ -140,14 +189,106 @@ void loop()
     {
       Serial.println(">> Client connected!");
       connected = true;
+      fill_solid(leds, NUM_LEDS, CRGB(48, 213, 150)); // Turn on all LEDs to indicate connection
+      FastLED.show();
       mpuBoot();
     }
     // doe je loops hier
-    readMPU();
-    computeAngles();
-    // printBalance(5.0); // drempel van 5 graden
-    sendAngles();
-    delay(20);
+    if (!toHot)
+    {
+      unsigned long currentTime = millis();
+      if (currentTime - previousTimeBT >= timeStepBT)
+      {
+        previousTimeBT = currentTime;
+        readMPU();
+        computeAngles();
+        // printBalance(5.0); // drempel van 5 graden
+        sendAngles();
+        if (temperature >= 80.0)
+        {
+          toHot = true;
+          Serial.println(">> MPU too hot! Entering cooldown mode.");
+          SerialBT.println("WARNING: TO HOT>>");
+          fill_solid(leds, NUM_LEDS, CRGB::Black); // Indicate overheating
+          FastLED.show();
+        }
+      }
+
+      if (SerialBT.available())
+      {
+        rainbowMode = false;
+        String incoming = SerialBT.readStringUntil('\n');
+        Serial.println("Received via BT: " + incoming);
+        // vb incoming: "R: 255, G: 127, B: 0, Side: 1>>"
+        // vb2: "Off>>"
+        // vb3: "Rainbow>>"
+        // vb4: "Idle>>"
+        if (incoming.startsWith("Off"))
+        {
+          fill_solid(leds, NUM_LEDS, CRGB::Black); // Turn off all LEDs
+          FastLED.show();
+        }
+        else if (incoming.startsWith("Rainbow"))
+        {
+          rainbowMode = true;
+        }
+        else if (incoming.startsWith("Idle"))
+        {
+          fill_solid(leds, NUM_LEDS, CRGB::Black);
+          FastLED.show();
+          mpuWrite(0x6B, 0x40); // mpu in slaapstand
+        }
+        else
+        {
+          int rIndex = incoming.indexOf("R: ");
+          int gIndex = incoming.indexOf("G: ");
+          int bIndex = incoming.indexOf("B: ");
+          int sideIndex = incoming.indexOf("Side: ");
+
+          if (rIndex != -1 && gIndex != -1 && bIndex != -1 && sideIndex != -1)
+          {
+            r = incoming.substring(rIndex + 3, incoming.indexOf(",", rIndex)).toInt();
+            g = incoming.substring(gIndex + 3, incoming.indexOf(",", gIndex)).toInt();
+            b = incoming.substring(bIndex + 3, incoming.indexOf(",", bIndex)).toInt();
+            side = incoming.substring(sideIndex + 6).toInt();
+
+            Serial.println("Parsed values - R: " + String(r) + " G: " + String(g) + " B: " + String(b) + " Side: " + String(side));
+
+            // Update LED colors based on side
+            if (side == 0) // all sides
+            {
+              fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
+            }
+            else
+            {
+              for (int i = (NUM_LEDS * (side-1))/4; i < (NUM_LEDS * side)/4; i++)
+              {
+                leds[i] = CRGB(r, g, b);
+              }
+            }
+            FastLED.show();
+          }
+        }
+
+        if (rainbowMode)
+        {
+          rainbow();
+        }
+      }
+    }
+    else
+    {
+      // MPU is te warm, wachten tot hij afgekoeld is
+      readMPU();
+      computeAngles();
+      if (temperature < 60.0)
+      {
+        toHot = false;
+        Serial.println("<< MPU cooled down. Resuming normal operation.");
+        SerialBT.println("WARNING: COOLED>>");
+      }
+      delay(1000);
+    }
   }
 
   // Geen verbinding, wachten op verbinding
@@ -157,9 +298,12 @@ void loop()
     {
       Serial.println("<< Client disconnected.");
       connected = false;
-      mpuWrite(0x6B, 0x40); // mpu in slaapstand van zodra de verbinding wegvalt
+      mpuWrite(0x6B, 0x40);                  // mpu in slaapstand van zodra de verbinding wegvalt
+      fill_solid(leds, NUM_LEDS, CRGB::Red); // Turn off all LEDs
+      FastLED.show();
     }
     Serial.println("Waiting for client to connect...");
+
     delay(1000);
   }
 }
