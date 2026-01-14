@@ -22,6 +22,7 @@ public abstract class BaseGame : MonoBehaviour
         GameManager.ScoreManager.HidePoints();
         Debug.Log($"{GameName} has ended.");
         GameManager.SceneManager.LoadSceneOnTop(GameManager.SceneManager.EndScreen);
+        Time.timeScale = 0.5f;
     }
 
 }

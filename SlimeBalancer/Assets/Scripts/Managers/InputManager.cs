@@ -9,8 +9,10 @@ public class InputManager : BaseManager
     private InputAction moveAction;
     private Vector2 inputVector;
     private Quaternion inputRotation;
+    private Vector3 inputEulerRotation;
     public Vector2 InputVector => inputVector;
     public Quaternion InputRotation => inputRotation;
+    public Vector3 InputEulerRotation => inputEulerRotation;
 
     private BluetoothClient bluetoothClient;
 
@@ -76,42 +78,45 @@ public class InputManager : BaseManager
             float pitch = -bluetoothClient.pitch;
             float roll = -bluetoothClient.roll;
 
-            float pitchMin = -15f;
-            float pitchMax = 15f;
-            float rollMin = -15f;
-            float rollMax = 15f;
+            float pitchMin = -18f;
+            float pitchMax = 18f;
+            float rollMin = -18f;
+            float rollMax = 18f;
             float xInput = Mathf.Clamp((roll - rollMin) / (rollMax - rollMin) * 2f - 1f, -1f, 1f);
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
             inputVector = new Vector2(-xInput, yInput);
             Debug.Log($"Bluetooth Input - Pitch: {pitch}, Roll: {roll}, Mapped Input: {inputVector}");
 
             inputRotation = Quaternion.Euler(pitch, 0f, roll);
+
+            inputEulerRotation = new Vector3(pitch, 0f, roll);
         }
         else
         {
             inputVector = GetInput();
-            inputRotation = Quaternion.Euler(inputVector.y * 15f, 0f, inputVector.x * 15f);
+            inputRotation = Quaternion.Euler(inputVector.y * 18f, 0f, inputVector.x * 18f);
+            inputEulerRotation = new Vector3(inputVector.y * 18f, 0f, inputVector.x * 18f);
         }
 
         // Detect directional changes and invoke events
         if (inputVector != lastInputVector)
         {
-            if (inputVector.y > 0.5f && lastInputVector.y <= 0.5f)
+            if (inputVector.y > 0.9f && lastInputVector.y <= 0.9f)
             {
                 OnUp?.Invoke();
                 Debug.Log("Up input detected");
             }
-            else if (inputVector.y < -0.5f && lastInputVector.y >= -0.5f)
+            else if (inputVector.y < -0.9f && lastInputVector.y >= -0.9f)
             {
                 OnDown?.Invoke();
                 Debug.Log("Down input detected");
             }
-            if (inputVector.x > 0.5f && lastInputVector.x <= 0.5f)
+            if (inputVector.x > 0.9f && lastInputVector.x <= 0.9f)
             {
                 OnRight?.Invoke();
                 Debug.Log("Right input detected");
             }
-            else if (inputVector.x < -0.5f && lastInputVector.x >= -0.5f)
+            else if (inputVector.x < -0.9f && lastInputVector.x >= -0.9f)
             {
                 OnLeft?.Invoke();
                 Debug.Log("Left input detected");

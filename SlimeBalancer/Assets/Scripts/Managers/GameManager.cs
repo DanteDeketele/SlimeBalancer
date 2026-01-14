@@ -123,6 +123,7 @@ public class GameManager : MonoBehaviour
 
     public void LoadGame(string sceneName)
     {
+        Time.timeScale = 1f;
         StartCoroutine(LoadGameCoroutine(sceneName));
     }
 
