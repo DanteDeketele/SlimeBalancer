@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
     {
         public string GameName;
         public string SceneName;
+        public string genre;
+        [TextArea]
+        public string[] Explination;
         public Texture2D GameLogo;
     }
 

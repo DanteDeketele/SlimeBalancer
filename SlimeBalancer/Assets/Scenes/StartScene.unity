@@ -201,12 +201,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   AvailableGames:
-  - GameName: Skiegame
+  - GameName: Slime Ski
     SceneName: skie
+    genre: Actie
+    Explination: []
     GameLogo: {fileID: 2800000, guid: 6fb958974304d184a89ef4f3e618d585, type: 3}
-  - GameName: Tilt it
+  - GameName: Tilt It
     SceneName: Tilt_It
+    genre: Puzzle
+    Explination: []
     GameLogo: {fileID: 2800000, guid: 4262dd58c984184459ef726818a5daf4, type: 3}
+  - GameName: Snake
+    SceneName: snake
+    genre: Klassier
+    Explination: []
+    GameLogo: {fileID: 2800000, guid: c9485f83f71128f439b3b10d41c2f555, type: 3}
 --- !u!1 &790449841
 GameObject:
   m_ObjectHideFlags: 0
@@ -346,6 +355,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SceneManager
   MainMenuSceneName: MainMenu
+  EndScreen: EndScene
+  InfoSceneName: InfoScene
 --- !u!1 &1506595059
 GameObject:
   m_ObjectHideFlags: 0
@@ -390,7 +401,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 367bda44d2afd3543a16bb32c9ec8413, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ScoreManager
-  Score: 0
   scoreUIPrefab: {fileID: 4517116115804384060, guid: 6ecb45994be429c429538ad938903fe0, type: 3}
 --- !u!1 &1878294886
 GameObject:
@@ -436,6 +446,27 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 195cfcf689baf2a44bb57394291494fd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::InputManager
+  OnUp:
+    m_PersistentCalls:
+      m_Calls: []
+  OnDown:
+    m_PersistentCalls:
+      m_Calls: []
+  OnLeft:
+    m_PersistentCalls:
+      m_Calls: []
+  OnRight:
+    m_PersistentCalls:
+      m_Calls: []
+  IsIdle: 0
+  IdleTime: 60
+  OnIdle:
+    m_PersistentCalls:
+      m_Calls: []
+  OnActive:
+    m_PersistentCalls:
+      m_Calls: []
+  MenuLighting: 0
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

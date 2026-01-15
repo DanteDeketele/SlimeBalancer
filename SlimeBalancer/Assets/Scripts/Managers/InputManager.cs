@@ -28,6 +28,8 @@ public class InputManager : BaseManager
     public UnityEvent OnIdle;
     public UnityEvent OnActive;
 
+    public bool MenuLighting = false;
+
     private void Awake()
     {
         // 3. Find the specific map, then the specific action
@@ -126,6 +128,15 @@ public class InputManager : BaseManager
             lastInputTime = Time.time;
 
             lastInputVector = inputVector;
+
+
+
+
+            if (MenuLighting)
+            {
+                // so I want to increase the brigtness for the direction it is goin to and once it activated blink blue
+
+            }
         }
 
         // Check for idle state
