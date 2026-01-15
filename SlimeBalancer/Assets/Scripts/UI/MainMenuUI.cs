@@ -1,133 +1,191 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
-using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(UIDocument))]
 public class MainMenuUI : MonoBehaviour
 {
-    [Header("Layout Settings")]
-    [SerializeField] private float _normalWidth = 260f;
-    [SerializeField] private float _selectedWidth = 360f + 8f;
-    [SerializeField] private float _spacing = 16f;
-    [SerializeField] private int _startPos = 60; // List starts 10% from left
+    public VisualTreeAsset gameContainerTemplate;
+    private VisualElement root;
+    private int selectedGameIndex = 0;
 
-    // Refs
-    private VisualElement _root;
-    private VisualElement _carouselContainer;
-    private VisualElement _infoBox;
-    private Label _titleLabel;
-    private List<VisualElement> _cards = new List<VisualElement>();
+    private VisualElement gameListContainer;
 
-    private int _selectedIndex = 0;
+    float timer = 0f;
+    public float scrollDelay = 0.5f;
+    float _scrollPosition = 0f;
+    float _startScrollPosition = 0f;
+    float containerSize = 0f;
 
-    // Inputs
-    private InputAction _navigateAction;
-    private InputAction _submitAction;
+    int actualScreenWidth = 0;
 
-    private void Awake()
+    public void Awake()
     {
-        var uiDoc = GetComponent<UIDocument>();
-        _root = uiDoc.rootVisualElement;
+        var uiDocument = GetComponent<UIDocument>();
+        root = uiDocument.rootVisualElement;
 
-        _carouselContainer = _root.Q<VisualElement>("CarouselContainer");
-        _infoBox = _root.Q<VisualElement>("InfoBox");
-        _titleLabel = _root.Q<Label>("GameTitle");
 
-        SetupInputs();
-        CreateCards();
 
-        // Wait for layout calculation
-        _root.RegisterCallback<GeometryChangedEvent>(OnLayoutReady);
-    }
+        GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
 
-    private void OnLayoutReady(GeometryChangedEvent evt)
-    {
-        _root.UnregisterCallback<GeometryChangedEvent>(OnLayoutReady);
-        UpdateSelection(0);
-    }
-
-    private void SetupInputs()
-    {
-        _navigateAction = new InputAction("Navigate", type: InputActionType.Value, expectedControlType: "Vector2");
-        _navigateAction.AddCompositeBinding("2DVector")
-            .With("Left", "<Keyboard>/a").With("Left", "<Keyboard>/leftArrow")
-            .With("Right", "<Keyboard>/d").With("Right", "<Keyboard>/rightArrow");
-
-        _navigateAction.performed += ctx => {
-            float x = ctx.ReadValue<Vector2>().x;
-            if (x < -0.5f) ChangeSelection(-1);
-            else if (x > 0.5f) ChangeSelection(1);
-        };
-
-        _submitAction = new InputAction("Submit", type: InputActionType.Button);
-        _submitAction.AddBinding("<Keyboard>/enter");
-        _submitAction.performed += ctx =>
+        gameListContainer = root.Q<VisualElement>("Carousel");
+        foreach (var gameData in games)
         {
-            var selectedGame = GameManager.Instance.AvailableGames[_selectedIndex];
-            Debug.Log($"[MainMenuUI] Loading game: {selectedGame.GameName} (Scene: {selectedGame.SceneName})");
-            // Here you would typically call your scene manager to load the scene
+            var gameEntry = gameContainerTemplate.CloneTree();
+            gameEntry.Q<Label>("game-title").text = gameData.GameName;
+            gameEntry.Q<Label>("game-genre").text = "Test";
+            gameEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(gameData.GameLogo);
+            gameListContainer.Add(gameEntry);
+        }
+
+        var icon = gameListContainer[1].Q<VisualElement>("game-icon");
+
+        // Register a callback to run ONLY when the layout geometry is calculated
+        icon.RegisterCallback<GeometryChangedEvent>(OnGeometryCalculated);
+
+        UpdateSelectedGame();
+
+        GameManager.InputManager.OnLeft.AddListener(() =>
+        {
+            selectedGameIndex = Mathf.Max(0, selectedGameIndex - 1);
+            UpdateSelectedGame();
+            BeginScroll();
+        });
+
+        GameManager.InputManager.OnRight.AddListener(() =>
+        {
+            selectedGameIndex = Mathf.Min(games.Length - 1, selectedGameIndex + 1);
+            UpdateSelectedGame();
+            BeginScroll();
+        });
+
+        GameManager.InputManager.OnDown.AddListener(() =>
+        {
+            var selectedGame = games[selectedGameIndex];
+            Debug.Log($"Selected game: {selectedGame.GameName}");
             GameManager.Instance.LoadGame(selectedGame.SceneName);
-        };
-
-        _navigateAction.Enable();
-        _submitAction.Enable();
+        });
     }
 
-    private void OnDisable() { _navigateAction.Disable(); _submitAction.Disable(); }
-
-    private void CreateCards()
+    void OnGeometryCalculated(GeometryChangedEvent evt = null)
     {
-        _carouselContainer.Clear();
-        _cards.Clear();
-
-        for (int i = 0; i < GameManager.Instance.AvailableGames.Count; i++)
+        float actualWidth = 0f;
+        if (evt != null)
         {
-            var data = GameManager.Instance.AvailableGames[i];
-            var card = new VisualElement();
-            card.AddToClassList("game-card");
-            if (data.GameLogo != null) card.style.backgroundImage = new StyleBackground(data.GameLogo);
+            // 1. Get the width directly from the event (it's faster and guaranteed not to be NaN)
+            actualWidth = evt.newRect.width;
+            Debug.Log($"Calculated Width: {actualWidth}");
+        }else
+        {
+            // Fallback: Get the width from the element directly
+            actualWidth = gameListContainer[1].Q<VisualElement>("GameContainer").resolvedStyle.width;
+            Debug.Log($"Calculated Width (Fallback): {actualWidth}");
+        }
 
-            _carouselContainer.Add(card);
-            _cards.Add(card);
+        // 2. Get the margin from the container
+        float marginRight = gameListContainer[1].Q<VisualElement>("GameContainer").resolvedStyle.marginRight;
+        Debug.Log($"Calculated Margin Right: {marginRight}");
+
+        // Safety check: specific layout edge cases might still leave margin as NaN
+        if (float.IsNaN(marginRight)) marginRight = 0;
+
+        float totalSize = actualWidth + marginRight;
+        Debug.Log($"Final Container Size: {totalSize}");
+        containerSize = totalSize;
+
+        float bigSize = gameListContainer[0].Q<VisualElement>("GameContainer").resolvedStyle.width;
+        Debug.Log($"Big Container Width: {bigSize}");
+
+        //screen width is not the actual screen width in pixels due to scaling based reference screen size of the ui in panel settings
+        PanelSettings panelSettings = GetComponent<UIDocument>().panelSettings;
+        float screenWidth = 0f;
+
+        if (panelSettings.scaleMode == PanelScaleMode.ConstantPixelSize)
+        {
+            screenWidth = Screen.width;
+        }
+        else if (panelSettings.scaleMode == PanelScaleMode.ScaleWithScreenSize)
+        {
+            float match = panelSettings.match;
+            // we use height so match is 1
+            float referenceWidth = panelSettings.referenceResolution.x;
+            float referenceHeight = panelSettings.referenceResolution.y;
+
+            float logWidth = Screen.width / referenceWidth;
+            float logHeight = Screen.height / referenceHeight;
+
+            float logWeightedAverage = Mathf.Lerp(logWidth, logHeight, match);
+            float scaleFactor = logWeightedAverage;
+            screenWidth = Screen.width / scaleFactor;
+        }
+
+
+        // give the carousel a left border of 50% - 50% of the container size to center the selected item
+        float leftBorder = (screenWidth / 2f) - (bigSize / 2f);
+        Debug.Log($"Setting left border to: {leftBorder}px, Screen Width: {screenWidth}px");
+        gameListContainer.style.paddingLeft = leftBorder;
+
+        // 3. IMPORTANT: Unregister to prevent this from running every time the UI updates
+        var element = evt.target as VisualElement;
+        element.UnregisterCallback<GeometryChangedEvent>(OnGeometryCalculated);
+    }
+
+    private void UpdateSelectedGame()
+    {
+        GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
+        for (int i = 0; i < gameListContainer.childCount; i++)
+        {
+            var gameEntry = gameListContainer[i];
+            if (i == selectedGameIndex)
+            {
+                gameEntry.AddToClassList("selected");
+            }
+            else
+            {
+                gameEntry.RemoveFromClassList("selected");
+            }
         }
     }
 
-    private void ChangeSelection(int dir)
+    private void BeginScroll()
     {
-        int newIndex = Mathf.Clamp(_selectedIndex + dir, 0, GameManager.Instance.AvailableGames.Count - 1);
-        if (newIndex != _selectedIndex) UpdateSelection(newIndex);
+        // Set the start position to the current scroll position and start the timer
+        _startScrollPosition = _scrollPosition;
+        timer = scrollDelay;
     }
 
-    private void UpdateSelection(int index)
+    private void Update()
     {
-        _selectedIndex = index;
+        float targetPosition = selectedGameIndex * containerSize; // Assuming each game entry is 200px wide + 20px margin
 
-        // 1. Visuals
-        for (int i = 0; i < _cards.Count; i++)
+        if (timer > 0f)
         {
-            if (i == index) _cards[i].AddToClassList("game-card--selected");
-            else _cards[i].RemoveFromClassList("game-card--selected");
+            timer -= Time.deltaTime;
+            float t = Mathf.Clamp01(1f - (timer / scrollDelay));
+            _scrollPosition = Mathf.Lerp(_startScrollPosition, targetPosition, t);
+            gameListContainer.style.translate = new StyleTranslate(new Translate(-_scrollPosition, 0f));
+
+            // When finished, ensure final position is exact
+            if (timer <= 0f)
+            {
+                _scrollPosition = targetPosition;
+                gameListContainer.style.translate = new StyleTranslate(new Translate(-_scrollPosition, 0f));
+            }
+        }
+        else
+        {
+            // Keep container in sync when idle
+            _scrollPosition = targetPosition;
+            gameListContainer.style.translate = new StyleTranslate(new Translate(-_scrollPosition, 0f));
         }
 
-        // 2. Text
-        _titleLabel.text = GameManager.Instance.AvailableGames[index].GameName;
 
-        // 3. Carousel Position (Left to Right)
-        float screenWidth = _root.layout.width;
-        if (float.IsNaN(screenWidth) || screenWidth < 1) screenWidth = 1920f;
+        if (actualScreenWidth != Screen.width)
+        {
+            actualScreenWidth = Screen.width;
 
-        float anchorPos = _startPos;
-
-        // Calculate shift: Sum of width+spacing for all PREVIOUS items
-        float shift = index * (_normalWidth + _spacing);
-
-        // Move the carousel
-        _carouselContainer.style.left = anchorPos - shift;
-
-        // 4. Info Box Position (Horizontal Lock)
-        // It should start at: Anchor + SelectedCardWidth + Gap
-        float textLeftPos = anchorPos + _selectedWidth + _spacing;
-        _infoBox.style.left = textLeftPos;
+            OnGeometryCalculated();
+        }
     }
 }
