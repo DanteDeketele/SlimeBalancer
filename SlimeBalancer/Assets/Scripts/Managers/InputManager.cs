@@ -29,6 +29,7 @@ public class InputManager : BaseManager
     public UnityEvent OnActive;
 
     public bool MenuLighting = false;
+    private bool isBlink = false;
 
     private void Awake()
     {
@@ -132,10 +133,34 @@ public class InputManager : BaseManager
 
 
 
-            if (MenuLighting)
+            if (MenuLighting && !isBlink)
             {
-                // so I want to increase the brigtness for the direction it is goin to and once it activated blink blue
+                BluetoothClient.BoardSide side;
 
+                if (inputVector.x > 0.5f)
+                {
+                    side = BluetoothClient.BoardSide.Right;
+                }
+                else if (inputVector.x < -0.5f)
+                {
+                    side = BluetoothClient.BoardSide.Left;
+                }
+                else if (inputVector.y > 0.5f)
+                {
+                    side = BluetoothClient.BoardSide.Top;
+                }
+                else if (inputVector.y < -0.5f)
+                {
+                    side = BluetoothClient.BoardSide.Bottom;
+                }
+                else
+                {
+                    return;
+                }
+
+                float brightness = Mathf.Clamp01(Mathf.Max(Mathf.Abs(inputVector.x), Mathf.Abs(inputVector.y)));
+                Color color = Color.HSVToRGB(0.33f * brightness, 1f, brightness); // Greenish color based on brightness
+                SetLightingEffect(LightingEffect.Custom, color, side);
             }
         }
 
