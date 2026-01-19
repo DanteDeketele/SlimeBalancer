@@ -20,6 +20,7 @@ public class InputManager : BaseManager
     public UnityEvent OnDown;
     public UnityEvent OnLeft;
     public UnityEvent OnRight;
+    public UnityEvent<Vector2> OnAnyDirection;
     private Vector2 lastInputVector;
 
     public bool IsIdle;
@@ -107,21 +108,25 @@ public class InputManager : BaseManager
             if (inputVector.y > 0.9f && lastInputVector.y <= 0.9f)
             {
                 OnUp?.Invoke();
+                OnAnyDirection?.Invoke(Vector2.up);
                 Debug.Log("Up input detected");
             }
             else if (inputVector.y < -0.9f && lastInputVector.y >= -0.9f)
             {
                 OnDown?.Invoke();
+                OnAnyDirection?.Invoke(Vector2.down);
                 Debug.Log("Down input detected");
             }
             if (inputVector.x > 0.9f && lastInputVector.x <= 0.9f)
             {
                 OnRight?.Invoke();
+                OnAnyDirection?.Invoke(Vector2.right);
                 Debug.Log("Right input detected");
             }
             else if (inputVector.x < -0.9f && lastInputVector.x >= -0.9f)
             {
                 OnLeft?.Invoke();
+                OnAnyDirection?.Invoke(Vector2.left);
                 Debug.Log("Left input detected");
             }
 
