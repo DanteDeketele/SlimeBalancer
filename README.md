@@ -198,7 +198,7 @@ Mpu_Values: P: 12.34, R: -5.67, T: 42.50>>
 
 ### Temperature Warning
 
-- If "WARNING: TO HOT>>" appears, the MPU6050 exceeded 80°C
+- If "WARNING: TOO HOT>>" appears, the MPU6050 exceeded 80°C
 - System automatically enters cooldown mode
 - Normal operation resumes below 60°C
 - Ensure adequate ventilation around the sensor
