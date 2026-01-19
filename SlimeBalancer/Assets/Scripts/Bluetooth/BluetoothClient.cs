@@ -49,7 +49,7 @@ public class BluetoothClient : MonoBehaviour
 
         foreach (string port in ports)
         {
-            if (!isScanning) break; // Stop if requested
+            if (!isScanning) break;
 
             Debug.Log($"[BT] Testing {port}...");
             SerialPort testPort = null;
@@ -57,50 +57,73 @@ public class BluetoothClient : MonoBehaviour
             try
             {
                 testPort = new SerialPort(port, 115200);
-                testPort.ReadTimeout = 2000; // Wait 1.5s max for data
-                testPort.WriteTimeout = 500;
+                testPort.ReadTimeout = 2000;
+                testPort.WriteTimeout = 1000;
+                testPort.DtrEnable = true; // Essential for some ESP32 boards
+                testPort.RtsEnable = true;
                 testPort.Open();
 
-                // Wait for the ESP32 to send its signature data ("Mpu_Values")
-                // Your ESP32 sends data every 25ms, so 1500ms is plenty.
-                string receivedChunk = "";
+                // PHASE 1: The "Reboot Wait"
+                // When a port opens, the ESP32 might restart. We must wait 2 seconds 
+                // blindly before we even expect data.
+                Thread.Sleep(2000);
 
-                // Read a few times to fill buffer
-                // We need to loop briefly because the first read might be partial
-                for (int i = 0; i < 5; i++)
+                // PHASE 2: Listen for specific data
+                // We give it another 3 seconds to send a valid "Mpu_Values" message
+                string accumulatedData = "";
+                DateTime timeOut = DateTime.Now.AddSeconds(3);
+
+                bool found = false;
+
+                while (DateTime.Now < timeOut)
                 {
-                    try { receivedChunk += testPort.ReadExisting(); } catch { }
-                    Thread.Sleep(100);
+                    try
+                    {
+                        string chunk = testPort.ReadExisting();
+                        if (!string.IsNullOrEmpty(chunk))
+                        {
+                            accumulatedData += chunk;
+                            // Debug.Log($"[BT] {port} received: {chunk}"); // Uncomment to debug raw data
+                        }
+
+                        if (accumulatedData.Contains("Mpu_Values") || accumulatedData.Contains(">>"))
+                        {
+                            found = true;
+                            break; // Found it!
+                        }
+                    }
+                    catch { }
+
+                    Thread.Sleep(100); // Small pause to save CPU
                 }
 
-                // Check for your specific protocol signature
-                if (receivedChunk.Contains("Mpu_Values") || receivedChunk.Contains(">>"))
+                if (found)
                 {
                     Debug.Log($"[BT] HANDSHAKE SUCCESS on {port}!");
-
-                    // We found it! Promote this testPort to our main serialPort
                     serialPort = testPort;
                     connectedPort = port;
                     IsConnected = true;
                     keepReading = true;
                     statusMessage = $"Connected: {port}";
 
-                    // Start the permanent read loop
+                    // Clear the buffer so we don't process old handshake data twice
+                    buffer = "";
+
                     readThread = new Thread(ReadDataThread);
                     readThread.Start();
 
                     isScanning = false;
-                    return; // Exit the scanner
+                    return;
                 }
                 else
                 {
-                    Debug.Log($"[BT] {port} open, but no valid data. Closing.");
+                    Debug.Log($"[BT] {port} timed out. Data received: '{accumulatedData}'");
                     testPort.Close();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                // Port busy or not a serial device
+                Debug.LogWarning($"[BT] Failed to open {port}: {ex.Message}");
                 if (testPort != null && testPort.IsOpen) testPort.Close();
             }
         }
@@ -109,7 +132,6 @@ public class BluetoothClient : MonoBehaviour
         statusMessage = "Device not found. Retrying in 3s...";
         Debug.LogWarning("[BT] Scan complete. Device not found.");
 
-        // Optional: Retry automatically
         Thread.Sleep(3000);
         StartAutoConnection();
     }
