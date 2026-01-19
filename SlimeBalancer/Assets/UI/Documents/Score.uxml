@@ -1,0 +1,8 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+    <ui:VisualElement name="VisualElement">
+        <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.13); flex-direction: column; align-items: stretch; justify-content: center; align-self: stretch;">
+            <ui:Label text="0" name="ScoreText" style="align-self: center; font-size: 70px; -unity-font-style: bold; text-shadow: 2px 2px 3.6px rgba(30, 31, 34, 0.62); color: rgb(227, 242, 249);" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

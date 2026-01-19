@@ -1,0 +1,117 @@
+.c-loadingscreen__background {
+    flex-grow: 1;
+    background-color: rgb(20, 20, 20);
+    align-items: center;
+    justify-content: center;
+}
+
+.c-loadingscreen__content {
+    width: 60%;
+    max-width: 500px;
+    flex-direction: column;
+}
+
+.c-loadingscreen__text {
+    color: rgb(150, 150, 150);
+    font-size: 12px;
+    margin-bottom: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-left;
+    letter-spacing: 4px;
+    padding: 0;
+}
+
+.c-loadingscreen__bar-rail {
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    overflow: hidden;
+    justify-content: flex-start;
+}
+
+.c-loadingscreen__bar-fill {
+    height: 100%;
+    width: 0%;
+    background-color: rgb(255, 255, 255);
+    border-radius: 2px;
+    transition-property: width;
+    transition-duration: 0.1s;
+    transition-timing-function: ease-out;
+}
+
+.container {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+}
+
+.mario-label {
+    font-size: 150px;
+    color: rgb(66, 228, 174);
+    -unity-text-align: middle-center;
+    -unity-text-outline-width: 4px;
+    -unity-text-outline-color: rgb(0, 0, 0);
+    opacity: 0;
+    scale: 0 0;
+}
+
+.mario-label.go-state {
+    color: rgb(0, 255, 255);
+    font-size: 250px;
+    scale: 1.25 1.25;
+}
+
+* {
+    -unity-font-definition: url("project://database/Assets/UI/Fonts/Lexend-VariableFont_wght.ttf?fileID=12800000&guid=b671a7e6b5c1b744a979a4b4a695717a&type=3#Lexend-VariableFont_wght");
+}
+
+Button {
+    background-color: rgb(255, 255, 255);
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+    border-bottom-left-radius: 16px;
+    padding-top: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+    padding-left: 16px;
+    border-left-color: rgba(0, 0, 0, 0);
+    border-right-color: rgba(0, 0, 0, 0);
+    border-top-color: rgba(0, 0, 0, 0);
+    border-bottom-color: rgba(0, 0, 0, 0);
+    border-top-width: 3px;
+    border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-left-width: 3px;
+}
+
+Button:focus {
+    border-left-color: rgb(0, 0, 0);
+    border-right-color: rgb(0, 0, 0);
+    border-top-color: rgb(0, 0, 0);
+    border-bottom-color: rgb(0, 0, 0);
+}
+
+.gameIcon {
+    flex-grow: 1;
+    height: 200px;
+    width: 200px;
+}
+
+.bigGameIcon {
+    width: 300px;
+    height: 300px;
+}
+
+.selected {
+}
+
+.selected .gameIcon {
+    width: 300px;
+    height: 300px;
+}
+
+.selected .gameTitle {
+    font-size: 32px;
+    -unity-font-style: bold;
+}
