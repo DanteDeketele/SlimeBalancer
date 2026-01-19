@@ -458,6 +458,9 @@ MonoBehaviour:
   OnRight:
     m_PersistentCalls:
       m_Calls: []
+  OnAnyDirection:
+    m_PersistentCalls:
+      m_Calls: []
   IsIdle: 0
   IdleTime: 60
   OnIdle:
