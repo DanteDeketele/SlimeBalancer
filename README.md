@@ -1,13 +1,16 @@
+
+
 # SlimeBalancer
 
 A Unity-based interactive gaming platform that uses a physical balance board controlled by an ESP32 microcontroller. Players control games by tilting a physical board, which reads motion data from an MPU6050 sensor and communicates with the Unity application via Bluetooth.
 
-## 🎮 Features
+## Features
 
 - **Physical Balance Board Control**: Real-time tilt-based input using MPU6050 accelerometer/gyroscope
 - **Bluetooth Communication**: Wireless connection between ESP32 and Unity game client
 - **LED Feedback**: WS2812B LED strip with customizable colors and rainbow effects
 - **Multiple Mini-Games**:
+  - Ski Game: Ski down a mountain by tiling left to right
   - Tilt Game: Control gameplay by tilting the board
   - Snake Game: Navigate using physical board movements
 - **Safety Features**:
@@ -15,7 +18,7 @@ A Unity-based interactive gaming platform that uses a physical balance board con
   - Connection status indicators via LED colors
 - **Modular Game System**: Easy-to-extend game manager architecture
 
-## 🛠️ Hardware Requirements
+## Hardware Requirements
 
 ### ESP32 Balance Board
 - ESP32-WROOM-32 (NodeMCU-32S or similar)
@@ -35,7 +38,7 @@ A Unity-based interactive gaming platform that uses a physical balance board con
 - Bluetooth capability
 - Unity-compatible system (Windows, macOS, or Linux)
 
-## 📋 Software Requirements
+## Software Requirements
 
 ### ESP32 Firmware
 - PlatformIO IDE or PlatformIO Core
@@ -51,7 +54,7 @@ A Unity-based interactive gaming platform that uses a physical balance board con
 - .NET Framework/Mono
 - Input System Package
 
-## 🚀 Setup Instructions
+## Setup Instructions
 
 ### 1. ESP32 Firmware Setup
 
@@ -88,7 +91,7 @@ A Unity-based interactive gaming platform that uses a physical balance board con
    - Open the main scene from `Assets/Scenes/`
    - Press Play in Unity Editor or build the executable
 
-## 🎯 Usage
+## Usage
 
 ### Starting the System
 
@@ -126,7 +129,7 @@ Multiple commands can be chained:
 "R: 255, G: 0, B: 0, Side: 1>>R: 0, G: 255, B: 0, Side: 2>>"
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### ESP32 Settings (in `ESP32/src/main.cpp`)
 
@@ -167,7 +170,7 @@ Mpu_Values: P: 12.34, R: -5.67, T: 42.50>>
 - RGB values: 0-255
 - Side values: 0 (all), 1 (top), 2 (right), 3 (bottom), 4 (left)
 
-## 🔍 Troubleshooting
+## Troubleshooting
 
 ### ESP32 Not Connecting
 
@@ -203,7 +206,7 @@ Mpu_Values: P: 12.34, R: -5.67, T: 42.50>>
 - Normal operation resumes below 60°C
 - Ensure adequate ventilation around the sensor
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 SlimeBalancer/
@@ -229,7 +232,7 @@ SlimeBalancer/
 └── README.md                       # This file
 ```
 
-## 🎓 Development
+## Development
 
 ### Adding New Games
 
@@ -276,11 +279,11 @@ Modify the MPU6050 configuration in the `mpuBoot()` function:
 
 ## 📝 License
 
-This project is developed by Howest.
+This project is developed by Dante Deketele, Noor Nissau and Jarne Baert as a school assignment for Howest MCT.
 
 ## 🤝 Contributing
 
-This appears to be an educational project. For contributions or questions, please contact the repository owner.
+This project is currently not activly monitored. Ask questions to dante@deketelecreations.be
 
 ## 📧 Support
 
