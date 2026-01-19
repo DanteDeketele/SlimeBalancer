@@ -57,7 +57,7 @@ public class BluetoothClient : MonoBehaviour
             try
             {
                 testPort = new SerialPort(port, 115200);
-                testPort.ReadTimeout = 1500; // Wait 1.5s max for data
+                testPort.ReadTimeout = 2000; // Wait 1.5s max for data
                 testPort.WriteTimeout = 500;
                 testPort.Open();
 
