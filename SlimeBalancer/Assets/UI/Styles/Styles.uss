@@ -61,99 +61,6 @@
     scale: 1.25 1.25;
 }
 
-.screen-root {
-    flex-grow: 1;
-    background-color: rgb(235, 235, 235);
-    flex-direction: column;
-}
-
-.header-section {
-    height: 15%;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding-left: 5%;
-    padding-right: 5%;
-}
-
-.user-icon-red {
-    width: 44px;
-    height: 44px;
-    background-color: rgb(255, 69, 84);
-    border-radius: 50%;
-    margin-right: 15px;
-}
-
-.user-icon-grey {
-    width: 44px;
-    height: 44px;
-    background-color: rgb(221, 221, 221);
-    border-radius: 50%;
-}
-
-.body-section {
-    flex-grow: 1;
-    position: relative;
-    overflow: hidden;
-}
-
-.carousel-container {
-    flex-direction: row;
-    position: absolute;
-    left: 0;
-    bottom: 60px;
-    height: 400px;
-    align-items: flex-end;
-    transition-property: left;
-    transition-duration: 0.25s;
-    transition-timing-function: ease-out-circ;
-}
-
-.game-card {
-    width: 260px;
-    height: 260px;
-    margin-right: 16px;
-    background-color: rgb(253, 253, 253);
-    border-radius: 4px;
-    -unity-background-scale-mode: scale-to-fill;
-    transition-duration: 0.2s;
-    transition-property: width, height, margin-right, border-width;
-    opacity: 0.9;
-}
-
-.game-card--selected {
-    width: 360px;
-    height: 360px;
-    background-color: white;
-    opacity: 1;
-    border-width: 4px;
-    border-color: rgb(0, 210, 255);
-}
-
-.info-box {
-    position: absolute;
-    bottom: 300px;
-    height: 150px;
-    justify-content: flex-end;
-    padding-bottom: 16px;
-}
-
-.game-title {
-    font-size: 50px;
-    color: rgb(46, 46, 46);
-    white-space: normal;
-}
-
-.footer-section {
-    height: 10%;
-    border-top-width: 1px;
-    border-top-color: rgba(0, 0, 0, 0.1);
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 5%;
-}
-
 * {
     -unity-font-definition: url("project://database/Assets/UI/Fonts/Lexend-VariableFont_wght.ttf?fileID=12800000&guid=b671a7e6b5c1b744a979a4b4a695717a&type=3#Lexend-VariableFont_wght");
 }
@@ -183,4 +90,28 @@ Button:focus {
     border-right-color: rgb(0, 0, 0);
     border-top-color: rgb(0, 0, 0);
     border-bottom-color: rgb(0, 0, 0);
+}
+
+.gameIcon {
+    flex-grow: 1;
+    height: 200px;
+    width: 200px;
+}
+
+.bigGameIcon {
+    width: 300px;
+    height: 300px;
+}
+
+.selected {
+}
+
+.selected .gameIcon {
+    width: 300px;
+    height: 300px;
+}
+
+.selected .gameTitle {
+    font-size: 32px;
+    -unity-font-style: bold;
 }

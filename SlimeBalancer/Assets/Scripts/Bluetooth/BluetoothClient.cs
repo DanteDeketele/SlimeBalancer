@@ -42,6 +42,7 @@ public class BluetoothClient : MonoBehaviour
     private volatile bool _connecting;
     private volatile bool _requestReconnect;
     private float _nextReconnectTime;
+    private bool _warnedMissingConfiguredPort;
 
     void OnEnable()
     {
@@ -124,7 +125,6 @@ public class BluetoothClient : MonoBehaviour
     // This is now only called on a background worker by QueueConnectAttempt
     public void TryConnect()
     {
-        Debug.Log("BluetoothClient: Attempting to connect...");
         if (IsConnected)
         {
             return;
@@ -132,49 +132,55 @@ public class BluetoothClient : MonoBehaviour
 
         try
         {
-            // If a specific port is set, try it first; otherwise scan available ports
-            if (!string.IsNullOrEmpty(portName))
+            string[] ports = SerialPort.GetPortNames();
+
+            // If a specific port is set but missing, fall back to scanning all ports
+            if (!string.IsNullOrEmpty(portName) && !PortExists(portName))
             {
-                if (!PortExists(portName))
+                if (!_warnedMissingConfiguredPort)
                 {
-                    // Port not present on this machine; skip opening and let keyboard fallback be used
-                    Debug.LogWarning($"BluetoothClient: Configured port '{portName}' not found. Using fallback input. Will retry later.");
-                    return;
+                    Debug.LogWarning($"BluetoothClient: Configured port '{portName}' not found. Scanning available ports.");
+                    _warnedMissingConfiguredPort = true;
                 }
-                OpenPort(portName);
+                // Clear configured port so we don't keep preferring a missing one
+                portName = string.Empty;
             }
-            else
+
+            // Prefer configured port if present; else try all available ports
+            var candidates = ports ?? Array.Empty<string>();
+            if (!string.IsNullOrEmpty(portName) && PortExists(portName))
             {
-                string[] ports = SerialPort.GetPortNames();
-                if (ports == null || ports.Length == 0)
+                candidates = new[] { portName }.Concat(candidates.Where(p => !string.Equals(p, portName, StringComparison.OrdinalIgnoreCase))).ToArray();
+            }
+
+            if (candidates.Length == 0)
+            {
+                // No ports available; remain disconnected and let keyboard input be used
+                return;
+            }
+
+            foreach (var p in candidates)
+            {
+                try
                 {
-                    Debug.LogWarning("BluetoothClient: No COM ports found. Ensure the device is paired and a COM port exists.");
-                }
-                else
-                {
-                    foreach (var p in ports)
+                    OpenPort(p);
+                    if (IsConnected)
                     {
-                        try
-                        {
-                            OpenPort(p);
-                            if (IsConnected)
-                            {
-                                portName = p; // adopt discovered port
-                                break;
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.LogWarning($"BluetoothClient: Could not open {p}. {ex.GetType().Name}: {ex.Message}");
-                            SafeDisposePort();
-                        }
+                        portName = p; // adopt discovered port
+                        _warnedMissingConfiguredPort = false; // reset
+                        break;
                     }
+                }
+                catch (Exception)
+                {
+                    // Ignore and try next candidate
+                    SafeDisposePort();
                 }
             }
         }
-        catch (Exception ex)
+        catch
         {
-            Debug.LogWarning($"BluetoothClient: Failed to connect. {ex.GetType().Name}: {ex.Message}");
+            // Swallow errors here; remain disconnected and retry later.
             SafeDisposePort();
         }
     }
@@ -288,16 +294,14 @@ public class BluetoothClient : MonoBehaviour
             {
                 break;
             }
-            catch (System.IO.IOException ex)
+            catch (System.IO.IOException)
             {
                 // Device removed or IO error; close and break so reconnect can occur
-                Debug.LogWarning($"BluetoothClient: Read error: IOException: {ex.Message}");
                 try { _port?.Close(); } catch { }
                 break;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Debug.LogWarning($"BluetoothClient: Read error: {ex.GetType().Name}: {ex.Message}");
                 // small backoff to avoid busy loop on repeated failures
                 Thread.Sleep(50);
             }
@@ -377,17 +381,15 @@ public class BluetoothClient : MonoBehaviour
         if (!IsConnected) return;
         try
         {
-            // Format: "“R: 255, G: 127, B: 0, Side: 1>>”
-
             int r = Mathf.Clamp(Mathf.RoundToInt(color.r * 255f), 0, 255);
             int g = Mathf.Clamp(Mathf.RoundToInt(color.g * 255f), 0, 255);
             int b = Mathf.Clamp(Mathf.RoundToInt(color.b * 255f), 0, 255);
             string cmd = $"R: {r},G: {g},B: {b},Side: {(int)side}";
             _port.WriteLine(cmd);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Debug.LogWarning($"BluetoothClient: SendColor error: {ex.GetType().Name}: {ex.Message}");
+            // ignore transient send errors
         }
     }
 
@@ -396,13 +398,12 @@ public class BluetoothClient : MonoBehaviour
         if (!IsConnected) return;
         try
         {
-            // Format: “Rainbow>>”
             string cmd = "Rainbow";
             _port.WriteLine(cmd);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Debug.LogWarning($"BluetoothClient: SendRainbow error: {ex.GetType().Name}: {ex.Message}");
+            // ignore transient send errors
         }
     }
 
@@ -411,13 +412,12 @@ public class BluetoothClient : MonoBehaviour
         if (!IsConnected) return;
         try
         {
-            // Format: “Off>>”
             string cmd = "Off";
             _port.WriteLine(cmd);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Debug.LogWarning($"BluetoothClient: off error: {ex.GetType().Name}: {ex.Message}");
+            // ignore transient send errors
         }
     }
 
@@ -426,13 +426,12 @@ public class BluetoothClient : MonoBehaviour
         if (!IsConnected) return;
         try
         {
-            // Format: “Idle>>”
             string cmd = "Idle";
             _port.WriteLine(cmd);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Debug.LogWarning($"BluetoothClient: idle error: {ex.GetType().Name}: {ex.Message}");
+            // ignore transient send errors
         }
     }
 }

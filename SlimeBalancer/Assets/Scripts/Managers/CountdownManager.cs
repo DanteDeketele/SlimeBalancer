@@ -16,7 +16,7 @@ public class CountdownManager : BaseManager
     {
         if (_countdownUIInstance == null)
         {
-            GameObject uiInstance = Instantiate(CountdownUI);
+            GameObject uiInstance = Instantiate(CountdownUI, transform);
             _countdownUIInstance = uiInstance.GetComponent<CountdownUI>();
         }
         _countdownUIInstance.gameObject.SetActive(true);
