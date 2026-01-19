@@ -254,7 +254,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SnakeGame
   GameName: Base Game
   IsGameActive: 0
-  player: {fileID: 2144330341}
+  player: {fileID: 719786245}
   SlimePrefab: {fileID: 6946571605323106449, guid: 431e6984f86c69f43a4283924421018f, type: 3}
   MoveSpeed: 3
   PlayAreaSize: {x: 15, y: 15}
@@ -502,7 +502,7 @@ Transform:
   m_GameObject: {fileID: 719786245}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2, z: 0}
+  m_LocalPosition: {x: 0, y: 0.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -731,11 +731,6 @@ MonoBehaviour:
   m_ShadowLayerMask: 1
   m_RenderingLayers: 1
   m_ShadowRenderingLayers: 1
---- !u!1 &2144330341 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6946571605323106449, guid: 431e6984f86c69f43a4283924421018f, type: 3}
-  m_PrefabInstance: {fileID: 1306905285}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

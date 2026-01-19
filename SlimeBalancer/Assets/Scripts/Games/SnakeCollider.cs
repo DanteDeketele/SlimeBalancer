@@ -19,6 +19,7 @@ public class SnakeCollider : MonoBehaviour
             snakeGame.MoveSpeed += 0.2f;
             Destroy(other.gameObject);
             snakeGame.SpawnSlime();
+            
         }
     }
 
