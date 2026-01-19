@@ -4,6 +4,10 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    /// <summary>
+    /// If set, the GameManager will skip directly to this game scene on load.
+    /// </summary>
+    public static string GameSceneNameToSkipTo = "";
     private BaseGame _currentGame;
     private GameData _currentGameData;
     public GameData CurrentGameData => _currentGameData;
@@ -121,7 +125,15 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("GameManager initialized.");
 
-        SceneManager.LoadScene(SceneManager.MainMenuSceneName);
+        if (GameSceneNameToSkipTo != "")
+        {
+            LoadGame(GameSceneNameToSkipTo);
+            GameSceneNameToSkipTo = "";
+        }
+        else
+        {
+            SceneManager.LoadScene(SceneManager.MainMenuSceneName);
+        }
     }
 
     public void LoadGame(string sceneName)
