@@ -1,437 +1,224 @@
+using UnityEngine;
+using System.IO.Ports;
+using System.Threading;
 using System;
 using System.Globalization;
-using System.IO.Ports;
-using System.Linq;
-using System.Threading;
-using UnityEngine;
 
-// Simple Bluetooth SPP client for Windows using a COM port.
-// Pair your ESP32 ("SlimeBalancer") in Windows first. Windows will create a COM port for SPP.
-// Set that COM port in `portName` (e.g., "COM5").
 public class BluetoothClient : MonoBehaviour
 {
-    [Header("Serial Port Settings")]
-    [Tooltip("Windows COM port assigned to the ESP32 SPP (e.g., COM5). Pair the device first in Windows.")]
-    public string portName = "COM5";
+    [Header("Connection Status")]
+    public string connectedPort = "None";
+    public bool IsConnected { get; private set; } = false;
+    public string statusMessage = "Disconnected";
 
-    [Tooltip("Baud rate must match Serial.begin on ESP32.")]
-    public int baudRate = 115200;
-
-    [Tooltip("Connect automatically on Start().")]
-    public bool connectOnStart = true;
-
-    [Header("Reconnect Settings")]
-    [Tooltip("Try to reconnect if the connection is lost.")]
-    public bool autoReconnect = true;
-
-    [Tooltip("Seconds between reconnect attempts.")]
-    public float reconnectIntervalSeconds = 2f;
-
-    [Header("Latest Sensor Values (read-only)")]
+    [Header("Live Data")]
     public float pitch;
     public float roll;
     public float temperature;
 
-    public bool IsConnected => _port != null && _port.IsOpen;
+    // Internal Threading & Serial
+    private SerialPort serialPort;
+    private Thread connectionThread;
+    private Thread readThread;
+    private bool keepReading = false;
+    private bool isScanning = false;
+    private string buffer = "";
 
-    private SerialPort _port;
-    private Thread _readThread;
-    private volatile bool _running;
-    private readonly object _lock = new object();
+    public enum BoardSide { All = 0, Top = 1, Right = 2, Bottom = 3, Left = 4 }
 
-    private volatile bool _connecting;
-    private volatile bool _requestReconnect;
-    private float _nextReconnectTime;
-    private bool _warnedMissingConfiguredPort;
-
-    void OnEnable()
+    private void Start()
     {
-        // Initialize next reconnect time to avoid immediate tight-loop attempts
-        _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
-
-        if (connectOnStart)
-        {
-            // Kick off connection without blocking main thread
-            QueueConnectAttempt();
-        }
+        // Start the scanning process in a background thread to keep the game smooth
+        StartAutoConnection();
     }
 
-    void Update()
+    public void StartAutoConnection()
     {
-        if (!autoReconnect) return;
+        if (isScanning || IsConnected) return;
 
-        // When a background thread asked for a reconnect, schedule next attempt on main thread
-        if (_requestReconnect)
-        {
-            _requestReconnect = false;
-            _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
-        }
-
-        // If not connected and not currently trying, attempt on interval
-        if (!IsConnected && !_connecting && Time.realtimeSinceStartup >= _nextReconnectTime)
-        {
-            _nextReconnectTime = Time.realtimeSinceStartup + reconnectIntervalSeconds;
-            QueueConnectAttempt();
-        }
+        isScanning = true;
+        statusMessage = "Scanning ports...";
+        connectionThread = new Thread(ScanAndConnect);
+        connectionThread.Start();
     }
 
-    void OnDestroy()
+    private void ScanAndConnect()
     {
-        Disconnect();
-    }
+        string[] ports = SerialPort.GetPortNames();
+        Debug.Log($"[BT] Found ports: {string.Join(", ", ports)}");
 
-    void OnApplicationQuit()
-    {
-        Disconnect();
-    }
-
-    // Schedule a background connection attempt
-    private void QueueConnectAttempt()
-    {
-        if (_connecting || IsConnected) return;
-        _connecting = true;
-        ThreadPool.QueueUserWorkItem(_ =>
+        foreach (string port in ports)
         {
+            if (!isScanning) break; // Stop if requested
+
+            Debug.Log($"[BT] Testing {port}...");
+            SerialPort testPort = null;
+
             try
             {
-                TryConnect();
-            }
-            finally
-            {
-                _connecting = false;
-                if (!IsConnected && autoReconnect)
+                testPort = new SerialPort(port, 115200);
+                testPort.ReadTimeout = 1500; // Wait 1.5s max for data
+                testPort.WriteTimeout = 500;
+                testPort.Open();
+
+                // Wait for the ESP32 to send its signature data ("Mpu_Values")
+                // Your ESP32 sends data every 25ms, so 1500ms is plenty.
+                string receivedChunk = "";
+
+                // Read a few times to fill buffer
+                // We need to loop briefly because the first read might be partial
+                for (int i = 0; i < 5; i++)
                 {
-                    // Ask main thread to schedule the next reconnect attempt
-                    _requestReconnect = true;
+                    try { receivedChunk += testPort.ReadExisting(); } catch { }
+                    Thread.Sleep(100);
+                }
+
+                // Check for your specific protocol signature
+                if (receivedChunk.Contains("Mpu_Values") || receivedChunk.Contains(">>"))
+                {
+                    Debug.Log($"[BT] HANDSHAKE SUCCESS on {port}!");
+
+                    // We found it! Promote this testPort to our main serialPort
+                    serialPort = testPort;
+                    connectedPort = port;
+                    IsConnected = true;
+                    keepReading = true;
+                    statusMessage = $"Connected: {port}";
+
+                    // Start the permanent read loop
+                    readThread = new Thread(ReadDataThread);
+                    readThread.Start();
+
+                    isScanning = false;
+                    return; // Exit the scanner
+                }
+                else
+                {
+                    Debug.Log($"[BT] {port} open, but no valid data. Closing.");
+                    testPort.Close();
                 }
             }
-        });
-    }
-
-    private static bool PortExists(string name)
-    {
-        if (string.IsNullOrEmpty(name)) return false;
-        try
-        {
-            var ports = SerialPort.GetPortNames();
-            return ports != null && ports.Contains(name, StringComparer.OrdinalIgnoreCase);
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    // This is now only called on a background worker by QueueConnectAttempt
-    public void TryConnect()
-    {
-        if (IsConnected)
-        {
-            return;
-        }
-
-        try
-        {
-            string[] ports = SerialPort.GetPortNames();
-
-            // If a specific port is set but missing, fall back to scanning all ports
-            if (!string.IsNullOrEmpty(portName) && !PortExists(portName))
+            catch (Exception)
             {
-                if (!_warnedMissingConfiguredPort)
-                {
-                    Debug.LogWarning($"BluetoothClient: Configured port '{portName}' not found. Scanning available ports.");
-                    _warnedMissingConfiguredPort = true;
-                }
-                // Clear configured port so we don't keep preferring a missing one
-                portName = string.Empty;
-            }
-
-            // Prefer configured port if present; else try all available ports
-            var candidates = ports ?? Array.Empty<string>();
-            if (!string.IsNullOrEmpty(portName) && PortExists(portName))
-            {
-                candidates = new[] { portName }.Concat(candidates.Where(p => !string.Equals(p, portName, StringComparison.OrdinalIgnoreCase))).ToArray();
-            }
-
-            if (candidates.Length == 0)
-            {
-                // No ports available; remain disconnected and let keyboard input be used
-                return;
-            }
-
-            foreach (var p in candidates)
-            {
-                try
-                {
-                    OpenPort(p);
-                    if (IsConnected)
-                    {
-                        portName = p; // adopt discovered port
-                        _warnedMissingConfiguredPort = false; // reset
-                        break;
-                    }
-                }
-                catch (Exception)
-                {
-                    // Ignore and try next candidate
-                    SafeDisposePort();
-                }
+                // Port busy or not a serial device
+                if (testPort != null && testPort.IsOpen) testPort.Close();
             }
         }
-        catch
-        {
-            // Swallow errors here; remain disconnected and retry later.
-            SafeDisposePort();
-        }
-    }
 
-    private void OpenPort(string name)
-    {
-        _port = new SerialPort(name, baudRate)
-        {
-            ReadTimeout = 500,
-            WriteTimeout = 500,
-            NewLine = ">>", // Messages end with ">>\r\n" on the ESP32
-            DtrEnable = false,
-            RtsEnable = false
-        };
-        _port.Open();
-        _running = true;
+        isScanning = false;
+        statusMessage = "Device not found. Retrying in 3s...";
+        Debug.LogWarning("[BT] Scan complete. Device not found.");
 
-        _readThread = new Thread(ReadLoop)
-        {
-            IsBackground = true,
-            Name = "BluetoothClientReadLoop"
-        };
-        _readThread.Start();
-
-        Debug.Log($"BluetoothClient: Opened {name} @ {baudRate}.");
+        // Optional: Retry automatically
+        Thread.Sleep(3000);
+        StartAutoConnection();
     }
 
     public void Disconnect()
     {
-        _running = false;
-        try
+        isScanning = false;
+        keepReading = false;
+        IsConnected = false;
+
+        // Kill threads safely
+        if (connectionThread != null && connectionThread.IsAlive) connectionThread.Abort();
+        if (readThread != null && readThread.IsAlive) readThread.Join(500);
+
+        if (serialPort != null && serialPort.IsOpen)
         {
-            if (_readThread != null && _readThread.IsAlive)
-            {
-                // Interrupt blocking reads by closing the port first
-                try { _port?.Close(); } catch { /* ignore */ }
-                if (!_readThread.Join(500))
-                {
-                    try { _readThread.Abort(); } catch { /* ignore */ }
-                }
-            }
+            serialPort.Close();
         }
-        catch { /* ignore */ }
-        finally
-        {
-            SafeDisposePort();
-            _readThread = null;
-        }
+
+        statusMessage = "Disconnected";
+        Debug.Log("[BT] Disconnected");
     }
 
-    private void SafeDisposePort()
+    // --- Sending Methods ---
+
+    private void SendString(string message)
     {
-        try
+        if (IsConnected && serialPort != null && serialPort.IsOpen)
         {
-            if (_port != null)
-            {
-                if (_port.IsOpen)
-                {
-                    _port.Close();
-                }
-                _port.Dispose();
-            }
-        }
-        catch { /* ignore */ }
-        finally
-        {
-            _port = null;
+            try { serialPort.WriteLine(message); }
+            catch (Exception e) { Debug.LogWarning($"[BT] Send Error: {e.Message}"); }
         }
     }
 
-    private void ReadLoop()
-    {
-        var invariant = CultureInfo.InvariantCulture;
-
-        while (_running && _port != null)
-        {
-            try
-            {
-                // Read until ">>" (per NewLine)
-                string payload = _port.ReadLine();
-                if (string.IsNullOrEmpty(payload))
-                    continue;
-
-                // Expecting: "Mpu_Values: P:<p>,R:<r>,T:<t>"
-                if (!payload.Contains("Mpu_Values:"))
-                    continue;
-
-                // Quick parse without allocations; split is fine for simplicity
-                // Example: Mpu_Values: P:12.3,R:-4.56,T:37.2
-                float p, r, t;
-                if (TryParseValues(payload, invariant, out p, out r, out t))
-                {
-                    lock (_lock)
-                    {
-                        pitch = p;
-                        roll = r;
-                        temperature = t;
-                    }
-                }
-            }
-            catch (TimeoutException)
-            {
-                // benign
-            }
-            catch (InvalidOperationException)
-            {
-                // Port closed during read
-                break;
-            }
-            catch (ThreadAbortException)
-            {
-                break;
-            }
-            catch (System.IO.IOException)
-            {
-                // Device removed or IO error; close and break so reconnect can occur
-                try { _port?.Close(); } catch { }
-                break;
-            }
-            catch (Exception)
-            {
-                // small backoff to avoid busy loop on repeated failures
-                Thread.Sleep(50);
-            }
-        }
-
-        // Ensure port closed on loop exit
-        try { _port?.Close(); } catch { }
-
-        // Signal reconnect if enabled (on main thread via Update)
-        if (autoReconnect)
-        {
-            _requestReconnect = true;
-        }
-    }
-
-    private static bool TryParseValues(string payload, IFormatProvider fmt, out float p, out float r, out float t)
-    {
-        p = r = t = 0f;
-
-        // Remove prefix if present
-        int idx = payload.IndexOf('P');
-        if (idx < 0)
-        {
-            // Try to find first digit sign
-            idx = payload.IndexOf(':');
-            if (idx >= 0 && idx + 1 < payload.Length) idx++;
-            else idx = 0;
-        }
-
-        // Split by comma for simplicity
-        // Expect tokens like "P:12.3" "R:-4.56" "T:37.2"
-        try
-        {
-            string work = payload.Trim();
-            // Trim optional leading label
-            int label = work.IndexOf(':');
-            if (label >= 0 && label + 1 < work.Length)
-            {
-                work = work.Substring(label + 1).Trim();
-            }
-
-            var parts = work.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length < 3) return false;
-
-            // P
-            int pidx = parts[0].IndexOf(':');
-            string ps = pidx >= 0 ? parts[0].Substring(pidx + 1) : parts[0];
-            // R
-            int ridx = parts[1].IndexOf(':');
-            string rs = ridx >= 0 ? parts[1].Substring(ridx + 1) : parts[1];
-            // T
-            int tidx = parts[2].IndexOf(':');
-            string ts = tidx >= 0 ? parts[2].Substring(tidx + 1) : parts[2];
-
-            p = (float)double.Parse(ps, fmt);
-            r = (float)double.Parse(rs, fmt);
-            t = (float)double.Parse(ts, fmt);
-            return true;
-        }
-        catch
-        {
-            return false;
-        }
-    }
-
-    public enum BoardSide
-    {
-        Left = 1,
-        Right = 3,
-        Top = 4,
-        Bottom = 2,
-        All = 0
-    }
+    public void SendOff() => SendString("Off>>");
+    public void SendRainbow() => SendString("Rainbow>>");
+    public void SendIdle() => SendString("Idle>>");
 
     public void SendColor(Color color, BoardSide side)
     {
-        if (!IsConnected) return;
-        try
+        int r = Mathf.RoundToInt(color.r * 255);
+        int g = Mathf.RoundToInt(color.g * 255);
+        int b = Mathf.RoundToInt(color.b * 255);
+        int s = (int)side;
+        SendString($"R: {r}, G: {g}, B: {b}, Side: {s}>>");
+    }
+
+    // --- Receiving Logic (Main Loop) ---
+
+    private void ReadDataThread()
+    {
+        while (keepReading && serialPort != null && serialPort.IsOpen)
         {
-            int r = Mathf.Clamp(Mathf.RoundToInt(color.r * 255f), 0, 255);
-            int g = Mathf.Clamp(Mathf.RoundToInt(color.g * 255f), 0, 255);
-            int b = Mathf.Clamp(Mathf.RoundToInt(color.b * 255f), 0, 255);
-            string cmd = $"R: {r},G: {g},B: {b},Side: {(int)side}";
-            _port.WriteLine(cmd);
-        }
-        catch (Exception)
-        {
-            // ignore transient send errors
+            try
+            {
+                string incoming = serialPort.ReadExisting();
+                if (!string.IsNullOrEmpty(incoming))
+                {
+                    ProcessIncomingData(incoming);
+                }
+            }
+            catch (TimeoutException) { }
+            catch (Exception e)
+            {
+                Debug.LogWarning($"[BT] Read Error: {e.Message}");
+                Disconnect(); // Auto-disconnect on fatal error
+            }
+            Thread.Sleep(10);
         }
     }
 
-    public void SendRainbow()
+    private void ProcessIncomingData(string newData)
     {
-        if (!IsConnected) return;
-        try
+        buffer += newData;
+        int terminatorIndex;
+        while ((terminatorIndex = buffer.IndexOf(">>")) != -1)
         {
-            string cmd = "Rainbow";
-            _port.WriteLine(cmd);
-        }
-        catch (Exception)
-        {
-            // ignore transient send errors
+            string cleanMessage = buffer.Substring(0, terminatorIndex).Trim();
+            buffer = buffer.Substring(terminatorIndex + 2);
+            ParseMessage(cleanMessage);
         }
     }
 
-    public void SendOff()
+    private void ParseMessage(string msg)
     {
-        if (!IsConnected) return;
-        try
+        if (msg.StartsWith("Mpu_Values:"))
         {
-            string cmd = "Off";
-            _port.WriteLine(cmd);
-        }
-        catch (Exception)
-        {
-            // ignore transient send errors
+            try
+            {
+                pitch = ExtractValue(msg, "P: ", ",");
+                roll = ExtractValue(msg, "R: ", ",");
+                temperature = ExtractValue(msg, "T: ", "");
+            }
+            catch { }
         }
     }
 
-    public void SendIdle()
+    private float ExtractValue(string source, string key, string endChar)
     {
-        if (!IsConnected) return;
-        try
-        {
-            string cmd = "Idle";
-            _port.WriteLine(cmd);
-        }
-        catch (Exception)
-        {
-            // ignore transient send errors
-        }
+        int startIndex = source.IndexOf(key);
+        if (startIndex == -1) return 0f;
+        startIndex += key.Length;
+        int endIndex = string.IsNullOrEmpty(endChar) ? source.Length : source.IndexOf(endChar, startIndex);
+        if (endIndex == -1) endIndex = source.Length;
+        string numStr = source.Substring(startIndex, endIndex - startIndex).Trim();
+        if (float.TryParse(numStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float result)) return result;
+        return 0f;
     }
+
+    private void OnDestroy() => Disconnect();
+    private void OnApplicationQuit() => Disconnect();
 }
