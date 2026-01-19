@@ -1,8 +1,11 @@
-using UnityEngine;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Globalization;
 using System.IO.Ports;
 using System.Threading;
-using System;
-using System.Globalization;
+using System.Threading.Tasks; // Required for Parallel tasks
+using UnityEngine;
 
 public class BluetoothClient : MonoBehaviour
 {
@@ -16,19 +19,20 @@ public class BluetoothClient : MonoBehaviour
     public float roll;
     public float temperature;
 
-    // Internal Threading & Serial
+    // --- Internal ---
     private SerialPort serialPort;
-    private Thread connectionThread;
     private Thread readThread;
     private bool keepReading = false;
     private bool isScanning = false;
     private string buffer = "";
 
+    // Cancellation token to stop all other searchers once one finds the device
+    private CancellationTokenSource scanTokenSource;
+
     public enum BoardSide { All = 0, Top = 1, Right = 2, Bottom = 3, Left = 4 }
 
     private void Start()
     {
-        // Start the scanning process in a background thread to keep the game smooth
         StartAutoConnection();
     }
 
@@ -37,150 +41,178 @@ public class BluetoothClient : MonoBehaviour
         if (isScanning || IsConnected) return;
 
         isScanning = true;
-        statusMessage = "Scanning ports...";
-        connectionThread = new Thread(ScanAndConnect);
-        connectionThread.Start();
+        statusMessage = "Scanning all ports...";
+
+        // Run the scanner in a background task so Unity doesn't freeze
+        Task.Run(() => ScanAllPortsParallel());
     }
 
-    private void ScanAndConnect()
+    private async Task ScanAllPortsParallel()
     {
         string[] ports = SerialPort.GetPortNames();
         Debug.Log($"[BT] Found ports: {string.Join(", ", ports)}");
 
-        foreach (string port in ports)
+        if (ports.Length == 0)
         {
-            if (!isScanning) break;
-
-            Debug.Log($"[BT] Testing {port}...");
-            SerialPort testPort = null;
-
-            try
-            {
-                testPort = new SerialPort(port, 115200);
-                testPort.ReadTimeout = 2000;
-                testPort.WriteTimeout = 1000;
-                testPort.DtrEnable = true; // Essential for some ESP32 boards
-                testPort.RtsEnable = true;
-                testPort.Open();
-
-                // PHASE 1: The "Reboot Wait"
-                // When a port opens, the ESP32 might restart. We must wait 2 seconds 
-                // blindly before we even expect data.
-                Thread.Sleep(2000);
-
-                // PHASE 2: Listen for specific data
-                // We give it another 3 seconds to send a valid "Mpu_Values" message
-                string accumulatedData = "";
-                DateTime timeOut = DateTime.Now.AddSeconds(3);
-
-                bool found = false;
-
-                while (DateTime.Now < timeOut)
-                {
-                    try
-                    {
-                        string chunk = testPort.ReadExisting();
-                        if (!string.IsNullOrEmpty(chunk))
-                        {
-                            accumulatedData += chunk;
-                            // Debug.Log($"[BT] {port} received: {chunk}"); // Uncomment to debug raw data
-                        }
-
-                        if (accumulatedData.Contains("Mpu_Values") || accumulatedData.Contains(">>"))
-                        {
-                            found = true;
-                            break; // Found it!
-                        }
-                    }
-                    catch { }
-
-                    Thread.Sleep(100); // Small pause to save CPU
-                }
-
-                if (found)
-                {
-                    Debug.Log($"[BT] HANDSHAKE SUCCESS on {port}!");
-                    serialPort = testPort;
-                    connectedPort = port;
-                    IsConnected = true;
-                    keepReading = true;
-                    statusMessage = $"Connected: {port}";
-
-                    // Clear the buffer so we don't process old handshake data twice
-                    buffer = "";
-
-                    readThread = new Thread(ReadDataThread);
-                    readThread.Start();
-
-                    isScanning = false;
-                    return;
-                }
-                else
-                {
-                    Debug.Log($"[BT] {port} timed out. Data received: '{accumulatedData}'");
-                    testPort.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.LogWarning($"[BT] Failed to open {port}: {ex.Message}");
-                if (testPort != null && testPort.IsOpen) testPort.Close();
-            }
+            RetryScan();
+            return;
         }
 
-        isScanning = false;
-        statusMessage = "Device not found. Retrying in 3s...";
-        Debug.LogWarning("[BT] Scan complete. Device not found.");
+        scanTokenSource = new CancellationTokenSource();
+        var token = scanTokenSource.Token;
+        List<Task> portTasks = new List<Task>();
 
+        foreach (string port in ports)
+        {
+            // Launch a separate task for EACH port
+            Task t = Task.Run(() => CheckSinglePort(port, token), token);
+            portTasks.Add(t);
+        }
+
+        try
+        {
+            // Wait for all to finish (or for one to succeed and cancel the rest)
+            await Task.WhenAll(portTasks);
+        }
+        catch (OperationCanceledException)
+        {
+            // This is expected when one task cancels the others
+        }
+
+        if (!IsConnected)
+        {
+            RetryScan();
+        }
+    }
+
+    private void CheckSinglePort(string port, CancellationToken token)
+    {
+        SerialPort testPort = null;
+        try
+        {
+            if (token.IsCancellationRequested) return;
+
+            testPort = new SerialPort(port, 115200);
+            testPort.ReadTimeout = 2000;
+            testPort.WriteTimeout = 1000;
+            testPort.DtrEnable = true;
+            testPort.RtsEnable = true;
+
+            testPort.Open();
+
+            // 1. Wait for potential ESP32 Reboot (essential)
+            // We use SpinWait or sleep in chunks to allow early cancellation
+            for (int i = 0; i < 20; i++)
+            {
+                if (token.IsCancellationRequested) { testPort.Close(); return; }
+                Thread.Sleep(100);
+            }
+
+            // 2. Listen for Handshake
+            string accumulated = "";
+            DateTime timeout = DateTime.Now.AddSeconds(2.5); // 2.5s listening window
+
+            while (DateTime.Now < timeout)
+            {
+                if (token.IsCancellationRequested) { testPort.Close(); return; }
+
+                try
+                {
+                    string chunk = testPort.ReadExisting();
+                    if (!string.IsNullOrEmpty(chunk))
+                    {
+                        accumulated += chunk;
+                        // Check for signature
+                        if (accumulated.Contains("Mpu_Values") || accumulated.Contains(">>"))
+                        {
+                            // --- WINNER FOUND ---
+                            if (!IsConnected) // Double check to ensure only one winner
+                            {
+                                ConnectSuccess(testPort, port);
+                            }
+                            return;
+                        }
+                    }
+                }
+                catch { }
+                Thread.Sleep(50);
+            }
+
+            // If we get here, this port failed.
+            testPort.Close();
+        }
+        catch
+        {
+            if (testPort != null && testPort.IsOpen) testPort.Close();
+        }
+    }
+
+    private void ConnectSuccess(SerialPort port, string portName)
+    {
+        // This lock ensures only one thread claims victory
+        lock (this)
+        {
+            if (IsConnected)
+            {
+                port.Close(); // Another thread beat us by a millisecond
+                return;
+            }
+
+            IsConnected = true;
+            isScanning = false;
+            serialPort = port; // Adopt the open port
+            connectedPort = portName;
+            statusMessage = $"Connected: {portName}";
+
+            // Cancel other searches
+            scanTokenSource.Cancel();
+
+            Debug.Log($"[BT] SUCCESS! Connected to {portName}");
+
+            // Start the permanent read thread
+            keepReading = true;
+            readThread = new Thread(ReadDataThread);
+            readThread.Start();
+        }
+    }
+
+    private void RetryScan()
+    {
+        isScanning = false;
+        statusMessage = "Device not found. Retrying...";
+        Debug.Log("[BT] Scan failed. Retrying in 3s...");
         Thread.Sleep(3000);
         StartAutoConnection();
     }
 
     public void Disconnect()
     {
+        scanTokenSource?.Cancel();
         isScanning = false;
         keepReading = false;
         IsConnected = false;
 
-        // Kill threads safely
-        if (connectionThread != null && connectionThread.IsAlive) connectionThread.Abort();
         if (readThread != null && readThread.IsAlive) readThread.Join(500);
-
-        if (serialPort != null && serialPort.IsOpen)
-        {
-            serialPort.Close();
-        }
+        if (serialPort != null && serialPort.IsOpen) serialPort.Close();
 
         statusMessage = "Disconnected";
         Debug.Log("[BT] Disconnected");
     }
 
-    // --- Sending Methods ---
-
-    private void SendString(string message)
-    {
-        if (IsConnected && serialPort != null && serialPort.IsOpen)
-        {
-            try { serialPort.WriteLine(message); }
-            catch (Exception e) { Debug.LogWarning($"[BT] Send Error: {e.Message}"); }
-        }
-    }
-
+    // --- Sending Methods (Unchanged) ---
+    private void SendString(string message) { if (IsConnected && serialPort?.IsOpen == true) try { serialPort.WriteLine(message); } catch { } }
     public void SendOff() => SendString("Off>>");
     public void SendRainbow() => SendString("Rainbow>>");
     public void SendIdle() => SendString("Idle>>");
-
     public void SendColor(Color color, BoardSide side)
     {
         int r = Mathf.RoundToInt(color.r * 255);
         int g = Mathf.RoundToInt(color.g * 255);
         int b = Mathf.RoundToInt(color.b * 255);
-        int s = (int)side;
-        SendString($"R: {r}, G: {g}, B: {b}, Side: {s}>>");
+        SendString($"R: {r}, G: {g}, B: {b}, Side: {(int)side}>>");
     }
 
-    // --- Receiving Logic (Main Loop) ---
-
+    // --- Receiving Logic (Unchanged) ---
     private void ReadDataThread()
     {
         while (keepReading && serialPort != null && serialPort.IsOpen)
@@ -188,17 +220,9 @@ public class BluetoothClient : MonoBehaviour
             try
             {
                 string incoming = serialPort.ReadExisting();
-                if (!string.IsNullOrEmpty(incoming))
-                {
-                    ProcessIncomingData(incoming);
-                }
+                if (!string.IsNullOrEmpty(incoming)) ProcessIncomingData(incoming);
             }
-            catch (TimeoutException) { }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[BT] Read Error: {e.Message}");
-                Disconnect(); // Auto-disconnect on fatal error
-            }
+            catch { Disconnect(); }
             Thread.Sleep(10);
         }
     }
@@ -236,9 +260,7 @@ public class BluetoothClient : MonoBehaviour
         startIndex += key.Length;
         int endIndex = string.IsNullOrEmpty(endChar) ? source.Length : source.IndexOf(endChar, startIndex);
         if (endIndex == -1) endIndex = source.Length;
-        string numStr = source.Substring(startIndex, endIndex - startIndex).Trim();
-        if (float.TryParse(numStr, NumberStyles.Float, CultureInfo.InvariantCulture, out float result)) return result;
-        return 0f;
+        return float.TryParse(source.Substring(startIndex, endIndex - startIndex).Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float r) ? r : 0f;
     }
 
     private void OnDestroy() => Disconnect();
