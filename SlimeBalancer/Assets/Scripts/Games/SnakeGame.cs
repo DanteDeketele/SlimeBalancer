@@ -176,6 +176,7 @@ public class SnakeGame : BaseGame
     // Pickup becomes a snake segment (delayed until next cell commit)
     public void GrowSnake(GameObject slime)
     {
+        StartCoroutine(GameManager.InputManager.LedBlink(Color.green, 2, .25f, endEffect: InputManager.LightingEffect.Rainbow));
         slime.SetActive(true);
         if (slime.TryGetComponent<Collider>(out var col))
         {

@@ -37,7 +37,7 @@ public class BluetoothClient : MonoBehaviour
         StartAutoConnection();
     }
 
-    public IEnumerator BlinkEffect(Color color, int count, float delayBetweenBlinks, BoardSide side, Color endColor)
+    public IEnumerator Blink(Color color, int count, float delayBetweenBlinks, BoardSide side, Color endColor, InputManager.LightingEffect endEffect)
     {
         for (int i = 0; i < count; i++)
         {
@@ -51,7 +51,11 @@ public class BluetoothClient : MonoBehaviour
 
             yield return new WaitForSeconds(delayBetweenBlinks);
         }
-        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, endColor, side);
+
+        if (endEffect != InputManager.LightingEffect.Custom)
+            GameManager.InputManager.SetLightingEffect(endEffect);
+        else
+            GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, endColor, side);
     }
 
     public void StartAutoConnection()

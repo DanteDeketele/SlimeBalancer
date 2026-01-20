@@ -25,6 +25,7 @@ public abstract class BaseGame : MonoBehaviour
 
     public virtual void UpdateGame()
     {
+
     }
 
     public virtual void EndGame(bool won = false)
