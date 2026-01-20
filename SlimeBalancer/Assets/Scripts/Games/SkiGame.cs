@@ -58,11 +58,12 @@ public class SkiGame : BaseGame
                 for (int j = 0; j < obsCount; j++)
                 {
                     float xpos = Random.Range(-60, 60) + Player.position.x;
-                    if (Mathf.Abs(flagPositionX - xpos) > 13f)
+                    
+                    int index = Random.Range(0, ObstaclePrefabs.Length);
+                    if (Mathf.Abs(flagPositionX - xpos) > 13f || index == 1) // 1 is snowman    
                     {
-                        var prefab = ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)];
                         GameObject obstacle = Instantiate(
-                            prefab,
+                            ObstaclePrefabs[index],
                         _floorDirection * (segDistance + Random.Range(0, 20)) + Vector3.right * xpos,
                         Quaternion.Euler(0, Random.Range(0, 360), 0), transform);
 
@@ -127,10 +128,11 @@ public class SkiGame : BaseGame
             for (int i = 0; i < Random.Range(5, 100); i++)
             {
                 float xPos = Random.Range(-60, 60) + Player.position.x;
-                if (Mathf.Abs(flagPositionX - xPos) > 13f)
+                int index = Random.Range(0, ObstaclePrefabs.Length);
+                if (Mathf.Abs(flagPositionX - xPos) > 13f || index == 1) // 1 is snowman    
                 {
                     GameObject obstacle = Instantiate(
-                        ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)],
+                        ObstaclePrefabs[index],
                         _floorDirection * (SpawnAheadDistance + Random.Range(0, 20)) + Vector3.right * xPos,
                         Quaternion.identity, transform);
                 
