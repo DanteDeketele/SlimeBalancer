@@ -5,7 +5,11 @@ using System.Collections;
 
 public class InputManager : BaseManager
 {
+    [SerializeField] private GameObject DisconnectedUI;
+
     private string actionMapName = "Player";
+    private float prevTimeScale = 1f;
+    private bool prevConnectionState = false;
 
     private InputAction moveAction;
     private Vector2 inputVector;
@@ -34,6 +38,9 @@ public class InputManager : BaseManager
     private bool isBlink = false;
 
     private bool isPressedIn = false;
+
+    public bool IsConnected => bluetoothClient != null && bluetoothClient.IsConnected;
+    public int BatteryLevel => 0;
 
     private void Awake()
     {
@@ -99,7 +106,6 @@ public class InputManager : BaseManager
             float xInput = Mathf.Clamp((roll - rollMin) / (rollMax - rollMin) * 2f - 1f, -1f, 1f);
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
             inputVector = new Vector2(-xInput, yInput);
-            Debug.Log($"Bluetooth Input - Pitch: {pitch}, Roll: {roll}, Mapped Input: {inputVector}");
 
             inputRotation = Quaternion.Euler(pitch, 0f, roll);
 
@@ -107,6 +113,7 @@ public class InputManager : BaseManager
         }
         else
         {
+
             inputVector = GetInput();
             inputRotation = Quaternion.Euler(inputVector.y * 18f, 0f, inputVector.x * 18f);
             inputEulerRotation = new Vector3(inputVector.y * 18f, 0f, inputVector.x * 18f);
@@ -185,6 +192,25 @@ public class InputManager : BaseManager
                 Color color = Color.HSVToRGB(0.33f * brightness, 1f, brightness); // Greenish color based on brightness
                 SetLightingEffect(LightingEffect.Custom, color, side);
             }
+
+            if (prevConnectionState != IsConnected && !Application.isEditor)
+            {
+                
+                if (IsConnected)
+                {
+                    DisconnectedUI.SetActive(false);
+                    Time.timeScale = prevTimeScale;
+                }
+                else
+                {
+                    DisconnectedUI.SetActive(true);
+                    prevTimeScale = Time.timeScale;
+                    Time.timeScale = 0f;
+                }
+
+                prevConnectionState = IsConnected;
+            }
+
         }
 
         // Check for idle state

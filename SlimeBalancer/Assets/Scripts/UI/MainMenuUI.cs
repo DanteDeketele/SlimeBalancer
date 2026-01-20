@@ -10,6 +10,8 @@ public class MainMenuUI : MonoBehaviour
     private int selectedGameIndex = 0;
 
     private VisualElement gameListContainer;
+    private VisualElement boardOnlineCircle;
+    private Label boardOnlineLabel;
 
     float timer = 0f;
     public float scrollDelay = 0.5f;
@@ -25,7 +27,8 @@ public class MainMenuUI : MonoBehaviour
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
 
-
+        boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
+        boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
 
         GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
 
@@ -190,6 +193,17 @@ public class MainMenuUI : MonoBehaviour
             actualScreenWidth = Screen.width;
 
             OnGeometryCalculated();
+        }
+
+        if (GameManager.InputManager.IsConnected)
+        {
+            boardOnlineCircle.style.backgroundColor = new StyleColor(Color.green);
+            boardOnlineLabel.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+        }
+        else
+        {
+            boardOnlineCircle.style.backgroundColor = new StyleColor(Color.red);
+            boardOnlineLabel.text = "Bord Offline";
         }
     }
 }
