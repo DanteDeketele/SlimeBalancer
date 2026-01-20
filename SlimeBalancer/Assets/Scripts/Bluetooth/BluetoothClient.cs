@@ -20,6 +20,26 @@ public class BluetoothClient : MonoBehaviour
     public float roll;
     public float temperature;
 
+    [Header("Options")]
+    [Tooltip("Enable extra logging to diagnose issues on specific machines.")]
+    public bool logVerbose = true;
+    [Tooltip("Baud rate used to open the serial port.")]
+    public int baudRate = 115200;
+    [Tooltip("Toggle DTR/RTS. Some machines/drivers behave differently. Try disabling if connection fails.")]
+    public bool useDtrRts = true;
+    [Tooltip("Seconds to wait after opening the port to allow MCU reboot over DTR/RTS.")]
+    public float postOpenResetDelaySec = 2.0f;
+    [Tooltip("Seconds to listen for handshake text after the initial reset delay.")]
+    public float handshakeListenWindowSec = 5.0f;
+    [Tooltip("Filters available ports to only those that can be opened briefly. Helps hide stale Bluetooth COM ports.")]
+    public bool filterToOpenablePorts = true;
+    [Tooltip("Timeout in ms used by the quick open-check when filtering ports.")]
+    public int openCheckTimeoutMs = 300;
+
+    [Header("Discovery")]
+    [Tooltip("Last seen available COM ports. Useful for manual selection in UI.")]
+    public string[] availablePorts = new string[0];
+
     // --- Internal ---
     private SerialPort serialPort;
     private Thread readThread;
@@ -65,13 +85,96 @@ public class BluetoothClient : MonoBehaviour
         Task.Run(() => ScanAllPortsParallel());
     }
 
-    private async Task ScanAllPortsParallel()
+    public void ConnectToPort(string portName)
+    {
+        if (IsConnected || string.IsNullOrEmpty(portName)) return;
+        statusMessage = $"Trying port {portName}...";
+        if (logVerbose) Debug.Log($"[BT] Manual connect to {portName}");
+        scanTokenSource?.Cancel();
+        isScanning = false;
+        Task.Run(() =>
+        {
+            try
+            {
+                CheckSinglePort(portName, CancellationToken.None);
+                if (!IsConnected)
+                {
+                    statusMessage = $"No handshake on {portName}";
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogWarning($"[BT] Manual connect error on {portName}: {ex.GetType().Name}: {ex.Message}");
+            }
+        });
+    }
+
+    public void RefreshPorts()
+    {
+        // Non-blocking refresh
+        Task.Run(() =>
+        {
+            string[] fresh = GetFilteredPorts();
+            availablePorts = fresh;
+            if (logVerbose) Debug.Log($"[BT] Ports refreshed: {string.Join(", ", fresh)}");
+        });
+    }
+
+    private string[] GetFilteredPorts()
     {
         string[] ports = SerialPort.GetPortNames();
-        Debug.Log($"[BT] Found ports: {string.Join(", ", ports)}");
+        Array.Sort(ports, StringComparer.OrdinalIgnoreCase);
+        if (!filterToOpenablePorts) return ports;
+
+        List<string> result = new List<string>();
+        foreach (var port in ports)
+        {
+            SerialPort p = null;
+            try
+            {
+                p = new SerialPort(port, baudRate)
+                {
+                    ReadTimeout = openCheckTimeoutMs,
+                    WriteTimeout = openCheckTimeoutMs,
+                    DtrEnable = false,
+                    RtsEnable = false
+                };
+                p.Open();
+                // Small sleep to emulate minimal activity
+                Thread.Sleep(10);
+                result.Add(port);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Port is busy but exists; still list it
+                result.Add(port);
+            }
+            catch (System.IO.IOException io)
+            {
+                // Likely stale/non-existent; skip
+                if (logVerbose) Debug.Log($"[BT] Skipping non-openable port {port}: {io.Message}");
+            }
+            catch (Exception ex)
+            {
+                if (logVerbose) Debug.Log($"[BT] Skipping port {port}: {ex.GetType().Name}: {ex.Message}");
+            }
+            finally
+            {
+                try { if (p != null && p.IsOpen) p.Close(); } catch { }
+            }
+        }
+        return result.ToArray();
+    }
+
+    private async Task ScanAllPortsParallel()
+    {
+        string[] ports = GetFilteredPorts();
+        availablePorts = ports;
+        if (logVerbose) Debug.Log($"[BT] Found ports: {string.Join(", ", ports)}");
 
         if (ports.Length == 0)
         {
+            if (logVerbose) Debug.LogWarning("[BT] No COM ports found. Ensure the device is paired and a Serial Port (SPP) is created in Windows.");
             RetryScan();
             return;
         }
@@ -94,7 +197,12 @@ public class BluetoothClient : MonoBehaviour
         }
         catch (OperationCanceledException)
         {
-            // This is expected when one task cancels the others
+            // Expected when one task cancels the others
+            if (logVerbose) Debug.Log("[BT] Scan tasks canceled after a successful connection.");
+        }
+        catch (Exception ex)
+        {
+            Debug.LogWarning($"[BT] Unexpected scan error: {ex.GetType().Name}: {ex.Message}");
         }
 
         if (!IsConnected)
@@ -110,29 +218,53 @@ public class BluetoothClient : MonoBehaviour
         {
             if (token.IsCancellationRequested) return;
 
-            testPort = new SerialPort(port, 115200);
-            testPort.ReadTimeout = 2000;
-            testPort.WriteTimeout = 1000;
-            testPort.DtrEnable = true;
-            testPort.RtsEnable = true;
+            if (logVerbose) Debug.Log($"[BT] Testing {port} @ {baudRate}bps (DTR/RTS={(useDtrRts ? "on" : "off")})");
+            testPort = new SerialPort(port, baudRate)
+            {
+                ReadTimeout = 2000,
+                WriteTimeout = 1000,
+                DtrEnable = useDtrRts,
+                RtsEnable = useDtrRts
+            };
 
-            testPort.Open();
+            try
+            {
+                testPort.Open();
+            }
+            catch (UnauthorizedAccessException ua)
+            {
+                if (logVerbose) Debug.LogWarning($"[BT] {port} access denied: {ua.Message}");
+                return;
+            }
+            catch (System.IO.IOException io)
+            {
+                if (logVerbose) Debug.LogWarning($"[BT] {port} I/O error: {io.Message}");
+                return;
+            }
+            catch (Exception ex)
+            {
+                if (logVerbose) Debug.LogWarning($"[BT] {port} open failed: {ex.GetType().Name}: {ex.Message}");
+                return;
+            }
 
             // 1. Wait for potential ESP32 Reboot (essential)
-            // We use SpinWait or sleep in chunks to allow early cancellation
-            for (int i = 0; i < 20; i++)
+            // We use small sleeps to allow early cancellation
+            int resetMillis = Mathf.RoundToInt(Mathf.Max(0f, postOpenResetDelaySec) * 1000f);
+            int waited = 0;
+            while (waited < resetMillis)
             {
-                if (token.IsCancellationRequested) { testPort.Close(); return; }
+                if (token.IsCancellationRequested) { try { testPort.Close(); } catch { } return; }
                 Thread.Sleep(100);
+                waited += 100;
             }
 
             // 2. Listen for Handshake
             string accumulated = "";
-            DateTime timeout = DateTime.Now.AddSeconds(2.5); // 2.5s listening window
+            DateTime timeout = DateTime.Now.AddSeconds(Mathf.Max(0.5f, handshakeListenWindowSec));
 
             while (DateTime.Now < timeout)
             {
-                if (token.IsCancellationRequested) { testPort.Close(); return; }
+                if (token.IsCancellationRequested) { try { testPort.Close(); } catch { } return; }
 
                 try
                 {
@@ -140,6 +272,7 @@ public class BluetoothClient : MonoBehaviour
                     if (!string.IsNullOrEmpty(chunk))
                     {
                         accumulated += chunk;
+                        if (logVerbose) Debug.Log($"[BT] {port} RX: {chunk.Replace("\n", "\\n").Replace("\r", "\\r")}" );
                         // Check for signature
                         if (accumulated.Contains("Mpu_Values") || accumulated.Contains(">>"))
                         {
@@ -152,16 +285,21 @@ public class BluetoothClient : MonoBehaviour
                         }
                     }
                 }
-                catch { }
+                catch (TimeoutException) { }
+                catch (Exception ex)
+                {
+                    if (logVerbose) Debug.LogWarning($"[BT] {port} read error: {ex.GetType().Name}: {ex.Message}");
+                }
                 Thread.Sleep(50);
             }
 
-            // If we get here, this port failed.
-            testPort.Close();
+            if (logVerbose) Debug.Log($"[BT] {port} no handshake within window.");
+            try { testPort.Close(); } catch { }
         }
-        catch
+        catch (Exception ex)
         {
-            if (testPort != null && testPort.IsOpen) testPort.Close();
+            if (logVerbose) Debug.LogWarning($"[BT] CheckSinglePort fatal on {port}: {ex.GetType().Name}: {ex.Message}");
+            try { if (testPort != null && testPort.IsOpen) testPort.Close(); } catch { }
         }
     }
 
@@ -172,7 +310,7 @@ public class BluetoothClient : MonoBehaviour
         {
             if (IsConnected)
             {
-                port.Close(); // Another thread beat us by a millisecond
+                try { port.Close(); } catch { } // Another thread beat us by a millisecond
                 return;
             }
 
@@ -183,13 +321,13 @@ public class BluetoothClient : MonoBehaviour
             statusMessage = $"Connected: {portName}";
 
             // Cancel other searches
-            scanTokenSource.Cancel();
+            try { scanTokenSource?.Cancel(); } catch { }
 
             Debug.Log($"[BT] SUCCESS! Connected to {portName}");
 
             // Start the permanent read thread
             keepReading = true;
-            readThread = new Thread(ReadDataThread);
+            readThread = new Thread(ReadDataThread) { IsBackground = true };
             readThread.Start();
         }
     }
@@ -198,20 +336,20 @@ public class BluetoothClient : MonoBehaviour
     {
         isScanning = false;
         statusMessage = "Device not found. Retrying...";
-        Debug.Log("[BT] Scan failed. Retrying in 3s...");
+        if (logVerbose) Debug.Log("[BT] Scan failed. Retrying in 3s...");
         Thread.Sleep(3000);
         StartAutoConnection();
     }
 
     public void Disconnect()
     {
-        scanTokenSource?.Cancel();
+        try { scanTokenSource?.Cancel(); } catch { }
         isScanning = false;
         keepReading = false;
         IsConnected = false;
 
-        if (readThread != null && readThread.IsAlive) readThread.Join(500);
-        if (serialPort != null && serialPort.IsOpen) serialPort.Close();
+        try { if (readThread != null && readThread.IsAlive) readThread.Join(500); } catch { }
+        try { if (serialPort != null && serialPort.IsOpen) serialPort.Close(); } catch { }
 
         statusMessage = "Disconnected";
         Debug.Log("[BT] Disconnected");
