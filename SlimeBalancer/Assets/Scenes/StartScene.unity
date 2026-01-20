@@ -205,12 +205,17 @@ MonoBehaviour:
   - GameName: Slime Ski
     SceneName: skie
     genre: Actie
-    Explination: []
+    Explination:
+    - "Stuur links en rechts om tussen de vlaggen door te gaan en punten te verdienen.
+      Hoe langer je blijft ski\xEBn, hoe hoger je score!"
+    - "Maar pas op! Bomen en sneeuwmannen blokkeren de piste raak je er \xE9\xE9n,
+      dan is het spel voorbij. "
     GameLogo: {fileID: 2800000, guid: 6fb958974304d184a89ef4f3e618d585, type: 3}
   - GameName: Tilt It
     SceneName: Tilt_It
     genre: Puzzle
-    Explination: []
+    Explination:
+    - Bestuur het bord en zorg ervoor dat de slimes in de juiste tube terecht komen.
     GameLogo: {fileID: 2800000, guid: 4262dd58c984184459ef726818a5daf4, type: 3}
   - GameName: Snake
     SceneName: Snake

@@ -97,7 +97,7 @@ public class MainMenuUI : MonoBehaviour
             {
                 var selectedGame = games[selectedGameIndex];
                 Debug.Log($"Selected game: {selectedGame.GameName}");
-                GameManager.Instance.LoadGame(selectedGame.SceneName);
+                GameManager.Instance.LoadInfo(selectedGame.SceneName);
             }
             // remove listeners to prevent multiple loads
             GameManager.InputManager.OnLeft.RemoveAllListeners();
