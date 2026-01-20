@@ -37,6 +37,10 @@ public class ScoreManager : BaseManager
             scoreUIInstance.gameObject.SetActive(false);
         }
     }
+    public int GetHighScore(string sceneName)
+    {
+        return PlayerPrefs.GetInt("HighScore_" + sceneName, 0);
+    }
     public void AddScore(int points)
     {
         Debug.Log($"Added {points} points to the score.");
