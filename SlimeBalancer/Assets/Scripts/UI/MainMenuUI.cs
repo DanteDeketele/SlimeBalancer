@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -22,6 +21,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void Awake()
     {
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
 

@@ -11,10 +11,6 @@ public class TiltGame : BaseGame
 
     [SerializeField] private float Delay = 5f;
 
-    private float timerLed;
-
-    private float DelayLed = 0.5f;
-
     public override void StartGame()
     {
         base.StartGame();
@@ -87,18 +83,7 @@ public class TiltGame : BaseGame
                 break;
         }
 
-        for (int i = 0; i < 2; i++)
-        {
-            GameManager.InputManager.SetLightingEffect(
-                InputManager.LightingEffect.Custom, color);
-
-            yield return new WaitForSeconds(DelayLed);
-
-            GameManager.InputManager.SetLightingEffect(
-                InputManager.LightingEffect.Custom, Color.black);
-
-            yield return new WaitForSeconds(DelayLed);
-        }
+        yield return GameManager.InputManager.LedBlink(color, 2);
         LedBasedOnPipe();
     }
 

@@ -29,11 +29,12 @@ public abstract class BaseGame : MonoBehaviour
 
     public virtual void EndGame(bool won = false)
     {
+        StartCoroutine(GameManager.InputManager.LedBlink(Color.red, 3, .15f, BluetoothClient.BoardSide.All));
         IsGameActive = false;
         GameManager.ScoreManager.HidePoints();
         Debug.Log($"{GameName} has ended.");
         GameManager.SceneManager.LoadSceneOnTop(GameManager.SceneManager.EndScreen);
-        Time.timeScale = 0.5f;
+        Time.timeScale = 0.5f;   
     }
 
 }

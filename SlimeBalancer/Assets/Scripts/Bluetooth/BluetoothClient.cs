@@ -6,6 +6,7 @@ using System.IO.Ports;
 using System.Threading;
 using System.Threading.Tasks; // Required for Parallel tasks
 using UnityEngine;
+using System.Collections;
 
 public class BluetoothClient : MonoBehaviour
 {
@@ -29,11 +30,28 @@ public class BluetoothClient : MonoBehaviour
     // Cancellation token to stop all other searchers once one finds the device
     private CancellationTokenSource scanTokenSource;
 
-    public enum BoardSide { All = 0, Top = 1, Right = 2, Bottom = 3, Left = 4 }
+    public enum BoardSide { All = 0, Top = 4, Right = 3, Bottom = 2, Left = 1 }
 
     private void Start()
     {
         StartAutoConnection();
+    }
+
+    public IEnumerator BlinkEffect(Color color, int count, float delayBetweenBlinks, BoardSide side, Color endColor)
+    {
+        for (int i = 0; i < count; i++)
+        {
+            GameManager.InputManager.SetLightingEffect(
+                InputManager.LightingEffect.Custom, Color.black, side);
+
+            yield return new WaitForSeconds(delayBetweenBlinks);
+
+            GameManager.InputManager.SetLightingEffect(
+                InputManager.LightingEffect.Custom, color, side);
+
+            yield return new WaitForSeconds(delayBetweenBlinks);
+        }
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, endColor, side);
     }
 
     public void StartAutoConnection()

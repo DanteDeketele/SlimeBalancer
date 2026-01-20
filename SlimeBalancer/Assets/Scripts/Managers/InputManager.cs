@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
+using System.Collections;
 
 public class InputManager : BaseManager
 {
@@ -218,5 +219,14 @@ public class InputManager : BaseManager
                     break;
             }
         }
+    }
+
+    public IEnumerator LedBlink(Color color, int count, float delayBetweenBlinks = 0.5f, BluetoothClient.BoardSide side = 0, Color endColor = default)
+    {
+        if (endColor == default)
+        {
+            endColor = new Color(48f / 255f, 213f / 255f, 150f / 255f);
+        }
+        yield return bluetoothClient.BlinkEffect(color, count, delayBetweenBlinks, side, endColor);
     }
 }

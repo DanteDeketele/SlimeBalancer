@@ -144,7 +144,7 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator LoadGameCoroutine(string sceneName)
     {
-        InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.blue);
+        InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         yield return SceneManager.LoadSceneCoroutine(SceneManager.InfoSceneName);
 
         yield return new WaitForSeconds(2f);

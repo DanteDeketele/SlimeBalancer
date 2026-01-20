@@ -151,6 +151,7 @@ public class SkiGame : BaseGame
                 if (Mathf.Abs(flag.transform.position.x - Player.position.x) < 3f)
                 {
                     GameManager.ScoreManager.AddScore(10);
+                    StartCoroutine(GameManager.InputManager.LedBlink(new Color(48f/255f, 213f/255f, 150f/255f), 2, .25f, BluetoothClient.BoardSide.All, Color.white));
                 }
                 else
                 {
