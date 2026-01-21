@@ -31,7 +31,7 @@ public class InfoUI : MonoBehaviour
     private void OnDisable()
     {
         GameManager.InputManager.OnDown.RemoveListener(Next);
-        GameManager.InputManager.OnLeft.RemoveListener(Back);
+        GameManager.InputManager.OnUp.RemoveListener(Back);
     }
 
     public void Next()

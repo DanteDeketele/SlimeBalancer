@@ -104,7 +104,7 @@ public class SoundManager : BaseManager
         }
 
         GameObject audioSourceObject = new GameObject("Soundtrack_" + clip.name);
-        audioSourceObject.transform.parent = this.transform;
+        DontDestroyOnLoad(audioSourceObject);
         AudioSource audioSource = audioSourceObject.AddComponent<AudioSource>();
         audioSource.clip = clip;
         audioSource.loop = loop;
@@ -126,10 +126,12 @@ public class SoundManager : BaseManager
         }
     }
 
-    public void StopAllSounds()
+    public void StopAllMusic()
     {
         foreach (AudioSource source in audioSources)
         {
+            if (!source.loop) continue; // Only stop music (looping sounds)
+
             source.Stop();
             audioSourcesToDestroy.Add(source);
             Debug.Log("Stopped sound: " + source.clip.name);

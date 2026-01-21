@@ -41,6 +41,7 @@ public class EndSceneUI : MonoBehaviour
             if (!inputInUse) return;
             restartButton.AddToClassList("focused");
             mainMenuButton.RemoveFromClassList("focused");
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
             restartSelected = true;
         });
         GameManager.InputManager.OnRight.AddListener(() =>
@@ -48,6 +49,7 @@ public class EndSceneUI : MonoBehaviour
             if (!inputInUse) return;
             mainMenuButton.AddToClassList("focused");
             restartButton.RemoveFromClassList("focused");
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
             restartSelected = false;
         });
         GameManager.InputManager.OnDown.AddListener(() =>
@@ -56,10 +58,14 @@ public class EndSceneUI : MonoBehaviour
             if (restartSelected)
             {
                 OnRestartButtonClicked();
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                
             }
             else
             {
                 OnMainMenuButtonClicked();
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                
             }
         });
 
@@ -86,10 +92,12 @@ public class EndSceneUI : MonoBehaviour
     private void OnRestartButtonClicked()
     {
         GameManager.Instance.LoadGame(GameManager.Instance.CurrentGameData.SceneName);
+        GameManager.SoundManager.StopAllMusic();
     }
 
     private void OnMainMenuButtonClicked()
     {
         GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
+        GameManager.SoundManager.StopAllMusic();
     }
 }

@@ -25,7 +25,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void Awake()
     {
-        GameManager.SoundManager.StopAllSounds();
+        GameManager.SoundManager.StopAllMusic();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
