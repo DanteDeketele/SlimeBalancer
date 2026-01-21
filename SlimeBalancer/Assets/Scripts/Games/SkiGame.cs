@@ -35,6 +35,7 @@ public class SkiGame : BaseGame
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.white);
 
         base.StartGame();
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SlimeSkieMainTheme, true, true);
     }
 
     private void PreSpawnAhead()
@@ -105,6 +106,7 @@ public class SkiGame : BaseGame
                     if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < 2f)
                     {
                         // Hit obstacle
+                        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SkiGameCrashSound);
                         EndGame(false);
                     }
 
@@ -153,6 +155,7 @@ public class SkiGame : BaseGame
                 if (Mathf.Abs(flag.transform.position.x - Player.position.x) < 3f)
                 {
                     GameManager.ScoreManager.AddScore(10);
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.SkiGameScoreSound);
                     StartCoroutine(GameManager.InputManager.LedBlink(new Color(48f/255f, 213f/255f, 150f/255f), 2, .25f, BluetoothClient.BoardSide.All, Color.white));
                 }
                 else

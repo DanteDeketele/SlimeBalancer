@@ -155,6 +155,7 @@ Transform:
   - {fileID: 1161109633}
   - {fileID: 794121537}
   - {fileID: 599194069}
+  - {fileID: 1004913449}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &599194068
@@ -203,9 +204,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SoundManager
   mainTheme: {fileID: 8300000, guid: 4a7b21cd3464194499134d213170184f, type: 3}
-  TiltGameScoreSound: {fileID: 8300000, guid: fd379cdb8f363fa4088e524e4a0d9672, type: 3}
   GameOverSound: {fileID: 8300000, guid: 4f627541444bdac4a85a7440d5d786b3, type: 3}
   GameSelectSound: {fileID: 8300000, guid: 5dd8def4b332da04e953d899b4affe11, type: 3}
+  TiltGameScoreSound: {fileID: 8300000, guid: fd379cdb8f363fa4088e524e4a0d9672, type: 3}
+  TiltItMainTheme: {fileID: 8300000, guid: 33a0c8282a19fb74ea8fcc17d40916ad, type: 3}
+  SlimeSkieMainTheme: {fileID: 8300000, guid: fca8dd83c012e3b43bfb47c2f52a8222, type: 3}
+  SkiGameScoreSound: {fileID: 8300000, guid: 9cab413ae82ff8f408af6f7b041bfcc7, type: 3}
+  SkiGameCrashSound: {fileID: 8300000, guid: db569c88d0fde9a46be5b9b20861b326, type: 3}
+  SnakeMainTheme: {fileID: 8300000, guid: 0f039284b30dce747a02b3910cc6a04e, type: 3}
+  SnakeGrowSound: {fileID: 8300000, guid: 3e2e84467150f6843a975562b7baf047, type: 3}
 --- !u!81 &599194071
 AudioListener:
   m_ObjectHideFlags: 0
