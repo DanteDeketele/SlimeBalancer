@@ -12,7 +12,7 @@ public class EndSceneUI : MonoBehaviour
 
     private Vector2 lastInput = Vector2.zero;
     private bool inputInUse = false;
-    private float inputDelay = 3f; // seconds
+    private float inputDelay = 2f; // seconds
     private float timer = 0f;
 
     private void OnEnable()
