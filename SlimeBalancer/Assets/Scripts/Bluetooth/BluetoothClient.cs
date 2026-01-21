@@ -57,9 +57,9 @@ public class BluetoothClient : MonoBehaviour
     [Tooltip("Toggle DTR/RTS. Some machines/drivers behave differently. Try disabling if connection fails.")]
     public bool useDtrRts = true;
     [Tooltip("Seconds to wait after opening the port to allow MCU reboot over DTR/RTS.")]
-    public float postOpenResetDelaySec = 2.0f;
+    public float postOpenResetDelaySec = 0.5f;
     [Tooltip("Seconds to listen for handshake text after the initial reset delay.")]
-    public float handshakeListenWindowSec = 5.0f;
+    public float handshakeListenWindowSec = 1.0f;
     [Tooltip("Filters available ports to only those that can be opened briefly. Helps hide stale Bluetooth COM ports.")]
     public bool filterToOpenablePorts = true;
     [Tooltip("Timeout in ms used by the quick open-check when filtering ports.")]
@@ -67,7 +67,7 @@ public class BluetoothClient : MonoBehaviour
 
     [Header("Disconnect Watchdog")]
     [Tooltip("If no data arrives for this many seconds, start probing the port to detect a dead link.")]
-    public float inactivityDisconnectSec = 2f; // faster detection
+    public float inactivityDisconnectSec = 0.5f; // faster detection
     [Tooltip("How often to probe the port while inactive (seconds).")]
     public float probeIntervalSec = 0.75f; // probe sooner
     [Tooltip("When probing, write a newline to trigger I/O errors on dead ports.")]
@@ -92,6 +92,9 @@ public class BluetoothClient : MonoBehaviour
     private DateTime lastProbeUtc = DateTime.MinValue;
     private volatile bool portErrorFlag = false;
 
+    // App lifecycle flag to avoid using Unity APIs off main thread
+    private volatile bool isAppStopping = false;
+
     public enum BoardSide { All = 0, Top = 4, Right = 3, Bottom = 2, Left = 1 }
 
     private void Awake()
@@ -104,12 +107,13 @@ public class BluetoothClient : MonoBehaviour
 
     private void Start()
     {
+        if (!Application.isPlaying) return;
         StartAutoConnection();
     }
 
     private void OnDisable()
     {
-        // Ensure we stop scanning/threads and close ports when object disables (e.g., scene stop)
+        isAppStopping = true;
         Disconnect();
     }
 
@@ -136,9 +140,8 @@ public class BluetoothClient : MonoBehaviour
 
     public void StartAutoConnection()
     {
-        // Do not start scanning if app is not playing
-        if (!Application.isPlaying) return;
-        if (isScanning || IsConnected) return;
+        // Removed Application.isPlaying check to allow calls from worker thread safely
+        if (isScanning || IsConnected || isAppStopping) return;
 
         isScanning = true;
         statusMessage = "Scanning all ports...";
@@ -235,6 +238,7 @@ public class BluetoothClient : MonoBehaviour
 
     private async Task ScanAllPortsParallel()
     {
+        if (isAppStopping) { isScanning = false; return; }
         string[] ports = GetFilteredPorts();
         availablePorts = ports;
         if (logVerbose) Debug.Log($"[BT] Found ports: {string.Join(", ", ports)}");
@@ -278,7 +282,7 @@ public class BluetoothClient : MonoBehaviour
 
     private void CheckSinglePort(string port, CancellationToken token)
     {
-        if (!Application.isPlaying) return;
+        if (isAppStopping) return;
         SerialPort testPort = null;
         try
         {
@@ -376,7 +380,7 @@ public class BluetoothClient : MonoBehaviour
     {
         lock (this)
         {
-            if (!Application.isPlaying)
+            if (isAppStopping)
             {
                 try { port.Close(); } catch { }
                 return;
@@ -418,10 +422,11 @@ public class BluetoothClient : MonoBehaviour
 
     private void RetryScan()
     {
+        if (isAppStopping) { isScanning = false; return; }
         isScanning = false;
         statusMessage = "Device not found. Retrying...";
         if (logVerbose) Debug.Log("[BT] Scan failed. Retrying in 3s...");
-        Thread.Sleep(3000);
+        Thread.Sleep(1000);
         StartAutoConnection();
     }
 
@@ -618,15 +623,24 @@ public class BluetoothClient : MonoBehaviour
         return float.TryParse(source.Substring(startIndex, endIndex - startIndex).Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float r) ? r : 0f;
     }
 
-    private void OnDestroy() => Disconnect();
-    private void OnApplicationQuit() => Disconnect();
+    private void OnDestroy()
+    {
+        isAppStopping = true;
+        Disconnect();
+    }
+
+    private void OnApplicationQuit()
+    {
+        isAppStopping = true;
+        Disconnect();
+    }
 
 #if UNITY_EDITOR
     private void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange change)
     {
         if (change == UnityEditor.PlayModeStateChange.ExitingPlayMode)
         {
-            // Ensure disconnect when stopping the game in editor
+            isAppStopping = true;
             Disconnect();
         }
     }
