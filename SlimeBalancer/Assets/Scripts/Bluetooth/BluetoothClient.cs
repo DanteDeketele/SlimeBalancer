@@ -582,6 +582,7 @@ public class BluetoothClient : MonoBehaviour
     {
         if (msg.StartsWith("Mpu_Values:"))
         {
+            Debug.Log($"[BT] Parsing MPU values: {msg}");
             try
             {
                 pitch = ExtractValue(msg, "P: ", ",");

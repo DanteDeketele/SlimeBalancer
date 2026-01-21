@@ -9,6 +9,8 @@ public class SceneManager : BaseManager
     public string MainMenuSceneName = "MainMenu";
     public string EndScreen = "EndScene";
     public string InfoSceneName = "InfoScene";
+    public string WaitingSceneName = "WaitingScene";
+    public string SettingsSceneName = "SettingsScene";
     private string activeSceneName;
 
     private List<string> _additiveScenes = new List<string>();

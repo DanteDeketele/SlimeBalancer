@@ -155,6 +155,7 @@ Transform:
   - {fileID: 1161109633}
   - {fileID: 794121537}
   - {fileID: 599194069}
+  - {fileID: 1004913449}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &599194068
@@ -475,6 +476,8 @@ MonoBehaviour:
   MainMenuSceneName: MainMenu
   EndScreen: EndScene
   InfoSceneName: InfoScene
+  WaitingSceneName: WaitingScene
+  SettingsSceneName: SettingsScene
 --- !u!1 &1506595059
 GameObject:
   m_ObjectHideFlags: 0
