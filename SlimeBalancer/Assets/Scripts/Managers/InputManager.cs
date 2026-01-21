@@ -40,7 +40,7 @@ public class InputManager : BaseManager
     private bool isPressedIn = false;
 
     public bool IsConnected => bluetoothClient != null && bluetoothClient.IsConnected;
-    public int BatteryLevel => 0;
+    public int BatteryLevel => bluetoothClient.BatteryLevel;
 
     private void Awake()
     {

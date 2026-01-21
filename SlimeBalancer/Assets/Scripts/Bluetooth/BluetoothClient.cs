@@ -15,6 +15,35 @@ public class BluetoothClient : MonoBehaviour
     public bool IsConnected { get; private set; } = false;
     public string statusMessage = "Disconnected";
 
+    private int[] batteryRecords = new int[200];
+    private int lastBatteryLevel = -1;
+    public int BatteryLevel
+    {
+        get
+        {
+            int sum = 0;
+            int count = 0;
+            foreach (var level in batteryRecords)
+            {
+                if (level > 0)
+                {
+                    sum += level;
+                    count++;
+                }
+            }
+            int percentage = count > 0 ? sum / count : 0;
+            if (Mathf.Abs(percentage - lastBatteryLevel) >= 2)
+            {
+                lastBatteryLevel = percentage;
+                return percentage;
+            }
+            else
+            {
+                return lastBatteryLevel;
+            }
+        }
+    }
+
     [Header("Live Data")]
     public float pitch;
     public float roll;
@@ -65,9 +94,23 @@ public class BluetoothClient : MonoBehaviour
 
     public enum BoardSide { All = 0, Top = 4, Right = 3, Bottom = 2, Left = 1 }
 
+    private void Awake()
+    {
+#if UNITY_EDITOR
+        // Ensure disconnect when exiting play mode in editor
+        UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
+    }
+
     private void Start()
     {
         StartAutoConnection();
+    }
+
+    private void OnDisable()
+    {
+        // Ensure we stop scanning/threads and close ports when object disables (e.g., scene stop)
+        Disconnect();
     }
 
     public IEnumerator Blink(Color color, int count, float delayBetweenBlinks, BoardSide side, Color endColor, InputManager.LightingEffect endEffect)
@@ -93,6 +136,8 @@ public class BluetoothClient : MonoBehaviour
 
     public void StartAutoConnection()
     {
+        // Do not start scanning if app is not playing
+        if (!Application.isPlaying) return;
         if (isScanning || IsConnected) return;
 
         isScanning = true;
@@ -104,6 +149,7 @@ public class BluetoothClient : MonoBehaviour
 
     public void ConnectToPort(string portName)
     {
+        if (!Application.isPlaying) return;
         if (IsConnected || string.IsNullOrEmpty(portName)) return;
         statusMessage = $"Trying port {portName}...";
         if (logVerbose) Debug.Log($"[BT] Manual connect to {portName}");
@@ -128,6 +174,7 @@ public class BluetoothClient : MonoBehaviour
 
     public void RefreshPorts()
     {
+        if (!Application.isPlaying) return;
         // Non-blocking refresh
         Task.Run(() =>
         {
@@ -231,6 +278,7 @@ public class BluetoothClient : MonoBehaviour
 
     private void CheckSinglePort(string port, CancellationToken token)
     {
+        if (!Application.isPlaying) return;
         SerialPort testPort = null;
         try
         {
@@ -328,6 +376,12 @@ public class BluetoothClient : MonoBehaviour
     {
         lock (this)
         {
+            if (!Application.isPlaying)
+            {
+                try { port.Close(); } catch { }
+                return;
+            }
+
             if (IsConnected)
             {
                 try { port.Close(); } catch { }
@@ -530,7 +584,25 @@ public class BluetoothClient : MonoBehaviour
                 temperature = ExtractValue(msg, "T: ", "");
             }
             catch { }
-        }else
+        }
+        else if (msg.StartsWith("Battery_Level:"))
+        {
+            try
+            {
+                int level = (int)ExtractValue(msg, "Battery_Level: ", "");
+                if (level >= 0 && level <= 100)
+                {
+                    // Shift records and add new level
+                    for (int i = batteryRecords.Length - 1; i > 0; i--)
+                    {
+                        batteryRecords[i] = batteryRecords[i - 1];
+                    }
+                    batteryRecords[0] = level;
+                }
+            }
+            catch { }
+        }
+        else
         {
             Debug.Log($"[BT] Unrecognized message: {msg}");
         }
@@ -548,4 +620,15 @@ public class BluetoothClient : MonoBehaviour
 
     private void OnDestroy() => Disconnect();
     private void OnApplicationQuit() => Disconnect();
+
+#if UNITY_EDITOR
+    private void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange change)
+    {
+        if (change == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+        {
+            // Ensure disconnect when stopping the game in editor
+            Disconnect();
+        }
+    }
+#endif
 }
