@@ -193,6 +193,7 @@ public class SnakeGame : BaseGame
 
         // Add to pending list instead of immediately to snakeSegments
         pendingSegments.Add(slime);
+        
 
         TriggerWaveEffect(); // Trigger the wave effect when the snake grows
     }

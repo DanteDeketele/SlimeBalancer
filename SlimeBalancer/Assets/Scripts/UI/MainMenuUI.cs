@@ -64,6 +64,8 @@ public class MainMenuUI : MonoBehaviour
         {
             var selectedGame = games[selectedGameIndex];
             Debug.Log($"Selected game: {selectedGame.GameName}");
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+
             GameManager.Instance.LoadGame(selectedGame.SceneName);
             // remove listeners to prevent multiple loads
             GameManager.InputManager.OnLeft.RemoveAllListeners();
@@ -80,7 +82,8 @@ public class MainMenuUI : MonoBehaviour
             // 1. Get the width directly from the event (it's faster and guaranteed not to be NaN)
             actualWidth = evt.newRect.width;
             Debug.Log($"Calculated Width: {actualWidth}");
-        }else
+        }
+        else
         {
             // Fallback: Get the width from the element directly
             actualWidth = gameListContainer[1].Q<VisualElement>("GameContainer").resolvedStyle.width;
