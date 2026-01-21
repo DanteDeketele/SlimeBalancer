@@ -208,7 +208,7 @@ MonoBehaviour:
   GameSelectSound: {fileID: 8300000, guid: 5dd8def4b332da04e953d899b4affe11, type: 3}
   UISelectSound: {fileID: 8300000, guid: 9cab413ae82ff8f408af6f7b041bfcc7, type: 3}
   CountdownBeepSound: {fileID: 8300000, guid: 08519aaf364f1394c8901d75e9e3899b, type: 3}
-  CountdownGoSound: {fileID: 8300000, guid: 61ca3131862d4134b89da73e4fd96016, type: 3}
+  CountdownGoSound: {fileID: 8300000, guid: 43db8e48abfde4c4ea874ef579c23b55, type: 3}
   TiltGameScoreSound: {fileID: 8300000, guid: fd379cdb8f363fa4088e524e4a0d9672, type: 3}
   TiltItMainTheme: {fileID: 8300000, guid: 33a0c8282a19fb74ea8fcc17d40916ad, type: 3}
   SlimeSkieMainTheme: {fileID: 8300000, guid: fca8dd83c012e3b43bfb47c2f52a8222, type: 3}

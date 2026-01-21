@@ -16,6 +16,8 @@ public class SoundManager : BaseManager
 
     public AudioClip CountdownBeepSound;
 
+    public AudioClip CountdownGoSound;
+
 
     //Tilt It Game
     public AudioClip TiltGameScoreSound;

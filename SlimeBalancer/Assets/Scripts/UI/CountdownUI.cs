@@ -56,7 +56,7 @@ public class CountdownUI : MonoBehaviour
         GameManager.CountdownManager.OnCountdownFinished.Invoke();
 
         // --- GO! ---
-        GameManager.SoundManager.PlaySound(GameManager.SoundManager.CountdownBeepSound);
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.CountdownGoSound);
         _label.text = "GO!";
         _label.AddToClassList("go-state");
         _label.style.opacity = 1;
