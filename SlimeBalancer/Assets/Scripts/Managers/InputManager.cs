@@ -30,7 +30,7 @@ public class InputManager : BaseManager
 
     public bool IsIdle;
     private float lastInputTime;
-    public float IdleTime = 60f;
+    public float IdleTime = 10f;
     public UnityEvent OnIdle;
     public UnityEvent OnActive;
 
@@ -40,7 +40,7 @@ public class InputManager : BaseManager
     private bool isPressedIn = false;
 
     public bool IsConnected => bluetoothClient != null && bluetoothClient.IsConnected;
-    public int BatteryLevel => 0;
+    public int BatteryLevel => bluetoothClient.BatteryLevel;
 
     private void Awake()
     {
@@ -155,8 +155,11 @@ public class InputManager : BaseManager
                 isPressedIn = false;
             }
 
-            // Update idle status
-            lastInputTime = Time.time;
+            if (Vector2.Distance(inputVector, lastInputVector) > 0.05f)
+            {
+                lastInputTime = Time.time;
+                Debug.Log("InputManager: Input detected, resetting idle timer.");
+            }
 
             lastInputVector = inputVector;
 
@@ -214,14 +217,20 @@ public class InputManager : BaseManager
         }
 
         // Check for idle state
-        if (Time.time - lastInputTime >= IdleTime)
+        if (Time.time - lastInputTime >= IdleTime && !IsIdle)
         {
             IsIdle = true;
+            bluetoothClient.SendIdle();
+            Debug.Log("InputManager: Idle state activated.");
             OnIdle?.Invoke();
+            GameManager.SceneManager.LoadScene(GameManager.SceneManager.WaitingSceneName);
         }
-        else
+
+        if (Time.time - lastInputTime < IdleTime && IsIdle)
         {
             IsIdle = false;
+            Debug.Log("InputManager: Active state restored.");
+            bluetoothClient.SendRainbow();
             OnActive?.Invoke();
         }
     }

@@ -15,6 +15,35 @@ public class BluetoothClient : MonoBehaviour
     public bool IsConnected { get; private set; } = false;
     public string statusMessage = "Disconnected";
 
+    private int[] batteryRecords = new int[200];
+    private int lastBatteryLevel = -1;
+    public int BatteryLevel
+    {
+        get
+        {
+            int sum = 0;
+            int count = 0;
+            foreach (var level in batteryRecords)
+            {
+                if (level > 0)
+                {
+                    sum += level;
+                    count++;
+                }
+            }
+            int percentage = count > 0 ? sum / count : 0;
+            if (Mathf.Abs(percentage - lastBatteryLevel) >= 2)
+            {
+                lastBatteryLevel = percentage;
+                return percentage;
+            }
+            else
+            {
+                return lastBatteryLevel;
+            }
+        }
+    }
+
     [Header("Live Data")]
     public float pitch;
     public float roll;
@@ -28,9 +57,9 @@ public class BluetoothClient : MonoBehaviour
     [Tooltip("Toggle DTR/RTS. Some machines/drivers behave differently. Try disabling if connection fails.")]
     public bool useDtrRts = true;
     [Tooltip("Seconds to wait after opening the port to allow MCU reboot over DTR/RTS.")]
-    public float postOpenResetDelaySec = 2.0f;
+    public float postOpenResetDelaySec = 0.5f;
     [Tooltip("Seconds to listen for handshake text after the initial reset delay.")]
-    public float handshakeListenWindowSec = 5.0f;
+    public float handshakeListenWindowSec = 1.0f;
     [Tooltip("Filters available ports to only those that can be opened briefly. Helps hide stale Bluetooth COM ports.")]
     public bool filterToOpenablePorts = true;
     [Tooltip("Timeout in ms used by the quick open-check when filtering ports.")]
@@ -38,7 +67,7 @@ public class BluetoothClient : MonoBehaviour
 
     [Header("Disconnect Watchdog")]
     [Tooltip("If no data arrives for this many seconds, start probing the port to detect a dead link.")]
-    public float inactivityDisconnectSec = 2f; // faster detection
+    public float inactivityDisconnectSec = 0.5f; // faster detection
     [Tooltip("How often to probe the port while inactive (seconds).")]
     public float probeIntervalSec = 0.75f; // probe sooner
     [Tooltip("When probing, write a newline to trigger I/O errors on dead ports.")]
@@ -63,11 +92,29 @@ public class BluetoothClient : MonoBehaviour
     private DateTime lastProbeUtc = DateTime.MinValue;
     private volatile bool portErrorFlag = false;
 
+    // App lifecycle flag to avoid using Unity APIs off main thread
+    private volatile bool isAppStopping = false;
+
     public enum BoardSide { All = 0, Top = 4, Right = 3, Bottom = 2, Left = 1 }
+
+    private void Awake()
+    {
+#if UNITY_EDITOR
+        // Ensure disconnect when exiting play mode in editor
+        UnityEditor.EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
+#endif
+    }
 
     private void Start()
     {
+        if (!Application.isPlaying) return;
         StartAutoConnection();
+    }
+
+    private void OnDisable()
+    {
+        isAppStopping = true;
+        Disconnect();
     }
 
     public IEnumerator Blink(Color color, int count, float delayBetweenBlinks, BoardSide side, Color endColor, InputManager.LightingEffect endEffect)
@@ -93,7 +140,8 @@ public class BluetoothClient : MonoBehaviour
 
     public void StartAutoConnection()
     {
-        if (isScanning || IsConnected) return;
+        // Removed Application.isPlaying check to allow calls from worker thread safely
+        if (isScanning || IsConnected || isAppStopping) return;
 
         isScanning = true;
         statusMessage = "Scanning all ports...";
@@ -104,6 +152,7 @@ public class BluetoothClient : MonoBehaviour
 
     public void ConnectToPort(string portName)
     {
+        if (!Application.isPlaying) return;
         if (IsConnected || string.IsNullOrEmpty(portName)) return;
         statusMessage = $"Trying port {portName}...";
         if (logVerbose) Debug.Log($"[BT] Manual connect to {portName}");
@@ -128,6 +177,7 @@ public class BluetoothClient : MonoBehaviour
 
     public void RefreshPorts()
     {
+        if (!Application.isPlaying) return;
         // Non-blocking refresh
         Task.Run(() =>
         {
@@ -188,6 +238,7 @@ public class BluetoothClient : MonoBehaviour
 
     private async Task ScanAllPortsParallel()
     {
+        if (isAppStopping) { isScanning = false; return; }
         string[] ports = GetFilteredPorts();
         availablePorts = ports;
         if (logVerbose) Debug.Log($"[BT] Found ports: {string.Join(", ", ports)}");
@@ -231,6 +282,7 @@ public class BluetoothClient : MonoBehaviour
 
     private void CheckSinglePort(string port, CancellationToken token)
     {
+        if (isAppStopping) return;
         SerialPort testPort = null;
         try
         {
@@ -328,6 +380,12 @@ public class BluetoothClient : MonoBehaviour
     {
         lock (this)
         {
+            if (isAppStopping)
+            {
+                try { port.Close(); } catch { }
+                return;
+            }
+
             if (IsConnected)
             {
                 try { port.Close(); } catch { }
@@ -364,10 +422,11 @@ public class BluetoothClient : MonoBehaviour
 
     private void RetryScan()
     {
+        if (isAppStopping) { isScanning = false; return; }
         isScanning = false;
         statusMessage = "Device not found. Retrying...";
         if (logVerbose) Debug.Log("[BT] Scan failed. Retrying in 3s...");
-        Thread.Sleep(3000);
+        Thread.Sleep(1000);
         StartAutoConnection();
     }
 
@@ -523,6 +582,7 @@ public class BluetoothClient : MonoBehaviour
     {
         if (msg.StartsWith("Mpu_Values:"))
         {
+            Debug.Log($"[BT] Parsing MPU values: {msg}");
             try
             {
                 pitch = ExtractValue(msg, "P: ", ",");
@@ -530,6 +590,27 @@ public class BluetoothClient : MonoBehaviour
                 temperature = ExtractValue(msg, "T: ", "");
             }
             catch { }
+        }
+        else if (msg.StartsWith("Battery_Level:"))
+        {
+            try
+            {
+                int level = (int)ExtractValue(msg, "Battery_Level: ", "");
+                if (level >= 0 && level <= 100)
+                {
+                    // Shift records and add new level
+                    for (int i = batteryRecords.Length - 1; i > 0; i--)
+                    {
+                        batteryRecords[i] = batteryRecords[i - 1];
+                    }
+                    batteryRecords[0] = level;
+                }
+            }
+            catch { }
+        }
+        else
+        {
+            Debug.Log($"[BT] Unrecognized message: {msg}");
         }
     }
 
@@ -543,6 +624,26 @@ public class BluetoothClient : MonoBehaviour
         return float.TryParse(source.Substring(startIndex, endIndex - startIndex).Trim(), NumberStyles.Float, CultureInfo.InvariantCulture, out float r) ? r : 0f;
     }
 
-    private void OnDestroy() => Disconnect();
-    private void OnApplicationQuit() => Disconnect();
+    private void OnDestroy()
+    {
+        isAppStopping = true;
+        Disconnect();
+    }
+
+    private void OnApplicationQuit()
+    {
+        isAppStopping = true;
+        Disconnect();
+    }
+
+#if UNITY_EDITOR
+    private void OnPlayModeStateChanged(UnityEditor.PlayModeStateChange change)
+    {
+        if (change == UnityEditor.PlayModeStateChange.ExitingPlayMode)
+        {
+            isAppStopping = true;
+            Disconnect();
+        }
+    }
+#endif
 }

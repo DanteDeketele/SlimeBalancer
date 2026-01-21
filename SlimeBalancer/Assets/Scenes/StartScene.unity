@@ -482,6 +482,8 @@ MonoBehaviour:
   MainMenuSceneName: MainMenu
   EndScreen: EndScene
   InfoSceneName: InfoScene
+  WaitingSceneName: WaitingScene
+  SettingsSceneName: SettingsScene
 --- !u!1 &1506595059
 GameObject:
   m_ObjectHideFlags: 0

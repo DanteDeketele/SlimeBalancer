@@ -147,7 +147,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            SceneManager.LoadScene(SceneManager.MainMenuSceneName);
+            SceneManager.LoadScene(SceneManager.WaitingSceneName);
         }
     }
 
