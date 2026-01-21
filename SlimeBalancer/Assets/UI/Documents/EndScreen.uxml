@@ -6,7 +6,7 @@
             <ui:Label text="Label" name="ScoreLabel" style="align-self: center; -unity-font-style: bold;" />
             <ui:Label text="Label" name="HighScoreLabel" style="align-self: center; -unity-font-style: bold;" />
             <ui:Label text="Ga van het balanceboard om het menu&#10;te bedienen." style="-unity-text-align: upper-center; font-size: 18px; color: rgb(85, 85, 85); margin-bottom: 8px;" />
-            <ui:VisualElement style="flex-grow: 1; flex-direction: row; flex-basis: auto; justify-content: space-between; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; align-content: stretch; align-self: stretch; align-items: flex-start;">
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row; flex-basis: auto; justify-content: space-between; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; align-content: stretch; align-self: stretch; align-items: flex-start; transition-duration: 0.5s;">
                 <ui:VisualElement name="RestartButton" class="focused" style="flex-grow: 1; border-top-width: 4px; border-right-width: 4px; border-bottom-width: 4px; border-left-width: 4px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;">
                     <ui:Label text="Opnieuw Spelen" selectable="false" focusable="false" style="margin-top: 16px; margin-right: 16px; margin-bottom: 16px; margin-left: 16px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;" />
                 </ui:VisualElement>

@@ -158,7 +158,6 @@ public class InputManager : BaseManager
             if (Vector2.Distance(inputVector, lastInputVector) > 0.05f)
             {
                 lastInputTime = Time.time;
-                Debug.Log("InputManager: Input detected, resetting idle timer.");
             }
 
             lastInputVector = inputVector;

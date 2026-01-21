@@ -64,17 +64,6 @@ public class CountdownUI : MonoBehaviour
         _label.style.opacity = 1;
         _label.style.scale = new Scale(new Vector2(1.5f, 1.5f)); // Start slightly bigger
 
-        // Optional: Shake the 'GO' text slightly
-        float goTimer = 0;
-        while (goTimer < 1.0f)
-        {
-            goTimer += Time.deltaTime;
-            // Simple wobble
-            float wobble = Mathf.Sin(Time.time * 50) * 5f;
-            _label.style.rotate = new Rotate(wobble);
-            yield return null;
-        }
-
         // Cleanup
         _label.style.opacity = 0;
     }
