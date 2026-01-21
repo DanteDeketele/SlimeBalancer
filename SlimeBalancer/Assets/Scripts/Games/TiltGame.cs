@@ -91,6 +91,7 @@ public class TiltGame : BaseGame
     public void Correct()
     {
         GameManager.ScoreManager.AddScore(10);
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.TiltGameScoreSound);
     }
 
     public void Wrong()

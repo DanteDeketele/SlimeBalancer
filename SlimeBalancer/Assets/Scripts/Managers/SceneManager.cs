@@ -16,6 +16,7 @@ public class SceneManager : BaseManager
     public void LoadScene(string sceneName)
     {
         StartCoroutine(LoadSceneCoroutine(sceneName));
+       
     }
 
     public IEnumerator LoadSceneCoroutine(string sceneName)
@@ -59,7 +60,12 @@ public class SceneManager : BaseManager
         Scene loadedScene = USM.GetSceneByName(sceneName);
         USM.SetActiveScene(loadedScene);
         activeSceneName = sceneName;
-
+        if(activeSceneName == "MainMenu")
+        {
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.mainTheme, true);
+        }
+       
+      
         // Hide loading screen
         GameManager.LoadingscreenManager.HideLoadingScreen();
         Debug.Log($"Scene '{sceneName}' loaded successfully.");

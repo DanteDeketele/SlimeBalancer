@@ -37,6 +37,18 @@ public class GameManager : MonoBehaviour
         }
     }
     private static ScoreManager _scoreManager;
+
+    public static SoundManager SoundManager
+    {
+        get {
+            if (_soundManager == null)
+            {
+                Debug.LogError("SoundManager is not initialized!");
+            }
+            return _soundManager; 
+        }
+    }
+    private static SoundManager _soundManager;
     public static InputManager InputManager
     {
         get {
@@ -102,6 +114,9 @@ public class GameManager : MonoBehaviour
             {
                 case ScoreManager scoreManager:
                     _scoreManager = scoreManager;
+                    break;
+                case SoundManager soundManager:
+                    _soundManager = soundManager;
                     break;
                 case InputManager inputManager:
                     _inputManager = inputManager;

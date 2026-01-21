@@ -30,6 +30,7 @@ public abstract class BaseGame : MonoBehaviour
 
     public virtual void EndGame(bool won = false)
     {
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameOverSound);
         StartCoroutine(GameManager.InputManager.LedBlink(Color.red, 3, .15f, BluetoothClient.BoardSide.All));
         IsGameActive = false;
         GameManager.ScoreManager.HidePoints();
