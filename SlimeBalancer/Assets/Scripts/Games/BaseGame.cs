@@ -30,13 +30,13 @@ public abstract class BaseGame : MonoBehaviour
 
     public virtual void EndGame(bool won = false)
     {
-        GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameOverSound);
         StartCoroutine(GameManager.InputManager.LedBlink(Color.red, 3, .15f, BluetoothClient.BoardSide.All));
         IsGameActive = false;
         GameManager.ScoreManager.HidePoints();
         Debug.Log($"{GameName} has ended.");
         GameManager.SceneManager.LoadSceneOnTop(GameManager.SceneManager.EndScreen);
-        Time.timeScale = 0.5f;   
+        Time.timeScale = 0.5f;
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameOverSound, false, false, true);   
     }
 
 }

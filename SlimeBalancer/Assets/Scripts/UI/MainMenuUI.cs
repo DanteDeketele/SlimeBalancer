@@ -25,6 +25,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void Awake()
     {
+        GameManager.SoundManager.StopAllSounds();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
@@ -73,6 +74,7 @@ public class MainMenuUI : MonoBehaviour
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
             selectedGameIndex = Mathf.Max(0, selectedGameIndex - 1);
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
             UpdateSelectedGame();
             BeginScroll();
         });
@@ -80,6 +82,7 @@ public class MainMenuUI : MonoBehaviour
         GameManager.InputManager.OnRight.AddListener(() =>
         {
             selectedGameIndex = Mathf.Min(games.Length - 1 + 1, selectedGameIndex + 1);
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
             UpdateSelectedGame();
             BeginScroll();
         });
@@ -90,11 +93,12 @@ public class MainMenuUI : MonoBehaviour
             {
                 Debug.Log("Opening Settings Menu...");
                 // Open Settings Menu
-
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                 return;
             }
             else
             {
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                 var selectedGame = games[selectedGameIndex];
                 Debug.Log($"Selected game: {selectedGame.GameName}");
                 GameManager.Instance.LoadInfo(selectedGame.SceneName);

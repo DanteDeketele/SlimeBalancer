@@ -39,6 +39,7 @@ public class SnakeGame : BaseGame
     public override void StartGame()
     {
         base.StartGame();
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeMainTheme, true, true);
 
         Vector3 startCell = CurrentCell;
         cellStart = startCell;
@@ -193,6 +194,7 @@ public class SnakeGame : BaseGame
 
         // Add to pending list instead of immediately to snakeSegments
         pendingSegments.Add(slime);
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeGrowSound);
         
 
         TriggerWaveEffect(); // Trigger the wave effect when the snake grows
@@ -230,6 +232,7 @@ public class SnakeGame : BaseGame
     public override void EndGame(bool won = false)
     {
         MoveSpeed = 0;
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeWallHitSound);    
         base.EndGame(won);
     }
 
