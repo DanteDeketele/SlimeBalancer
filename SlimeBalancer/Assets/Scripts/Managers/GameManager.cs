@@ -98,7 +98,7 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(gameObject.transform.parent);
         }
         else
         {
@@ -151,19 +151,28 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    public void LoadGame(string sceneName)
+    public void LoadInfo(string sceneName)
     {
         Time.timeScale = 1f;
-        StartCoroutine(LoadGameCoroutine(sceneName));
+        _currentGameData = AvailableGames.Find(g => g.SceneName == sceneName);
+        StartCoroutine(LoadInfoScreen(sceneName));
     }
 
-    public IEnumerator LoadGameCoroutine(string sceneName)
+    public IEnumerator LoadInfoScreen(string sceneName)
     {
         InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         yield return SceneManager.LoadSceneCoroutine(SceneManager.InfoSceneName);
 
-        yield return new WaitForSeconds(2f);
+    }
 
+    public void LoadGame(string sceneName)
+    {
+        Time.timeScale = 1f;
+        StartCoroutine(LoadGameAsync(sceneName));
+    }
+
+    public IEnumerator LoadGameAsync(string sceneName)
+    {
         yield return SceneManager.LoadSceneCoroutine(sceneName);
 
 

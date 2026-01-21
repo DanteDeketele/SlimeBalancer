@@ -5,7 +5,11 @@ using System.Collections;
 
 public class InputManager : BaseManager
 {
+    [SerializeField] private GameObject DisconnectedUI;
+
     private string actionMapName = "Player";
+    private float prevTimeScale = 1f;
+    private bool prevConnectionState = false;
 
     private InputAction moveAction;
     private Vector2 inputVector;
@@ -33,6 +37,11 @@ public class InputManager : BaseManager
     public bool MenuLighting = false;
     private bool isBlink = false;
 
+    private bool isPressedIn = false;
+
+    public bool IsConnected => bluetoothClient != null && bluetoothClient.IsConnected;
+    public int BatteryLevel => 0;
+
     private void Awake()
     {
         // 3. Find the specific map, then the specific action
@@ -57,6 +66,8 @@ public class InputManager : BaseManager
 
         // Initialize Bluetooth client
         bluetoothClient = gameObject.AddComponent<BluetoothClient>();
+
+        OnAnyDirection.AddListener(OnAnyDirectionActivated);
     }
 
     private void OnEnable()
@@ -75,6 +86,11 @@ public class InputManager : BaseManager
         return moveAction != null ? moveAction.ReadValue<Vector2>() : Vector2.zero;
     }
 
+    private void OnAnyDirectionActivated(Vector2 direction)
+    {
+        isPressedIn = true;
+    }
+
     private void Update()
     {
         // Fallback to standard input when Bluetooth is not connected
@@ -90,7 +106,6 @@ public class InputManager : BaseManager
             float xInput = Mathf.Clamp((roll - rollMin) / (rollMax - rollMin) * 2f - 1f, -1f, 1f);
             float yInput = Mathf.Clamp((pitch - pitchMin) / (pitchMax - pitchMin) * 2f - 1f, -1f, 1f);
             inputVector = new Vector2(-xInput, yInput);
-            Debug.Log($"Bluetooth Input - Pitch: {pitch}, Roll: {roll}, Mapped Input: {inputVector}");
 
             inputRotation = Quaternion.Euler(pitch, 0f, roll);
 
@@ -98,6 +113,7 @@ public class InputManager : BaseManager
         }
         else
         {
+
             inputVector = GetInput();
             inputRotation = Quaternion.Euler(inputVector.y * 18f, 0f, inputVector.x * 18f);
             inputEulerRotation = new Vector3(inputVector.y * 18f, 0f, inputVector.x * 18f);
@@ -106,29 +122,37 @@ public class InputManager : BaseManager
         // Detect directional changes and invoke events
         if (inputVector != lastInputVector)
         {
-            if (inputVector.y > 0.9f && lastInputVector.y <= 0.9f)
+            if (!isPressedIn)
             {
-                OnUp?.Invoke();
-                OnAnyDirection?.Invoke(Vector2.up);
-                Debug.Log("Up input detected");
+                if (inputVector.y > 0.9f && lastInputVector.y <= 0.9f)
+                {
+                    OnUp?.Invoke();
+                    OnAnyDirection?.Invoke(Vector2.up);
+                    Debug.Log("Up input detected");
+                }
+                else if (inputVector.y < -0.9f && lastInputVector.y >= -0.9f)
+                {
+                    OnDown?.Invoke();
+                    OnAnyDirection?.Invoke(Vector2.down);
+                    Debug.Log("Down input detected");
+                }
+                if (inputVector.x > 0.9f && lastInputVector.x <= 0.9f)
+                {
+                    OnRight?.Invoke();
+                    OnAnyDirection?.Invoke(Vector2.right);
+                    Debug.Log("Right input detected");
+                }
+                else if (inputVector.x < -0.9f && lastInputVector.x >= -0.9f)
+                {
+                    OnLeft?.Invoke();
+                    OnAnyDirection?.Invoke(Vector2.left);
+                    Debug.Log("Left input detected");
+                }
             }
-            else if (inputVector.y < -0.9f && lastInputVector.y >= -0.9f)
+            else if (inputVector.magnitude < 0.2f)
             {
-                OnDown?.Invoke();
-                OnAnyDirection?.Invoke(Vector2.down);
-                Debug.Log("Down input detected");
-            }
-            if (inputVector.x > 0.9f && lastInputVector.x <= 0.9f)
-            {
-                OnRight?.Invoke();
-                OnAnyDirection?.Invoke(Vector2.right);
-                Debug.Log("Right input detected");
-            }
-            else if (inputVector.x < -0.9f && lastInputVector.x >= -0.9f)
-            {
-                OnLeft?.Invoke();
-                OnAnyDirection?.Invoke(Vector2.left);
-                Debug.Log("Left input detected");
+                // Reset pressed state when input returns to neutral
+                isPressedIn = false;
             }
 
             // Update idle status
@@ -168,6 +192,25 @@ public class InputManager : BaseManager
                 Color color = Color.HSVToRGB(0.33f * brightness, 1f, brightness); // Greenish color based on brightness
                 SetLightingEffect(LightingEffect.Custom, color, side);
             }
+
+            if (prevConnectionState != IsConnected && !Application.isEditor)
+            {
+                
+                if (IsConnected)
+                {
+                    DisconnectedUI.SetActive(false);
+                    Time.timeScale = prevTimeScale;
+                }
+                else
+                {
+                    DisconnectedUI.SetActive(true);
+                    prevTimeScale = Time.timeScale;
+                    Time.timeScale = 0f;
+                }
+
+                prevConnectionState = IsConnected;
+            }
+
         }
 
         // Check for idle state

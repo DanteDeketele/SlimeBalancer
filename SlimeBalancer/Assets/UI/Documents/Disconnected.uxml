@@ -1,0 +1,14 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+    <ui:VisualElement style="flex-grow: 1; background-color: rgba(0, 0, 0, 0.3);">
+        <ui:VisualElement style="flex-grow: 1; align-self: center; align-content: center; justify-content: center; align-items: center;">
+            <ui:VisualElement style="justify-content: center; align-items: center; align-self: center; align-content: center; padding-top: 16px; padding-right: 16px; padding-bottom: 16px; padding-left: 16px; background-color: rgb(255, 255, 255); border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;">
+                <ui:Label text="Balanceboard is niet meer &#10;geconnecteerd." style="-unity-text-align: upper-center; text-overflow: clip; font-size: 22px; -unity-font-style: bold; color: rgb(32, 55, 53);" />
+                <ui:VisualElement name="BoardConnection" style="flex-grow: 1; align-items: center; justify-content: center; flex-direction: row; margin-top: 16px;">
+                    <ui:VisualElement name="BoardOnlineCircle" style="flex-grow: 0; flex-shrink: 0; width: 24px; height: 24px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; background-color: rgb(194, 81, 81); border-top-width: 3px; border-right-width: 3px; border-bottom-width: 3px; border-left-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);" />
+                    <ui:Label text="Bord offline" name="BoardOnlineLabel" style="font-size: 20px; padding-left: 8px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

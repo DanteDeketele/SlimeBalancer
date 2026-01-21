@@ -10,6 +10,10 @@ public class MainMenuUI : MonoBehaviour
     private int selectedGameIndex = 0;
 
     private VisualElement gameListContainer;
+    private VisualElement boardOnlineCircle;
+    private Label boardOnlineLabel;
+    public Texture2D SettingsIcon;
+    public Texture2D ControlDownIcon;
 
     float timer = 0f;
     public float scrollDelay = 0.5f;
@@ -25,7 +29,8 @@ public class MainMenuUI : MonoBehaviour
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
 
-
+        boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
+        boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
 
         GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
 
@@ -38,6 +43,25 @@ public class MainMenuUI : MonoBehaviour
             gameEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(gameData.GameLogo);
             gameListContainer.Add(gameEntry);
         }
+
+        // Add Settings entry
+        var settingsEntry = gameContainerTemplate.CloneTree();
+        settingsEntry.Q<Label>("game-title").text = "Instellingen";
+        settingsEntry.Q<Label>("game-genre").text = "Instellingen";
+        settingsEntry.Q<Label>("game-genre").style.color = new StyleColor(Color.white);
+        // solid color for settings icon background
+        settingsEntry.Q<VisualElement>("game-icon").style.backgroundColor = new StyleColor(Color.lightBlue);
+        settingsEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(); // clear any existing background image
+        settingsEntry.Q<VisualElement>("game-icon").style.justifyContent = Justify.Center;
+        // Add Icon with 70% width and height into the game-icon element
+        VisualElement iconContainer = new VisualElement();
+        iconContainer.style.width = Length.Percent(80);
+        iconContainer.style.height = Length.Percent(80);
+        iconContainer.style.alignSelf = Align.Center;
+        iconContainer.style.backgroundImage = new StyleBackground(SettingsIcon);
+        settingsEntry.Q<VisualElement>("game-icon").Add(iconContainer);
+
+        gameListContainer.Add(settingsEntry);
 
         var icon = gameListContainer[1].Q<VisualElement>("game-icon");
 
@@ -55,18 +79,26 @@ public class MainMenuUI : MonoBehaviour
 
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            selectedGameIndex = Mathf.Min(games.Length - 1, selectedGameIndex + 1);
+            selectedGameIndex = Mathf.Min(games.Length - 1 + 1, selectedGameIndex + 1);
             UpdateSelectedGame();
             BeginScroll();
         });
 
         GameManager.InputManager.OnDown.AddListener(() =>
         {
-            var selectedGame = games[selectedGameIndex];
-            Debug.Log($"Selected game: {selectedGame.GameName}");
-            GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+            if (selectedGameIndex == games.Length)
+            {
+                Debug.Log("Opening Settings Menu...");
+                // Open Settings Menu
 
-            GameManager.Instance.LoadGame(selectedGame.SceneName);
+                return;
+            }
+            else
+            {
+                var selectedGame = games[selectedGameIndex];
+                Debug.Log($"Selected game: {selectedGame.GameName}");
+                GameManager.Instance.LoadInfo(selectedGame.SceneName);
+            }
             // remove listeners to prevent multiple loads
             GameManager.InputManager.OnLeft.RemoveAllListeners();
             GameManager.InputManager.OnRight.RemoveAllListeners();
@@ -147,10 +179,113 @@ public class MainMenuUI : MonoBehaviour
             if (i == selectedGameIndex)
             {
                 gameEntry.AddToClassList("selected");
+
+                if (i != games.Length)
+                {
+                    VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
+                    if (scoreSection != null)
+                    {
+                        scoreSection.style.opacity = 1f;
+                    }
+                    Label score = gameEntry.Q<Label>("game-score");
+                    if (score != null)
+                    {
+                        score.text = GameManager.ScoreManager.GetHighScore(games[i].SceneName).ToString();
+                    }
+                }else
+                {
+                    VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
+                    if (scoreSection != null)
+                    {
+                        scoreSection.style.opacity = 0f;
+                    }
+                }
+
+                // Add a position abstract ino label next to the icon alligned to the top
+                VisualElement container = gameEntry.Q<VisualElement>("InfoContainer");
+                if (container != null)
+                {
+                    for (int j = 0; j < container.childCount; j++)
+                    {
+                        var child = container[j];
+                        child.style.opacity = 1f;
+                    }
+                }
+                else
+                {
+                    container = new VisualElement();
+                    container.name = "InfoContainer";
+                    // info container should be positioned next to the game entry
+                    container.style.position = Position.Absolute;
+                    container.style.top = 0;
+                    container.style.left = Length.Percent(100);
+                    container.style.width = Length.Pixels(240);
+                    container.style.flexGrow = 0;
+                    container.style.marginLeft = Length.Pixels(-20);
+                    gameEntry.Add(container);
+
+                    Label instructionLabel = new Label("Druk om te spelen");
+                    instructionLabel.name = "InstructionLabel";
+                    instructionLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    instructionLabel.style.fontSize = 20;
+                    instructionLabel.style.color = new StyleColor(Color.black);
+                    instructionLabel.style.width = Length.Percent(100);
+                    instructionLabel.style.unityTextAlign = TextAnchor.UpperCenter;
+                    instructionLabel.style.whiteSpace = WhiteSpace.Normal;
+                    instructionLabel.style.marginBottom = Length.Pixels(0);
+                    instructionLabel.style.marginLeft = Length.Pixels(0);
+                    instructionLabel.style.marginRight = Length.Pixels(0);
+                    instructionLabel.style.paddingRight = Length.Pixels(0);
+                    instructionLabel.style.paddingLeft = Length.Pixels(0);
+                    instructionLabel.style.paddingBottom = Length.Pixels(0);
+
+                    if (i == games.Length)
+                    {
+                        instructionLabel.text = "Druk om instellingen te openen";
+                    }
+
+                    container.Add(instructionLabel);
+
+                    VisualElement ControlIcon = new VisualElement();
+                    ControlIcon.name = "ControlIcon";
+                    ControlIcon.style.width = Length.Pixels(70);
+                    ControlIcon.style.height = Length.Pixels(50);
+                    ControlIcon.style.backgroundImage = new StyleBackground(ControlDownIcon);
+                    ControlIcon.style.backgroundSize = new StyleBackgroundSize(new BackgroundSize(BackgroundSizeType.Contain));
+                    ControlIcon.style.alignSelf = Align.Center;
+
+                    container.Add(ControlIcon);
+
+
+                    // add transition for opacity
+                    for (int j = 0; j < container.childCount; j++)
+                    {
+                        var child = container[j];
+                        child.style.opacity = 1f;
+                    }
+                }
+
             }
             else
             {
                 gameEntry.RemoveFromClassList("selected");
+
+                VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
+                if (scoreSection != null)
+                {
+                    scoreSection.style.opacity = 0f;
+                }
+
+                // Set the opacity of the position abstract info text and backgrounds to 0
+                VisualElement container = gameEntry.Q<VisualElement>("InfoContainer");
+                if (container != null)
+                {
+                    for (int j = 0; j < container.childCount; j++)
+                    {
+                        var child = container[j];
+                        child.style.opacity = 0f;
+                    }
+                }
             }
         }
     }
@@ -193,6 +328,17 @@ public class MainMenuUI : MonoBehaviour
             actualScreenWidth = Screen.width;
 
             OnGeometryCalculated();
+        }
+
+        if (GameManager.InputManager.IsConnected)
+        {
+            boardOnlineCircle.style.backgroundColor = new StyleColor(Color.green);
+            boardOnlineLabel.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+        }
+        else
+        {
+            boardOnlineCircle.style.backgroundColor = new StyleColor(Color.red);
+            boardOnlineLabel.text = "Bord Offline";
         }
     }
 }
