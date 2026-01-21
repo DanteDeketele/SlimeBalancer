@@ -11,6 +11,9 @@ public class EndSceneUI : MonoBehaviour
     private bool restartSelected = false;
 
     private Vector2 lastInput = Vector2.zero;
+    private bool inputInUse = false;
+    private float inputDelay = 3f; // seconds
+    private float timer = 0f;
 
     private void OnEnable()
     {
@@ -19,6 +22,8 @@ public class EndSceneUI : MonoBehaviour
         restartButton = root.Q<VisualElement>("RestartButton");
         mainMenuButton = root.Q<VisualElement>("MainMenuButton");
         restartButton.AddToClassList("focused");
+        restartButton.AddToClassList("disabled");
+        mainMenuButton.AddToClassList("disabled");
         scoreLabel = root.Q<Label>("ScoreLabel");
         highScoreLabel = root.Q<Label>("HighScoreLabel");
 
@@ -33,18 +38,21 @@ public class EndSceneUI : MonoBehaviour
 
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
+            if (!inputInUse) return;
             restartButton.AddToClassList("focused");
             mainMenuButton.RemoveFromClassList("focused");
             restartSelected = true;
         });
         GameManager.InputManager.OnRight.AddListener(() =>
         {
+            if (!inputInUse) return;
             mainMenuButton.AddToClassList("focused");
             restartButton.RemoveFromClassList("focused");
             restartSelected = false;
         });
         GameManager.InputManager.OnDown.AddListener(() =>
         {
+            if (!inputInUse) return;
             if (restartSelected)
             {
                 OnRestartButtonClicked();
@@ -57,6 +65,16 @@ public class EndSceneUI : MonoBehaviour
 
     }
 
+    private void Update()
+    {
+        timer += Time.deltaTime;
+        if (timer >= inputDelay)
+        {
+            inputInUse = true;
+            mainMenuButton.RemoveFromClassList("disabled");
+            restartButton.RemoveFromClassList("disabled");
+        }
+    }
 
     private void OnDisable()
     {
