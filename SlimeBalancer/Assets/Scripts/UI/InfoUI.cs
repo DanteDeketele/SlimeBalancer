@@ -37,11 +37,13 @@ public class InfoUI : MonoBehaviour
     public void Next()
     {
         GameManager.Instance.LoadGame(GameManager.Instance.CurrentGameData.SceneName);
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
     }
 
     public void Back()
     {
         GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
     }
 
     public void SetInfoText(string text)
