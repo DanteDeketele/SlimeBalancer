@@ -3,8 +3,8 @@ using UnityEngine.UIElements;
 public class EndSceneUI : MonoBehaviour
 {
     private VisualElement root;
-    private Button restartButton;
-    private Button mainMenuButton;
+    private VisualElement restartButton;
+    private VisualElement mainMenuButton;
     private Label scoreLabel;
     private Label highScoreLabel;
 
@@ -16,12 +16,11 @@ public class EndSceneUI : MonoBehaviour
     {
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
-        restartButton = root.Q<Button>("RestartButton");
-        mainMenuButton = root.Q<Button>("MainMenuButton");
+        restartButton = root.Q<VisualElement>("RestartButton");
+        mainMenuButton = root.Q<VisualElement>("MainMenuButton");
+        restartButton.AddToClassList("focused");
         scoreLabel = root.Q<Label>("ScoreLabel");
         highScoreLabel = root.Q<Label>("HighScoreLabel");
-        restartButton.clicked += OnRestartButtonClicked;
-        mainMenuButton.clicked += OnMainMenuButtonClicked;
 
         // Set score and high score labels
         int finalScore = GameManager.ScoreManager.Score;
@@ -34,12 +33,14 @@ public class EndSceneUI : MonoBehaviour
 
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
-            restartButton.Focus();
+            restartButton.AddToClassList("focused");
+            mainMenuButton.RemoveFromClassList("focused");
             restartSelected = true;
         });
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            mainMenuButton.Focus();
+            mainMenuButton.AddToClassList("focused");
+            restartButton.RemoveFromClassList("focused");
             restartSelected = false;
         });
         GameManager.InputManager.OnDown.AddListener(() =>
@@ -59,8 +60,9 @@ public class EndSceneUI : MonoBehaviour
 
     private void OnDisable()
     {
-        restartButton.clicked -= OnRestartButtonClicked;
-        mainMenuButton.clicked -= OnMainMenuButtonClicked;
+        GameManager.InputManager.OnLeft.RemoveAllListeners();
+        GameManager.InputManager.OnRight.RemoveAllListeners();
+        GameManager.InputManager.OnDown.RemoveAllListeners();
     }
 
     private void OnRestartButtonClicked()
