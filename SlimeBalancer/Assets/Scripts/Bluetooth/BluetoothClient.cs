@@ -530,6 +530,9 @@ public class BluetoothClient : MonoBehaviour
                 temperature = ExtractValue(msg, "T: ", "");
             }
             catch { }
+        }else
+        {
+            Debug.Log($"[BT] Unrecognized message: {msg}");
         }
     }
 
