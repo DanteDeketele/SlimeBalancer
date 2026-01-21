@@ -23,15 +23,15 @@ public class SkiGame : BaseGame
     public void Start()
     {        
         _floorDirection = Floor.transform.forward;
-        _camera = Camera.main.transform;
+        _camera = Camera.main.transform; 
+        _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation, transform);
+
 
         // Pre-spawn flags (and obstacles) up to SpawnAheadDistance before the run starts
         PreSpawnAhead();
     }
     public override void StartGame()
     {
-        _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation, transform);
-
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.white);
 
         base.StartGame();

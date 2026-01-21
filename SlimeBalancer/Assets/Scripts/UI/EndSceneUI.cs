@@ -8,7 +8,7 @@ public class EndSceneUI : MonoBehaviour
     private Label scoreLabel;
     private Label highScoreLabel;
 
-    private bool restartSelected = false;
+    private bool restartSelected = true;
 
     private Vector2 lastInput = Vector2.zero;
     private bool inputInUse = false;

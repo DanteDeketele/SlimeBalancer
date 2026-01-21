@@ -11,7 +11,7 @@ public class LoadingscreenManager : BaseManager
     {
         if (_loadingScreenInstance == null)
         {
-            _loadingScreenInstance = Instantiate(LoadingScreenPrefab);
+            _loadingScreenInstance = Instantiate(LoadingScreenPrefab, transform);
             _loadingScreenUI = _loadingScreenInstance.GetComponent<LoadingscreenUI>();
         }
         _loadingScreenInstance.SetActive(true);

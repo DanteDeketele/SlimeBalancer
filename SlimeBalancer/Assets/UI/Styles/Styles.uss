@@ -51,8 +51,6 @@
     -unity-text-align: middle-center;
     -unity-text-outline-width: 5px;
     -unity-text-outline-color: rgb(0, 0, 0);
-    opacity: 0;
-    scale: 0 0;
 }
 
 .mario-label.go-state {
