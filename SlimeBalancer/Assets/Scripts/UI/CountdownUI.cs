@@ -11,7 +11,7 @@ public class CountdownUI : MonoBehaviour
     [SerializeField] private float _slamDuration = 0.5f; // How fast it hits
     [SerializeField] private AnimationCurve _slamCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    private void Awake()
+    private void OnEnable()
     {
         var doc = GetComponent<UIDocument>();
         _label = doc.rootVisualElement.Q<Label>("CountdownLabel");

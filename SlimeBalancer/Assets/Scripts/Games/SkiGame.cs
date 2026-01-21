@@ -55,12 +55,22 @@ public class SkiGame : BaseGame
             // Spawn obstacles around this segment distance
             if (ObstaclePrefabs != null && ObstaclePrefabs.Length > 0)
             {
+                int maxSnowmen = 3;
+                int snowmenCount = 0;
                 int obsCount = Random.Range(5, 100);
                 for (int j = 0; j < obsCount; j++)
                 {
                     float xpos = Random.Range(-60, 60) + Player.position.x;
-                    
+
                     int index = Random.Range(0, ObstaclePrefabs.Length);
+                    if (index == 1) // 1 is snowman
+                    {
+                        if (snowmenCount >= maxSnowmen)
+                        {
+                            continue; // skip spawning more snowmen
+                        }
+                        snowmenCount++;
+                    }
                     if (Mathf.Abs(flagPositionX - xpos) > 13f || index == 1) // 1 is snowman    
                     {
                         GameObject obstacle = Instantiate(
@@ -103,7 +113,8 @@ public class SkiGame : BaseGame
                 obstacle.transform.position += -_floorDirection * Speed * Time.deltaTime;
                 if (obstacle.transform.position.z < 0f)
                 {
-                    if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < 2f)
+                    float radius = obstacle.GetComponent<SphereCollider>().radius;
+                    if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < radius + 0.5f) // 0.5f is player radius
                     {
                         // Hit obstacle
                         GameManager.SoundManager.PlaySound(GameManager.SoundManager.SkiGameCrashSound);
@@ -126,11 +137,23 @@ public class SkiGame : BaseGame
             flagPositionX = flag.transform.position.x;
             _flags.Add(flag);
 
+            int maxSnowmen = 3;
+            int snowmenCount = 0;
+
             // Spawn obstacles further ahead around the flag spawn distance
             for (int i = 0; i < Random.Range(5, 100); i++)
             {
                 float xPos = Random.Range(-60, 60) + Player.position.x;
                 int index = Random.Range(0, ObstaclePrefabs.Length);
+                
+                if (index == 1) // 1 is snowman
+                {
+                    if (snowmenCount >= maxSnowmen)
+                    {
+                        continue; // skip spawning more snowmen
+                    }
+                    snowmenCount++;
+                }
                 if (Mathf.Abs(flagPositionX - xPos) > 13f || index == 1) // 1 is snowman    
                 {
                     GameObject obstacle = Instantiate(
