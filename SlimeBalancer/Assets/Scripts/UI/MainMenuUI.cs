@@ -73,18 +73,24 @@ public class MainMenuUI : MonoBehaviour
 
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
-            selectedGameIndex = Mathf.Max(0, selectedGameIndex - 1);
-            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
-            UpdateSelectedGame();
-            BeginScroll();
+            if (selectedGameIndex > 0)
+            {
+                selectedGameIndex = Mathf.Max(0, selectedGameIndex - 1);
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
+                UpdateSelectedGame();
+                BeginScroll();
+            }
         });
 
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            selectedGameIndex = Mathf.Min(games.Length - 1 + 1, selectedGameIndex + 1);
-            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
-            UpdateSelectedGame();
-            BeginScroll();
+            if (selectedGameIndex < games.Length)
+            {
+                selectedGameIndex = Mathf.Min(games.Length - 1 + 1, selectedGameIndex + 1);
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
+                UpdateSelectedGame();
+                BeginScroll();
+            }
         });
 
         GameManager.InputManager.OnDown.AddListener(() =>

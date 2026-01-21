@@ -14,6 +14,9 @@ public class SoundManager : BaseManager
 
     public AudioClip UISelectSound;
 
+    public AudioClip CountdownBeepSound;
+
+
     //Tilt It Game
     public AudioClip TiltGameScoreSound;
 

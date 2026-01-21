@@ -25,6 +25,7 @@ public class CountdownUI : MonoBehaviour
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         for (int i = 3; i > 0; i--)
         {
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.CountdownBeepSound);
             // 1. Setup the number
             _label.RemoveFromClassList("go-state"); // Ensure styling is correct
             _label.text = i.ToString();
@@ -55,6 +56,7 @@ public class CountdownUI : MonoBehaviour
         GameManager.CountdownManager.OnCountdownFinished.Invoke();
 
         // --- GO! ---
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.CountdownBeepSound);
         _label.text = "GO!";
         _label.AddToClassList("go-state");
         _label.style.opacity = 1;
