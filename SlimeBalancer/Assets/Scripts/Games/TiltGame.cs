@@ -56,9 +56,9 @@ public class TiltGame : BaseGame
         float heightAbovePlayer = 15f;
 
         Vector3 spawnPoint = new Vector3(
-            playerposition.x + Random.Range(-1.5f, 1.5f),
+            playerposition.x + Random.Range(-1f, 1f),
             playerposition.y + heightAbovePlayer,
-            playerposition.z + Random.Range(-1.5f, 1.5f)
+            playerposition.z + Random.Range(-1f, 1f)
         );
         GameObject ob = Instantiate(PrefabSlime[Random.Range(0, PrefabSlime.Length)], spawnPoint, Quaternion.identity, transform);
         StartCoroutine(BlinkLedFromObject(ob));
