@@ -156,8 +156,9 @@ public class InputManager : BaseManager
                 isPressedIn = false;
             }
 
-            if (Vector2.Distance(inputVector, lastInputVector) > 0.05f)
+            if (Vector2.Distance(inputVector, lastInputVector) > 0.1f)
             {
+                Debug.Log("Significant input change detected: " + inputVector);
                 lastInputTime = Time.time;
             }
 
