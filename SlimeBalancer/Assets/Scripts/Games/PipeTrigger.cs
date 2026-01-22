@@ -15,7 +15,9 @@ public class PipeTrigger : MonoBehaviour
     
     private void OnTriggerEnter(Collider other)
     {
-        SlimeCollider.SlimeColor color = other.GetComponent<SlimeCollider>().slimeColor;
+        SlimeCollider collider = other.GetComponent<SlimeCollider>();
+        if (collider == null) return;
+        SlimeCollider.SlimeColor color = collider.slimeColor;
         if (color == slimeColor)
         {
             

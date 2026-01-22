@@ -10,6 +10,13 @@ public class TiltGame : BaseGame
     private float timer;
 
     [SerializeField] private float Delay = 5f;
+    private Rigidbody playerRigidbody;
+
+    public override void Awake()
+    {
+        playerRigidbody = player.GetComponent<Rigidbody>();
+        base.Awake();
+    }
 
     public override void StartGame()
     {
@@ -26,7 +33,7 @@ public class TiltGame : BaseGame
         rotation.z *= 1.5f;
         Quaternion quaternion = Quaternion.Euler(rotation.x, 0, rotation.z);
         quaternion = Quaternion.Lerp(player.transform.rotation, quaternion, Time.deltaTime * 15);
-        player.transform.rotation = quaternion;
+        playerRigidbody.MoveRotation(quaternion);
     }
 
     public override void UpdateGame()

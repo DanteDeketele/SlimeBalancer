@@ -7,7 +7,7 @@ public abstract class BaseGame : MonoBehaviour
     public string GameName = "Base Game";
     public bool IsGameActive = false;
 
-    void Awake()
+    public virtual void Awake()
     {
         if (GameManager.Instance == null)
         {
