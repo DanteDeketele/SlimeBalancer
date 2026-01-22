@@ -24,6 +24,7 @@ bool toHot = false;
 #define LED_PIN 4
 #define NUM_LEDS 44
 #define BRIGHTNESS 100
+#define BRIGHTNESS_STANDBY 100
 #define LED_TYPE WS2812B
 #define COLOR_ORDER GRB
 byte r, g, b, side;
@@ -35,12 +36,15 @@ const uint8_t colorStep = 6;
 
 // overige variabelen
 #define BATTERIJ_PIN 27
-unsigned long previousTimeLEDs, previousTimeBT, previousTimeBTDisconnect = millis();
+unsigned long previousTimeLEDs, previousTimeBT, previousTimeBTDisconnect, previousTimeStandBy, previousTimeIdle = millis();
 const unsigned long timeStepLEDs = 40;
-const unsigned long timeStepBT = 25;
-const unsigned long timeStepBTDisconnect = 1000; // 1 seconden
+const unsigned long timeStepBT = 50;
+const unsigned long timeStepBTDisconnect = 60000; // 1 minuut
+const unsigned long timeStepStandBy = 1000;       // 1 seconde
+const unsigned long timeStepIdle = 500;
 bool rainbowMode = false;
 bool runlightMode = false;
+bool standbyMode = false;
 byte ledplace_counter = NUM_LEDS;
 byte previousBatteryPercentage = -1;
 
@@ -80,6 +84,7 @@ void readMPU()
   uint8_t buf[14];
   mpuReadBytes(0x3B, 14, buf); // vanaf ACCEL_XOUT_H
 
+  // Serial.println();
   AcX = (buf[0] << 8) | buf[1];
   AcY = (buf[2] << 8) | buf[3];
   AcZ = (buf[4] << 8) | buf[5];
@@ -144,6 +149,53 @@ void sendAngles()
   SerialBT.println(">>");
 }
 
+void readBattery()
+{
+  int batteryLevel = analogRead(BATTERIJ_PIN);
+  // Serial.print("Raw Battery Level: ");
+  // Serial.println(batteryLevel);
+  if (batteryLevel < 3102)
+  {
+    SerialBT.println("WARNING: LOW BATTERY>>");
+    // Serial.println("WARNING: LOW BATTERY>>");
+  }
+  else if (batteryLevel > 4095)
+  {
+    // foutieve waarde, negeren
+  }
+  else
+  {
+    byte batteryPercentage = map(batteryLevel, 3102, 4095, 0, 100); // omzetten naar percentage
+
+    SerialBT.print("Battery_Level: ");
+    SerialBT.print(batteryPercentage);
+    SerialBT.println(">>");
+
+    // Serial.print("Battery_Level: ");
+    // Serial.print(batteryPercentage);
+    // Serial.println(">>");
+  }
+
+  // Serial.println("Battery level: " + String(batteryLevel));
+}
+
+void readAndSendMPU()
+{
+  readMPU();
+  computeAngles();
+  // printBalance(5.0); // drempel van 5 graden
+  sendAngles();
+  readBattery();
+  if (temperature >= 80.0)
+  {
+    toHot = true;
+    Serial.println(">> MPU too hot! Entering cooldown mode.");
+    SerialBT.println("WARNING: TO HOT>>");
+    fill_solid(leds, NUM_LEDS, CRGB::Black); // Indicate overheating
+    FastLED.show();
+  }
+}
+
 void rainbow()
 {
   unsigned long currentTime = millis();
@@ -162,6 +214,10 @@ void rainbow()
 
     // Advance to the next hue
     startColor += colorStep;
+    if (startColor > 255)
+    {
+      startColor = 0;
+    }
 
     FastLED.show();
   }
@@ -195,35 +251,6 @@ void runlight(const struct CRGB &color)
   }
 }
 
-void readBattery()
-{
-  int batteryLevel = analogRead(BATTERIJ_PIN);
-  // Serial.print("Raw Battery Level: ");
-  // Serial.println(batteryLevel);
-  if (batteryLevel < 3102)
-  {
-    SerialBT.println("WARNING: LOW BATTERY>>");
-    // Serial.println("WARNING: LOW BATTERY>>");
-  }
-  else
-  {
-    byte batteryPercentage = map(batteryLevel, 3102, 4095, 0, 100); // omzetten naar percentage
-    if (batteryPercentage != previousBatteryPercentage)
-    {
-      previousBatteryPercentage = batteryPercentage;
-      SerialBT.print("Battery_Level: ");
-      SerialBT.print(batteryPercentage);
-      SerialBT.println(">>");
-    }
-
-    // Serial.print("Battery_Level: ");
-    // Serial.print(batteryPercentage);
-    // Serial.println(">>");
-  }
-
-  // Serial.println("Battery level: " + String(batteryLevel));
-}
-
 void setup()
 {
   Serial.begin(115200);
@@ -233,7 +260,7 @@ void setup()
   SerialBT.begin("SlimeBalancer");
 
   Wire.begin();
-  mpuWrite(0x6B, 0x40); // mpu in slaapstand houden tot verbinding
+  mpuBoot();
 
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
   FastLED.setBrightness(BRIGHTNESS);
@@ -251,40 +278,26 @@ void loop()
     if (!connected)
     {
       Serial.println(">> Client connected!");
+      // mpuBoot();
       connected = true;
+      standbyMode = false;
       fill_solid(leds, NUM_LEDS, CRGB(48, 213, 150)); // Turn on all LEDs to indicate connection
       rainbowMode = true;
       FastLED.setBrightness(BRIGHTNESS);
       FastLED.show();
-      mpuBoot();
       runlightMode = false;
     }
     // doe je loops hier
     if (!toHot)
     {
       unsigned long currentTime = millis();
-      if (currentTime - previousTimeBT >= timeStepBT)
+      if ((currentTime - previousTimeBT >= timeStepBT) && !runlightMode)
       {
         previousTimeBT = currentTime;
-        readMPU();
-        computeAngles();
-        // printBalance(5.0); // drempel van 5 graden
-        sendAngles();
-        readBattery();
-        if (temperature >= 80.0)
-        {
-          toHot = true;
-          Serial.println(">> MPU too hot! Entering cooldown mode.");
-          SerialBT.println("WARNING: TO HOT>>");
-          fill_solid(leds, NUM_LEDS, CRGB::Black); // Indicate overheating
-          FastLED.show();
-        }
+        readAndSendMPU();
       }
       if (SerialBT.available())
       {
-        rainbowMode = false;
-        runlightMode = false;
-        FastLED.setBrightness(BRIGHTNESS);
         String incoming = SerialBT.readStringUntil('\n');
         Serial.println("Received via BT: " + incoming);
         // vb incoming: "R: 255, G: 127, B: 0, Side: 1>>"
@@ -298,64 +311,70 @@ void loop()
         int partIndex = 0;
         int startIndex = 0;
         int endIndex = incoming.indexOf(">>");
-        while (endIndex != -1 && partIndex < 10)
-        {
-          incomingParts[partIndex] = incoming.substring(startIndex, endIndex);
-          partIndex++;
-          startIndex = endIndex + 2;
-          endIndex = incoming.indexOf(">>", startIndex);
-        }
 
-        for (int i = 0; i < partIndex; i++)
+        if ((endIndex != -1) && (endIndex < 25) && (incoming.length() > 4))
         {
-          if (incomingParts[i].startsWith("Off"))
+          while (endIndex != -1 && partIndex < 10)
           {
-            fill_solid(leds, NUM_LEDS, CRGB::Black); // Turn off all LEDs
-            FastLED.show();
+            incomingParts[partIndex] = incoming.substring(startIndex, endIndex);
+            partIndex++;
+            startIndex = endIndex + 2;
+            endIndex = incoming.indexOf(">>", startIndex);
           }
-          else if (incomingParts[i].startsWith("Rainbow"))
-          {
-            rainbowMode = true;
-          }
-          else if (incomingParts[i].startsWith("Idle"))
-          {
-            runlightMode = true;
-            ledplace_counter = NUM_LEDS;
-            fill_solid(leds, NUM_LEDS, CRGB::Black);
-            leds[0] = CRGB(48, 213, 150);
-            FastLED.setBrightness(50);
-            FastLED.show();
-            mpuWrite(0x6B, 0x40); // mpu in slaapstand
-          }
-          else
-          {
-            int rIndex = incomingParts[i].indexOf("R: ");
-            int gIndex = incomingParts[i].indexOf("G: ");
-            int bIndex = incomingParts[i].indexOf("B: ");
-            int sideIndex = incomingParts[i].indexOf("Side: ");
+          rainbowMode = false;
+          runlightMode = false;
+          FastLED.setBrightness(BRIGHTNESS);
 
-            if (rIndex != -1 && gIndex != -1 && bIndex != -1 && sideIndex != -1)
+          for (int i = 0; i < partIndex; i++)
+          {
+            if (incomingParts[i].startsWith("Off"))
             {
-              r = incomingParts[i].substring(rIndex + 3, incomingParts[i].indexOf(",", rIndex)).toInt();
-              g = incomingParts[i].substring(gIndex + 3, incomingParts[i].indexOf(",", gIndex)).toInt();
-              b = incomingParts[i].substring(bIndex + 3, incomingParts[i].indexOf(",", bIndex)).toInt();
-              side = incomingParts[i].substring(sideIndex + 6).toInt();
-
-              Serial.println("Parsed values - R: " + String(r) + " G: " + String(g) + " B: " + String(b) + " Side: " + String(side));
-
-              // Update LED colors based on side
-              if (side == 0) // all sides
-              {
-                fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
-              }
-              else
-              {
-                for (int i = (NUM_LEDS * (side - 1)) / 4; i < (NUM_LEDS * side) / 4; i++)
-                {
-                  leds[i] = CRGB(r, g, b);
-                }
-              }
+              fill_solid(leds, NUM_LEDS, CRGB::Black); // Turn off all LEDs
               FastLED.show();
+            }
+            else if (incomingParts[i].startsWith("Rainbow"))
+            {
+              rainbowMode = true;
+            }
+            else if (incomingParts[i].startsWith("Idle"))
+            {
+              runlightMode = true;
+              ledplace_counter = NUM_LEDS;
+              fill_solid(leds, NUM_LEDS, CRGB::Black);
+              // leds[0] = CRGB(48, 213, 150);
+              FastLED.setBrightness(BRIGHTNESS_STANDBY);
+              FastLED.show();
+            }
+            else
+            {
+              int rIndex = incomingParts[i].indexOf("R: ");
+              int gIndex = incomingParts[i].indexOf("G: ");
+              int bIndex = incomingParts[i].indexOf("B: ");
+              int sideIndex = incomingParts[i].indexOf("Side: ");
+
+              if (rIndex != -1 && gIndex != -1 && bIndex != -1 && sideIndex != -1)
+              {
+                r = incomingParts[i].substring(rIndex + 3, incomingParts[i].indexOf(",", rIndex)).toInt();
+                g = incomingParts[i].substring(gIndex + 3, incomingParts[i].indexOf(",", gIndex)).toInt();
+                b = incomingParts[i].substring(bIndex + 3, incomingParts[i].indexOf(",", bIndex)).toInt();
+                side = incomingParts[i].substring(sideIndex + 6).toInt();
+
+                Serial.println("Parsed values - R: " + String(r) + " G: " + String(g) + " B: " + String(b) + " Side: " + String(side));
+
+                // Update LED colors based on side
+                if (side == 0) // all sides
+                {
+                  fill_solid(leds, NUM_LEDS, CRGB(r, g, b));
+                }
+                else
+                {
+                  for (int i = (NUM_LEDS * (side - 1)) / 4; i < (NUM_LEDS * side) / 4; i++)
+                  {
+                    leds[i] = CRGB(r, g, b);
+                  }
+                }
+                FastLED.show();
+              }
             }
           }
         }
@@ -366,7 +385,15 @@ void loop()
       }
       else if (runlightMode)
       {
-        runlight(CRGB(48, 213, 150));
+        // Serial.println("Idle mode");
+        unsigned long currentTime = millis();
+        if (currentTime - previousTimeIdle >= timeStepIdle)
+        {
+          // Serial.println("Idle mode action");
+          previousTimeIdle = currentTime;
+          readAndSendMPU();
+          runlight(CRGB(48, 213, 150));
+        }
       }
     }
     else
@@ -391,29 +418,41 @@ void loop()
     {
       Serial.println("<< Client disconnected.");
       connected = false;
-      mpuWrite(0x6B, 0x40); // mpu in slaapstand van zodra de verbinding wegvalt
+      // mpuWrite(0x6B, 0x40); // mpu in slaapstand van zodra de verbinding wegvalt
       fill_solid(leds, NUM_LEDS, CRGB::Red);
       FastLED.show();
       previousTimeBTDisconnect = millis();
     }
 
-    unsigned long currentTime = millis();
-    if (currentTime - previousTimeBTDisconnect >= timeStepBTDisconnect)
+    if (standbyMode)
     {
-      previousTimeBTDisconnect = currentTime;
-      // Serial.println("Waiting for client to connect...");
-      if (!runlightMode)
+      unsigned long currentTime = millis();
+      if ((currentTime - previousTimeStandBy >= timeStepStandBy))
       {
-        runlightMode = true;
-        ledplace_counter = NUM_LEDS;
-        fill_solid(leds, NUM_LEDS, CRGB::Black);
-        // leds[0] = CRGB::Red;
-        FastLED.setBrightness(50);
-        FastLED.show();
+        previousTimeStandBy = currentTime;
+        // Serial.println("Waiting for client to connect...");
+        if (!runlightMode)
+        {
+          runlightMode = true;
+          ledplace_counter = NUM_LEDS;
+          fill_solid(leds, NUM_LEDS, CRGB::Black);
+          // leds[0] = CRGB::Red;
+          FastLED.setBrightness(BRIGHTNESS_STANDBY);
+          FastLED.show();
+        }
+        else
+        {
+          runlight(CRGB::Red);
+        }
       }
-      else
+    }
+    else
+    {
+      unsigned long currentTime = millis();
+      if (currentTime - previousTimeBTDisconnect >= timeStepBTDisconnect)
       {
-        runlight(CRGB::Red);
+        standbyMode = true;
+        previousTimeBTDisconnect = currentTime;
       }
     }
   }
