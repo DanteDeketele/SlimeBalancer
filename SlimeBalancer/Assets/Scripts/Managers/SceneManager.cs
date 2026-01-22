@@ -62,7 +62,7 @@ public class SceneManager : BaseManager
         Scene loadedScene = USM.GetSceneByName(sceneName);
         USM.SetActiveScene(loadedScene);
         activeSceneName = sceneName;
-        if(activeSceneName == "MainMenu" || activeSceneName == "InfoScene")
+        if(activeSceneName == "MainMenu" || activeSceneName == "InfoScene" || activeSceneName == "SettingsMenu")
         {
             GameManager.SoundManager.PlaySound(GameManager.SoundManager.mainTheme, true, true);
         }

@@ -10,6 +10,8 @@ public class SettingsUI : MonoBehaviour
 
     private VisualElement gameListContainer;
     private VisualElement boardOnlineCircle;
+    private Label volumeLabel;
+    private Label musicLabel;
     private Label boardOnlineLabel;
     public Texture2D ControlDownIcon;
 
@@ -21,12 +23,21 @@ public class SettingsUI : MonoBehaviour
 
     int actualScreenWidth = 0;
 
+    private int volumeLevel = 5;
+
     public void Start()
     {
+        volumeLevel = GameManager.SoundManager.GetVolumeInt();
         GameManager.SoundManager.StopAllMusic();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
+
+        volumeLabel = root.Q<Label>("VolumeLabel");
+        volumeLabel.text = volumeLevel.ToString();
+
+        musicLabel = root.Q<Label>("MusicLabel");
+        musicLabel.text = GameManager.SoundManager.IsMusicOn ? "Aan" : "Uit";
 
         boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
         boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
@@ -63,12 +74,26 @@ public class SettingsUI : MonoBehaviour
             }
         });
 
+        GameManager.InputManager.OnUp.AddListener(() =>
+        {
+            if (selectedGameIndex == 1) // Edit Volume
+            {
+                if (volumeLevel < 5)
+                {
+                    volumeLevel += 1;
+                    volumeLabel.text = volumeLevel.ToString();
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                    GameManager.SoundManager.SetVolumeInt(volumeLevel);
+                }
+            }
+        });
+
         GameManager.InputManager.OnDown.AddListener(() =>
         {
-            GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
             switch (selectedGameIndex)
             {
                 case 0: // Back to Main Menu
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                     GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
                     // remove listeners to prevent multiple loads
                     GameManager.InputManager.OnLeft.RemoveAllListeners();
@@ -76,10 +101,22 @@ public class SettingsUI : MonoBehaviour
                     GameManager.InputManager.OnDown.RemoveAllListeners();
                     break;
                 case 1: // Edit Volume
+                    if (volumeLevel > 0)
+                    {
+                        volumeLevel -= 1;
+                        volumeLabel.text = volumeLevel.ToString();
+                        GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                        GameManager.SoundManager.SetVolumeInt(volumeLevel);
+                    }
                     break;
                 case 2: // Toggle Music
+                    GameManager.SoundManager.ToggleMusic();
+                    musicLabel.text = GameManager.SoundManager.IsMusicOn ? "Aan" : "Uit";
+
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                     break;
                 case 3: // Delete History
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                     // Delete PlayerPrefs history for each game
                     var data = GameManager.Instance.AvailableGames;
                     foreach (var game in data)

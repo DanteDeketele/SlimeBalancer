@@ -42,10 +42,13 @@ public class SoundManager : BaseManager
 
     public AudioClip SnakeWallHitSound;
 
+    public bool IsMusicOn = true;
+
 
     //Volume control
 
     private float volume = 1.0f;
+    private AudioClip lastClip;
 
 
     // Audio source management
@@ -55,13 +58,47 @@ public class SoundManager : BaseManager
 
     void Awake()
     {
+        volume = PlayerPrefs.GetFloat("volume", 1.0f);
+        IsMusicOn = PlayerPrefs.GetInt("IsMusicOn", 1) == 1;
+    }
 
-        
+    public void ToggleMusic()
+    {
+        IsMusicOn = !IsMusicOn;
+        PlayerPrefs.SetInt("IsMusicOn", IsMusicOn ? 1 : 0);
+        if (!IsMusicOn)
+        {
+            foreach (AudioSource source in audioSources)
+            {
+                if (source.loop && source.isPlaying)
+                {
+                    lastClip = source.clip;
+                    break;
+                }
+            }
+
+            StopAllMusic();
+        } 
+        else if (lastClip != null)
+        {
+            PlaySound(lastClip, true, true);
+        }
+    }
+
+    public int GetVolumeInt()
+    {
+        return Mathf.RoundToInt(volume * 5);
+    }
+    public void SetVolumeInt(int volumeInt)
+    {
+        float volume = volumeInt / 5.0f;
+        ChangeVolume(volume);
     }
 
     public void ChangeVolume(float volume)
     {
         this.volume = volume;
+        PlayerPrefs.SetFloat("volume", volume);
         foreach (AudioSource source in audioSources)
         {
                 source.volume = volume;
@@ -100,6 +137,12 @@ public class SoundManager : BaseManager
 
     public void PlaySound(AudioClip clip, bool loop = false, bool single = false, bool waitForOtherToFinish = false)
     {
+        if (!IsMusicOn && loop)
+        {
+            Debug.Log("Music is turned off, not playing sound: " + clip.name);
+            return;
+        }
+
         if (waitForOtherToFinish && audioSources.Count > 0)
         {
             StartCoroutine(WaitForOtherToFinishAndPlay(clip, loop, single));
