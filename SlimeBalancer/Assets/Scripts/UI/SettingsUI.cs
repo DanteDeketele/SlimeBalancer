@@ -65,6 +65,7 @@ public class SettingsUI : MonoBehaviour
 
         GameManager.InputManager.OnDown.AddListener(() =>
         {
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
             switch (selectedGameIndex)
             {
                 case 0: // Back to Main Menu
@@ -77,7 +78,6 @@ public class SettingsUI : MonoBehaviour
                 case 1: // Edit Volume
                     break;
                 case 2: // Toggle Music
-                    
                     break;
                 case 3: // Delete History
                     // Delete PlayerPrefs history for each game
