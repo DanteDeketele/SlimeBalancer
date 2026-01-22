@@ -280,7 +280,7 @@ MonoBehaviour:
   player: {fileID: 998056704}
   SlimePrefab: {fileID: 6946571605323106449, guid: 431e6984f86c69f43a4283924421018f, type: 3}
   ParticleEffect: {fileID: 537369062081580091, guid: 8b86f469facbceb43b5c90380e358538, type: 3}
-  MoveSpeed: 3
+  MoveSpeed: 2
   PlayAreaSize: {x: 22, y: 12}
 --- !u!1 &525595983
 GameObject:

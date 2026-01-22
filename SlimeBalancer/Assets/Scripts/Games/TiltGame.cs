@@ -12,6 +12,7 @@ public class TiltGame : BaseGame
     [SerializeField] private float Delay = 5f;
     private Rigidbody playerRigidbody;
 
+
     public override void Awake()
     {
         playerRigidbody = player.GetComponent<Rigidbody>();
@@ -68,9 +69,14 @@ public class TiltGame : BaseGame
             playerposition.y + heightAbovePlayer,
             playerposition.z + Random.Range(-1f, 1f)
         );
-        GameObject ob = Instantiate(PrefabSlime[Random.Range(0, PrefabSlime.Length)], spawnPoint, Quaternion.identity, transform);
-        StartCoroutine(BlinkLedFromObject(ob));
-        Destroy(ob, 20f);
+        GameObject slime = Instantiate(PrefabSlime[Random.Range(0, PrefabSlime.Length)], spawnPoint, Quaternion.identity, transform);
+        StartCoroutine(BlinkLedFromObject(slime));
+
+
+        Destroy(slime, 20f);
+
+
+
     }
 
     IEnumerator BlinkLedFromObject(GameObject ob)
