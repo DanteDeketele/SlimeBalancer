@@ -23,6 +23,7 @@ public class TiltGame : BaseGame
         GameManager.SoundManager.PlaySound(GameManager.SoundManager.TiltItMainTheme, true, true);
         base.StartGame();
         LedBasedOnPipe();
+        spawnSlime();
 
     }
 
@@ -60,7 +61,7 @@ public class TiltGame : BaseGame
         Vector3 playerposition = player.transform.position;
 
 
-        float heightAbovePlayer = 15f;
+        float heightAbovePlayer = 12f;
 
         Vector3 spawnPoint = new Vector3(
             playerposition.x + Random.Range(-1f, 1f),
