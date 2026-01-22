@@ -146,7 +146,7 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            SceneManager.LoadScene(SceneManager.WaitingSceneName);
+            SceneManager.LoadScene(SceneManager.SplashScreen);
         }
     }
 

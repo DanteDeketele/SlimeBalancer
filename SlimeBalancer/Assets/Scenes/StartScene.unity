@@ -217,6 +217,7 @@ MonoBehaviour:
   SnakeMainTheme: {fileID: 8300000, guid: 0f039284b30dce747a02b3910cc6a04e, type: 3}
   SnakeGrowSound: {fileID: 8300000, guid: 3e2e84467150f6843a975562b7baf047, type: 3}
   SnakeWallHitSound: {fileID: 8300000, guid: db569c88d0fde9a46be5b9b20861b326, type: 3}
+  IsMusicOn: 1
 --- !u!81 &599194071
 AudioListener:
   m_ObjectHideFlags: 0

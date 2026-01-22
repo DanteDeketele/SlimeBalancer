@@ -11,6 +11,8 @@ public class SceneManager : BaseManager
     public string InfoSceneName = "InfoScene";
     public string WaitingSceneName = "WaitingScene";
     public string SettingsSceneName = "SettingsMenu";
+    public string SplashScreen = "SplashScreen";
+    public string ConnectingSceneName = "ConnectingScene";
     private string activeSceneName;
 
     private List<string> _additiveScenes = new List<string>();

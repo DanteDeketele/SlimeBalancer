@@ -348,12 +348,18 @@ public class MainMenuUI : MonoBehaviour
 
         if (GameManager.InputManager.IsConnected)
         {
-            boardOnlineCircle.style.backgroundColor = new StyleColor(Color.green);
+            string colorHex = "30d5c8";
+            Color color;
+            ColorUtility.TryParseHtmlString("#" + colorHex, out color);
+            boardOnlineCircle.style.backgroundColor = new StyleColor(color);
             boardOnlineLabel.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
         }
         else
         {
-            boardOnlineCircle.style.backgroundColor = new StyleColor(Color.red);
+            string colorHex = "ff5b63";
+            Color color;
+            ColorUtility.TryParseHtmlString("#" + colorHex, out color);
+            boardOnlineCircle.style.backgroundColor = new StyleColor(color);
             boardOnlineLabel.text = "Bord Offline";
         }
     }
