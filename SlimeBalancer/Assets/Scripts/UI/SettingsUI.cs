@@ -3,16 +3,14 @@ using UnityEngine;
 using UnityEngine.UIElements;
 
 [RequireComponent(typeof(UIDocument))]
-public class MainMenuUI : MonoBehaviour
+public class SettingsUI : MonoBehaviour
 {
-    public VisualTreeAsset gameContainerTemplate;
     private VisualElement root;
     private int selectedGameIndex = 0;
 
     private VisualElement gameListContainer;
     private VisualElement boardOnlineCircle;
     private Label boardOnlineLabel;
-    public Texture2D SettingsIcon;
     public Texture2D ControlDownIcon;
 
     float timer = 0f;
@@ -23,7 +21,7 @@ public class MainMenuUI : MonoBehaviour
 
     int actualScreenWidth = 0;
 
-    public void Awake()
+    public void Start()
     {
         GameManager.SoundManager.StopAllMusic();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
@@ -33,36 +31,8 @@ public class MainMenuUI : MonoBehaviour
         boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
         boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
 
-        GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
-
         gameListContainer = root.Q<VisualElement>("Carousel");
-        foreach (var gameData in games)
-        {
-            var gameEntry = gameContainerTemplate.CloneTree();
-            gameEntry.Q<Label>("game-title").text = gameData.GameName;
-            gameEntry.Q<Label>("game-genre").text = "Test";
-            gameEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(gameData.GameLogo);
-            gameListContainer.Add(gameEntry);
-        }
-
-        // Add Settings entry
-        var settingsEntry = gameContainerTemplate.CloneTree();
-        settingsEntry.Q<Label>("game-title").text = "Instellingen";
-        settingsEntry.Q<Label>("game-genre").text = "Instellingen";
-        settingsEntry.Q<Label>("game-genre").style.color = new StyleColor(Color.white);
-        // solid color for settings icon background
-        settingsEntry.Q<VisualElement>("game-icon").style.backgroundColor = new StyleColor(Color.lightBlue);
-        settingsEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(); // clear any existing background image
-        settingsEntry.Q<VisualElement>("game-icon").style.justifyContent = Justify.Center;
-        // Add Icon with 70% width and height into the game-icon element
-        VisualElement iconContainer = new VisualElement();
-        iconContainer.style.width = Length.Percent(80);
-        iconContainer.style.height = Length.Percent(80);
-        iconContainer.style.alignSelf = Align.Center;
-        iconContainer.style.backgroundImage = new StyleBackground(SettingsIcon);
-        settingsEntry.Q<VisualElement>("game-icon").Add(iconContainer);
-
-        gameListContainer.Add(settingsEntry);
+        Debug.Log($"Game List Container Children: {gameListContainer.childCount}");
 
         var icon = gameListContainer[1].Q<VisualElement>("game-icon");
 
@@ -84,9 +54,9 @@ public class MainMenuUI : MonoBehaviour
 
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            if (selectedGameIndex < games.Length)
+            if (selectedGameIndex < 4)
             {
-                selectedGameIndex = Mathf.Min(games.Length - 1 + 1, selectedGameIndex + 1);
+                selectedGameIndex = Mathf.Min(4, selectedGameIndex + 1);
                 GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
                 UpdateSelectedGame();
                 BeginScroll();
@@ -95,30 +65,40 @@ public class MainMenuUI : MonoBehaviour
 
         GameManager.InputManager.OnDown.AddListener(() =>
         {
-            if (selectedGameIndex == games.Length)
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+            switch (selectedGameIndex)
             {
-                Debug.Log("Opening Settings Menu...");
-                // Open Settings Menu
-                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
-
-                GameManager.SceneManager.LoadScene(GameManager.SceneManager.SettingsSceneName);
-                // remove listeners to prevent multiple loads
-                GameManager.InputManager.OnLeft.RemoveAllListeners();
-                GameManager.InputManager.OnRight.RemoveAllListeners();
-                GameManager.InputManager.OnDown.RemoveAllListeners();
-                return;
+                case 0: // Back to Main Menu
+                    GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
+                    // remove listeners to prevent multiple loads
+                    GameManager.InputManager.OnLeft.RemoveAllListeners();
+                    GameManager.InputManager.OnRight.RemoveAllListeners();
+                    GameManager.InputManager.OnDown.RemoveAllListeners();
+                    break;
+                case 1: // Edit Volume
+                    break;
+                case 2: // Toggle Music
+                    break;
+                case 3: // Delete History
+                    // Delete PlayerPrefs history for each game
+                    var data = GameManager.Instance.AvailableGames;
+                    foreach (var game in data)
+                    {
+                        string scoreKey = $"HighScore_{game.SceneName}";
+                        if (PlayerPrefs.HasKey(scoreKey))
+                        {
+                            PlayerPrefs.DeleteKey(scoreKey);
+                            Debug.Log($"Deleted high score for {game.SceneName}");
+                        }
+                    }
+                    break;
+                case 4: // Quit Game
+                    Application.Quit();
+                    break;
+                default:
+                    Debug.LogWarning("No action assigned for this selection.");
+                    break;
             }
-            else
-            {
-                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
-                var selectedGame = games[selectedGameIndex];
-                Debug.Log($"Selected game: {selectedGame.GameName}");
-                GameManager.Instance.LoadInfo(selectedGame.SceneName);
-            }
-            // remove listeners to prevent multiple loads
-            GameManager.InputManager.OnLeft.RemoveAllListeners();
-            GameManager.InputManager.OnRight.RemoveAllListeners();
-            GameManager.InputManager.OnDown.RemoveAllListeners();
         });
     }
 
@@ -188,34 +168,12 @@ public class MainMenuUI : MonoBehaviour
 
     private void UpdateSelectedGame()
     {
-        GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
         for (int i = 0; i < gameListContainer.childCount; i++)
         {
             var gameEntry = gameListContainer[i];
             if (i == selectedGameIndex)
             {
                 gameEntry.AddToClassList("selected");
-
-                if (i != games.Length)
-                {
-                    VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
-                    if (scoreSection != null)
-                    {
-                        scoreSection.style.opacity = 1f;
-                    }
-                    Label score = gameEntry.Q<Label>("game-score");
-                    if (score != null)
-                    {
-                        score.text = GameManager.ScoreManager.GetHighScore(games[i].SceneName).ToString();
-                    }
-                }else
-                {
-                    VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
-                    if (scoreSection != null)
-                    {
-                        scoreSection.style.opacity = 0f;
-                    }
-                }
 
                 // Add a position abstract ino label next to the icon alligned to the top
                 VisualElement container = gameEntry.Q<VisualElement>("InfoContainer");
@@ -255,10 +213,26 @@ public class MainMenuUI : MonoBehaviour
                     instructionLabel.style.paddingLeft = Length.Pixels(0);
                     instructionLabel.style.paddingBottom = Length.Pixels(0);
 
-                    if (i == games.Length)
+                    int index = selectedGameIndex; // Capture the current index for the lambda
+                    switch (index)
                     {
-                        instructionLabel.text = "Druk om instellingen te openen";
+                        case 0:
+                            instructionLabel.text = "Druk om terug te gaan";
+                            break;
+                        case 1:
+                            instructionLabel.text = "Druk om volume aan te passen";
+                            break;
+                        case 2:
+                            instructionLabel.text = "Druk om muziek aan/uit te zetten";
+                            break;
+                        case 3:
+                            instructionLabel.text = "Druk om geschiedenis te verwijderen";
+                            break;
+                        case 4:
+                            instructionLabel.text = "Druk om het spel te verlaten";
+                            break;
                     }
+
 
                     container.Add(instructionLabel);
 

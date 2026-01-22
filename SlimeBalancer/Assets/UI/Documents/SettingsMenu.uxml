@@ -1,0 +1,86 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+    <ui:VisualElement style="flex-grow: 1; background-color: rgb(255, 255, 255);">
+        <ui:VisualElement name="Header" style="flex-grow: 0; height: 20%;">
+            <ui:VisualElement name="Logo" style="background-image: url(&quot;project://database/Assets/Textures/Logos/Rechtelogp.png?fileID=2800000&amp;guid=65c48125df17d0e43b02b4846d5cd395&amp;type=3#Rechtelogp&quot;); -unity-background-scale-mode: scale-to-fit; flex-grow: 1; margin-top: 32px; margin-right: 32px; margin-bottom: 32px; margin-left: 32px;" />
+        </ui:VisualElement>
+        <ui:VisualElement name="Main" tabindex="7" style="flex-grow: 0; height: 60%; border-top-width: 1px; border-right-width: 0; border-bottom-width: 1px; border-left-width: 0; border-left-color: rgba(0, 0, 0, 0.41); border-right-color: rgba(0, 0, 0, 0.41); border-top-color: rgba(0, 0, 0, 0.41); border-bottom-color: rgba(0, 0, 0, 0.41);">
+            <ui:VisualElement name="Carousel" style="flex-grow: 1; align-items: flex-end; justify-content: flex-start; align-content: auto; padding-top: 16px; padding-right: 0; padding-bottom: 16px; padding-left: 0; flex-direction: row; width: 2278px;">
+                <ui:VisualElement template="GameContainer">
+                    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+                    <ui:VisualElement name="GameContainer" style="margin-right: 48px;">
+                        <ui:VisualElement name="game-icon" class="gameIcon" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; background-image: none; transition-duration: 0.5s; background-color: rgb(48, 213, 200); align-content: center; justify-content: center;">
+                            <ui:VisualElement style="flex-grow: 0; background-image: url(&quot;project://database/Assets/Textures/gamemenu.png?fileID=2800000&amp;guid=8ed0bc330077095489c9607e6e463f0a&amp;type=3#gamemenu&quot;); width: 80%; height: 80%; align-self: center; align-content: center; justify-content: center;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <ui:Label text="Game Menu" name="game-title" class="gameTitle" style="padding-top: 8px; padding-right: 0; padding-bottom: 4px; padding-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; font-size: 24px;" />
+                        </ui:VisualElement>
+                        <ui:Label text="Puzzle" name="game-genre" style="font-size: 18px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(111, 111, 111); display: flex; visibility: hidden;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement template="GameContainer">
+                    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+                    <ui:VisualElement name="GameContainer" style="margin-right: 48px;">
+                        <ui:VisualElement name="game-icon" class="gameIcon" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; background-image: none; transition-duration: 0.5s; background-color: rgb(48, 213, 200); align-content: center; justify-content: center;">
+                            <ui:Label text="5" name="VolumeLabel" style="align-self: center; color: rgb(255, 255, 255); font-size: 153px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; -unity-font-style: normal;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <ui:Label text="Geluid" name="game-title" class="gameTitle" style="padding-top: 8px; padding-right: 0; padding-bottom: 4px; padding-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; font-size: 24px;" />
+                        </ui:VisualElement>
+                        <ui:Label text="Puzzle" name="game-genre" style="font-size: 18px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(111, 111, 111); display: flex; visibility: hidden;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement template="GameContainer">
+                    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+                    <ui:VisualElement name="GameContainer" style="margin-right: 48px;">
+                        <ui:VisualElement name="game-icon" class="gameIcon" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; background-image: none; transition-duration: 0.5s; background-color: rgb(48, 213, 200); align-content: center; justify-content: center;">
+                            <ui:Label text="Muziek aan" style="align-self: center; color: rgb(255, 255, 255); font-size: 48px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; white-space: normal; -unity-text-align: upper-center; -unity-font-style: normal;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <ui:Label text="Muziek" name="game-title" class="gameTitle" style="padding-top: 8px; padding-right: 0; padding-bottom: 4px; padding-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; font-size: 24px;" />
+                        </ui:VisualElement>
+                        <ui:Label text="Puzzle" name="game-genre" style="font-size: 18px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(111, 111, 111); display: flex; visibility: hidden;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement template="GameContainer">
+                    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+                    <ui:VisualElement name="GameContainer" style="margin-right: 48px;">
+                        <ui:VisualElement name="game-icon" class="gameIcon" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; background-image: none; transition-duration: 0.5s; background-color: rgb(48, 213, 200); align-content: center; justify-content: center;">
+                            <ui:Label text="Geschiedenis Verwijderen" style="align-self: center; color: rgb(255, 255, 255); font-size: 28px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; -unity-text-align: upper-center; white-space: normal;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <ui:Label text="Highscores" name="game-title" class="gameTitle" style="padding-top: 8px; padding-right: 0; padding-bottom: 4px; padding-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; font-size: 24px;" />
+                        </ui:VisualElement>
+                        <ui:Label text="Puzzle" name="game-genre" style="font-size: 18px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(111, 111, 111); display: flex; visibility: hidden;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement template="GameContainer">
+                    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+                    <ui:VisualElement name="GameContainer" style="margin-right: 48px;">
+                        <ui:VisualElement name="game-icon" class="gameIcon" style="border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; background-image: none; transition-duration: 0.5s; background-color: rgb(48, 213, 200); align-content: center; justify-content: center;">
+                            <ui:VisualElement style="flex-grow: 0; background-image: url(&quot;project://database/Assets/Textures/off.png?fileID=2800000&amp;guid=dd9752f06feb7cf42a2f211da9503115&amp;type=3#off&quot;); width: 80%; height: 80%; align-self: center; align-content: center; justify-content: center;" />
+                        </ui:VisualElement>
+                        <ui:VisualElement style="flex-direction: row; justify-content: space-between; align-items: center;">
+                            <ui:Label text="Afsluiten" name="game-title" class="gameTitle" style="padding-top: 8px; padding-right: 0; padding-bottom: 4px; padding-left: 0; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; font-size: 24px;" />
+                        </ui:VisualElement>
+                        <ui:Label text="Puzzle" name="game-genre" style="font-size: 18px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; color: rgb(111, 111, 111); display: flex; visibility: hidden;" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement name="Footer" style="flex-grow: 1; height: 20%; flex-direction: row; padding-top: 16px; padding-right: 16px; padding-bottom: 16px; padding-left: 16px;">
+            <ui:VisualElement name="BoardConnection" style="flex-grow: 1; align-items: center; justify-content: center; flex-direction: row;">
+                <ui:VisualElement name="BoardOnlineCircle" style="flex-grow: 0; flex-shrink: 0; width: 24px; height: 24px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px; background-color: rgb(194, 81, 81); border-top-width: 3px; border-right-width: 3px; border-bottom-width: 3px; border-left-width: 3px; border-left-color: rgb(0, 0, 0); border-right-color: rgb(0, 0, 0); border-top-color: rgb(0, 0, 0); border-bottom-color: rgb(0, 0, 0);" />
+                <ui:Label text="Bord offline" name="BoardOnlineLabel" style="font-size: 20px; padding-left: 8px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0;" />
+            </ui:VisualElement>
+            <ui:VisualElement name="InputControlls" style="flex-grow: 1; justify-content: center; flex-direction: row; align-items: center;">
+                <ui:VisualElement name="LeftIcon" style="background-image: url(&quot;project://database/Assets/Textures/Balanceboardlinks.png?fileID=2800000&amp;guid=0d47661becf1f5940a0945599aa922a9&amp;type=3#Balanceboardlinks&quot;); -unity-background-scale-mode: scale-to-fit; height: 75px; width: 75px;" />
+                <ui:Label text="Links" style="justify-content: center; align-content: center; align-self: center; font-size: 20px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 8px; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
+                <ui:VisualElement name="LeftIcon" style="background-image: url(&quot;project://database/Assets/Textures/naar%20benedenbalanceboard.png?fileID=2800000&amp;guid=0365b325dfd21f94f9bdb2cc618c7005&amp;type=3#naar benedenbalanceboard&quot;); -unity-background-scale-mode: scale-to-fit; height: 75px; width: 75px; margin-left: 16px;" />
+                <ui:Label text="Ok" style="justify-content: center; align-content: center; align-self: center; font-size: 20px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 8px; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0;" />
+                <ui:VisualElement name="LeftIcon" style="background-image: url(&quot;project://database/Assets/Textures/Balanceboard%20rechts.png?fileID=2800000&amp;guid=3d60e270ff4800049b005baf30f91248&amp;type=3#Balanceboard rechts&quot;); -unity-background-scale-mode: scale-to-fit; height: 75px; width: 75px; margin-left: 16px;" />
+                <ui:Label text="Rechts&#10;" style="justify-content: center; align-content: center; align-self: center; font-size: 20px; margin-top: 0; margin-right: 0; margin-bottom: 0; margin-left: 0; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 8px;" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
