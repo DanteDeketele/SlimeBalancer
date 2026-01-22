@@ -8,7 +8,9 @@ public class SnakeGame : BaseGame
     public GameObject player;
     public GameObject SlimePrefab;
 
-    public float MoveSpeed = 5f;
+    public GameObject ParticleEffect;
+
+    public float MoveSpeed = 1f;
     public Vector2 PlayAreaSize = new Vector2(10f, 10f);
 
     private Vector3 moveDirection = Vector3.forward;
@@ -33,7 +35,7 @@ public class SnakeGame : BaseGame
 
     private float waveTimer = 0f;
     private float waveDuration = 0.5f; // Duration of the wave effect
-    private float waveScaleFactor = 1.2f; // How much the segments scale up during the wave
+    private float waveScaleFactor = 1.3f; // How much the segments scale up during the wave
     private bool isWaveActive = false; // Tracks if the wave effect is active
 
     public override void StartGame()
@@ -89,31 +91,41 @@ public class SnakeGame : BaseGame
         // Ensure the wave effect finishes smoothly for all segments
         if (isWaveActive)
         {
-            float maxWaveTime = adjustedWaveDuration + (snakeSegments.Count * 0.1f); // Extend wave time to cover all segments
+            float waveSpeed = snakeSegments.Count / adjustedWaveDuration;
+            float waveWidth = 2f; // Controls smoothness of the wave
 
             for (int i = 0; i < snakeSegments.Count; i++)
             {
-                float waveOffset = (i / (float)snakeSegments.Count) * adjustedWaveDuration; // Spread wave across all segments
-                float scale = 1f + Mathf.Sin((waveTimer - waveOffset) * Mathf.PI * 2 / adjustedWaveDuration) * (waveScaleFactor - 1f);
-                snakeSegments[i].transform.localScale = Vector3.one * Mathf.Max(1f, scale); // Ensure scale doesn't go below 1
+                // Distance from wave center
+                float distance = Mathf.Abs(i - waveTimer);
+
+                // Smooth bell-shaped curve
+                float influence = Mathf.Exp(-(distance * distance) / (waveWidth * waveWidth));
+
+                float scale = Mathf.Lerp(1f, waveScaleFactor, influence);
+                snakeSegments[i].transform.localScale = Vector3.one * scale * 0.9f;
             }
 
-            float headScale = 1f + Mathf.Sin(waveTimer * Mathf.PI * 2 / adjustedWaveDuration) * (waveScaleFactor - 1f);
-            player.transform.localScale = Vector3.one * Mathf.Max(1f, headScale);
+            // Head reacts slightly stronger
+            float headInfluence = Mathf.Exp(-(waveTimer * waveTimer) / (waveWidth * waveWidth));
+            float headScale = Mathf.Lerp(1f, waveScaleFactor, headInfluence);
+            player.transform.localScale = Vector3.one * headScale;
 
-            waveTimer += Time.deltaTime;
+            // Move wave forward
+            waveTimer += Time.deltaTime * waveSpeed;
 
-            // Stop the wave effect after the extended duration
-            if (waveTimer >= maxWaveTime)
+            // End once wave passed the tail
+            if (waveTimer > snakeSegments.Count + waveWidth)
             {
                 isWaveActive = false;
-                player.transform.localScale = Vector3.one; // Reset head scale
+                waveTimer = 0f;
+
+                player.transform.localScale = Vector3.one;
                 foreach (var seg in snakeSegments)
-                {
-                    seg.transform.localScale = Vector3.one; // Reset all segment scales
-                }
+                    seg.transform.localScale = Vector3.one * 0.9f;
             }
         }
+
 
         player.transform.position = Vector3.Lerp(cellStart, cellEnd, cellProgress);
         player.transform.rotation = Quaternion.Lerp(
@@ -153,6 +165,14 @@ public class SnakeGame : BaseGame
         {
             EndGame(false);
         }
+        //add if the head hits any of its segments game over
+        foreach (var segment in snakeSegments)
+        {
+            if (Vector3.Distance(player.transform.position, segment.transform.position) < 0.5f)
+            {
+                EndGame(false);
+            }
+        }
 
         base.UpdateGame();
     }
@@ -177,6 +197,22 @@ public class SnakeGame : BaseGame
     // Pickup becomes a snake segment (delayed until next cell commit)
     public void GrowSnake(GameObject slime)
     {
+        // Get slime color
+        Renderer slimeRenderer = slime.GetComponent<Renderer>();
+        Color slimeColor = slimeRenderer.material.GetColor("_MainColor");
+
+        // Instantiate particle effect
+        GameObject particleInstance = Instantiate(
+            ParticleEffect,
+            slime.transform.position + Vector3.up * 0.5f,
+            Quaternion.identity
+        );
+
+        // Apply color to the INSTANCE material
+        Renderer particleRenderer = particleInstance.GetComponent<Renderer>();
+        particleRenderer.material.SetColor("_MainColor", slimeColor);
+
+
         StartCoroutine(GameManager.InputManager.LedBlink(Color.green, 2, .25f, endEffect: InputManager.LightingEffect.Rainbow));
         slime.SetActive(true);
         if (slime.TryGetComponent<Collider>(out var col))
@@ -189,13 +225,14 @@ public class SnakeGame : BaseGame
         // remove all children
         foreach (Transform child in slime.transform)
         {
-            Destroy(child.gameObject);
+            if (child.gameObject.name != "outline")
+                Destroy(child.gameObject);
         }
 
         // Add to pending list instead of immediately to snakeSegments
         pendingSegments.Add(slime);
         GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeGrowSound);
-        
+
 
         TriggerWaveEffect(); // Trigger the wave effect when the snake grows
     }
@@ -223,17 +260,18 @@ public class SnakeGame : BaseGame
         // Assign unique material
         Renderer r = slime.GetComponent<Renderer>();
         Material mat = new Material(r.sharedMaterial);
-        mat.SetColor("_MainColor", Random.ColorHSV(0, 1, .6f, .9f, .7f, 1f));
-        mat.SetColor("_SideColor", Random.ColorHSV(0, 1, .6f, .9f, .7f, 1f));
+        mat.SetColor("_MainColor", Random.ColorHSV(0, 1, .8f, 1f, .8f, 1f));
+        mat.SetColor("_SideColor", Random.ColorHSV(0, 1, .8f, 1f, .8f, 1f));
         mat.SetFloat("_Seed", Random.Range(0f, 100f));
         r.sharedMaterial = mat;
     }
 
     public override void EndGame(bool won = false)
     {
+        Instantiate(ParticleEffect, player.transform.position + Vector3.up * 1.5f, Quaternion.identity);
         MoveSpeed = 0;
         GameManager.SoundManager.ChangeVolumeMusic(GameManager.SoundManager.SnakeMainTheme, 0.5f);
-        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeWallHitSound);    
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeWallHitSound);
         base.EndGame(won);
     }
 
@@ -247,7 +285,7 @@ public class SnakeGame : BaseGame
         );
 
         // draw gizmos for segment list and queue
-        
+
         foreach (var seg in snakeSegments)
         {
             Gizmos.color = Color.hotPink;
@@ -258,7 +296,7 @@ public class SnakeGame : BaseGame
         foreach (var pos in positionHistory)
         {
             Gizmos.color = Color.cyan;
-            Gizmos.DrawCube(pos,Vector3.up +  Vector3.one * 0.1f);
+            Gizmos.DrawCube(pos, Vector3.up + Vector3.one * 0.1f);
             Handles.color = Color.cyan;
             Handles.Label(pos + Vector3.up * 1.5f, "Pos" + positionHistory.ToArray().ToList().IndexOf(pos));
         }
