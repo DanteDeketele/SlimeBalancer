@@ -51,8 +51,6 @@ public class SnakeGame : BaseGame
         positionHistory.Enqueue(startCell);
 
         SpawnSlime();
-
-        GameManager.InputManager.OnAnyDirection.AddListener(OnInput);
     }
 
     public void TriggerWaveEffect()
@@ -63,6 +61,12 @@ public class SnakeGame : BaseGame
 
     public override void UpdateGame()
     {
+        Vector2 input = GameManager.InputManager.InputVector;
+        if (input.magnitude > 0.4f)
+        {
+            OnInput(input);
+        }
+
         cellProgress += MoveSpeed * Time.deltaTime;
 
         // Adjust wave duration to scale with the snake's length
@@ -179,6 +183,18 @@ public class SnakeGame : BaseGame
 
     private void OnInput(Vector2 direction)
     {
+        // make input into normilised into x or y direction
+        
+        if (Mathf.Abs(direction.x) > Mathf.Abs(direction.y))
+        {
+            direction.y = 0;
+        }
+        else
+        {
+            direction.x = 0;
+        }
+        direction.Normalize();
+
         // Only allow perpendicular direction changes
         if (lastMoveDirection == Vector3.forward || lastMoveDirection == Vector3.back)
         {

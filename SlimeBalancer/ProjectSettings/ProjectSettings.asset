@@ -17,8 +17,8 @@ PlayerSettings:
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.0482971, g: 0.050314426, b: 0.04762466, a: 1}
-  m_ShowUnitySplashScreen: 1
-  m_ShowUnitySplashLogo: 1
+  m_ShowUnitySplashScreen: 0
+  m_ShowUnitySplashLogo: 0
   m_SplashScreenOverlayOpacity: 1
   m_SplashScreenAnimation: 0
   m_SplashScreenLogoStyle: 1
@@ -45,12 +45,6 @@ PlayerSettings:
   - logo: {fileID: 21300000, guid: 65c48125df17d0e43b02b4846d5cd395, type: 3}
     duration: 3.3
   - logo: {fileID: 21300000, guid: 05ef0a3b0dcd3854ba7da22098cbbd27, type: 3}
-    duration: 2
-  - logo: {fileID: 21300000, guid: 2705ce608af20ce4da468185c9bced61, type: 3}
-    duration: 2
-  - logo: {fileID: 21300000, guid: 803bf4fc7cf063d4da7c921afa4e40b9, type: 3}
-    duration: 2
-  - logo: {fileID: 10404, guid: 0000000000000000f000000000000000, type: 0}
     duration: 2
   m_VirtualRealitySplashScreen: {fileID: 0}
   m_HolographicTrackingLossScreen: {fileID: 0}
