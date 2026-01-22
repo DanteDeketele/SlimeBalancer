@@ -102,6 +102,10 @@ public class MainMenuUI : MonoBehaviour
                 GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
 
                 GameManager.SceneManager.LoadScene(GameManager.SceneManager.SettingsSceneName);
+                // remove listeners to prevent multiple loads
+                GameManager.InputManager.OnLeft.RemoveAllListeners();
+                GameManager.InputManager.OnRight.RemoveAllListeners();
+                GameManager.InputManager.OnDown.RemoveAllListeners();
                 return;
             }
             else

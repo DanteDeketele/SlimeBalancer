@@ -21,7 +21,7 @@ public class SettingsUI : MonoBehaviour
 
     int actualScreenWidth = 0;
 
-    public void Awake()
+    public void Start()
     {
         GameManager.SoundManager.StopAllMusic();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
@@ -54,9 +54,9 @@ public class SettingsUI : MonoBehaviour
 
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            if (selectedGameIndex < 5)
+            if (selectedGameIndex < 4)
             {
-                selectedGameIndex = Mathf.Min(5, selectedGameIndex + 1);
+                selectedGameIndex = Mathf.Min(4, selectedGameIndex + 1);
                 GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
                 UpdateSelectedGame();
                 BeginScroll();
@@ -65,11 +65,14 @@ public class SettingsUI : MonoBehaviour
 
         GameManager.InputManager.OnDown.AddListener(() =>
         {
-            int selectedIndex = selectedGameIndex;
             switch (selectedGameIndex)
             {
                 case 0: // Back to Main Menu
                     GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
+                    // remove listeners to prevent multiple loads
+                    GameManager.InputManager.OnLeft.RemoveAllListeners();
+                    GameManager.InputManager.OnRight.RemoveAllListeners();
+                    GameManager.InputManager.OnDown.RemoveAllListeners();
                     break;
                 case 1: // Edit Volume
                     break;
@@ -92,11 +95,10 @@ public class SettingsUI : MonoBehaviour
                 case 4: // Quit Game
                     Application.Quit();
                     break;
+                default:
+                    Debug.LogWarning("No action assigned for this selection.");
+                    break;
             }
-            // remove listeners to prevent multiple loads
-            GameManager.InputManager.OnLeft.RemoveAllListeners();
-            GameManager.InputManager.OnRight.RemoveAllListeners();
-            GameManager.InputManager.OnDown.RemoveAllListeners();
         });
     }
 
@@ -210,6 +212,26 @@ public class SettingsUI : MonoBehaviour
                     instructionLabel.style.paddingRight = Length.Pixels(0);
                     instructionLabel.style.paddingLeft = Length.Pixels(0);
                     instructionLabel.style.paddingBottom = Length.Pixels(0);
+
+                    int index = selectedGameIndex; // Capture the current index for the lambda
+                    switch (index)
+                    {
+                        case 0:
+                            instructionLabel.text = "Druk om terug te gaan";
+                            break;
+                        case 1:
+                            instructionLabel.text = "Druk om volume aan te passen";
+                            break;
+                        case 2:
+                            instructionLabel.text = "Druk om muziek aan/uit te zetten";
+                            break;
+                        case 3:
+                            instructionLabel.text = "Druk om geschiedenis te verwijderen";
+                            break;
+                        case 4:
+                            instructionLabel.text = "Druk om het spel te verlaten";
+                            break;
+                    }
 
 
                     container.Add(instructionLabel);
