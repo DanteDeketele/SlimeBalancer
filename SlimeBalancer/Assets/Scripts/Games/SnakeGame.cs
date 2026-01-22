@@ -232,6 +232,7 @@ public class SnakeGame : BaseGame
     public override void EndGame(bool won = false)
     {
         MoveSpeed = 0;
+        GameManager.SoundManager.ChangeVolumeMusic(GameManager.SoundManager.SnakeMainTheme, 0.5f);
         GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeWallHitSound);    
         base.EndGame(won);
     }

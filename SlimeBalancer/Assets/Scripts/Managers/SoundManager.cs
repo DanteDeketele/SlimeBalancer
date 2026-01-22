@@ -68,6 +68,17 @@ public class SoundManager : BaseManager
         }
     }
 
+    public void ChangeVolumeMusic(AudioClip clip, float volume)
+    {
+        foreach (AudioSource source in audioSources)
+        {
+            if (source.clip == clip)
+            {
+                source.volume = volume;
+            }
+        }
+    }
+
     private IEnumerator WaitForOtherToFinishAndPlay(AudioClip clip, bool loop, bool single)
     {
         int soundEffectsPlaying;
@@ -143,17 +154,7 @@ public class SoundManager : BaseManager
         }
     }
 
-    public void PauseSound(AudioClip clip)
-    {
-        foreach (AudioSource source in audioSources)
-        {
-            if (source.clip == clip)
-            {
-                source.Pause();
-                Debug.Log("Paused sound: " + clip.name);
-            }
-        }
-    }
+
 
     public void FadeOutSound(AudioClip clip, float duration)
     {

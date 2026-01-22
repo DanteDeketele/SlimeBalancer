@@ -100,6 +100,7 @@ public class TiltGame : BaseGame
     public void Wrong()
     {
         EndGame();
+        GameManager.SoundManager.ChangeVolumeMusic(GameManager.SoundManager.TiltItMainTheme, 0.5f);
     }
 
     private void LedBasedOnPipe()

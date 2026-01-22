@@ -7,6 +7,7 @@ public class WaitingUI : MonoBehaviour
 
     private void OnEnable()
     {
+        GameManager.SoundManager.StopAllMusic();
         GameManager.InputManager.OnDown.AddListener(LoadMainMenu);
         
         

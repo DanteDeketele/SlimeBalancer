@@ -198,6 +198,7 @@ public class SkiGame : BaseGame
     public override void EndGame(bool won = false)
     {
         base.EndGame(won);
+        GameManager.SoundManager.ChangeVolumeMusic(GameManager.SoundManager.SlimeSkieMainTheme, 0.5f);
     }
 
 
