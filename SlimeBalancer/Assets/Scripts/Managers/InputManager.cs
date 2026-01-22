@@ -124,32 +124,33 @@ public class InputManager : BaseManager
         {
             if (!isPressedIn)
             {
-                if (inputVector.y > 0.9f && lastInputVector.y <= 0.9f)
+                float sensitivity = 0.85f;
+                if (inputVector.y > sensitivity && lastInputVector.y <= sensitivity)
                 {
                     OnUp?.Invoke();
                     OnAnyDirection?.Invoke(Vector2.up);
                     Debug.Log("Up input detected");
                 }
-                else if (inputVector.y < -0.9f && lastInputVector.y >= -0.9f)
+                else if (inputVector.y < -sensitivity && lastInputVector.y >= -sensitivity)
                 {
                     OnDown?.Invoke();
                     OnAnyDirection?.Invoke(Vector2.down);
                     Debug.Log("Down input detected");
                 }
-                if (inputVector.x > 0.9f && lastInputVector.x <= 0.9f)
+                if (inputVector.x > sensitivity && lastInputVector.x <= sensitivity)
                 {
                     OnRight?.Invoke();
                     OnAnyDirection?.Invoke(Vector2.right);
                     Debug.Log("Right input detected");
                 }
-                else if (inputVector.x < -0.9f && lastInputVector.x >= -0.9f)
+                else if (inputVector.x < -sensitivity && lastInputVector.x >= -sensitivity)
                 {
                     OnLeft?.Invoke();
                     OnAnyDirection?.Invoke(Vector2.left);
                     Debug.Log("Left input detected");
                 }
             }
-            else if (inputVector.magnitude < 0.2f)
+            else if (inputVector.magnitude < 0.5f)
             {
                 // Reset pressed state when input returns to neutral
                 isPressedIn = false;
