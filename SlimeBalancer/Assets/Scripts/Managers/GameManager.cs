@@ -10,6 +10,14 @@ public class GameManager : MonoBehaviour
     public static string GameSceneNameToSkipTo = "";
     private BaseGame _currentGame;
     private GameData _currentGameData;
+
+    public enum Difficulty
+    {
+        Easy,
+        Medium,
+        Hard
+    }
+    public static Difficulty CurrentDifficulty = Difficulty.Medium;
     public GameData CurrentGameData => _currentGameData;
 
     [System.Serializable]

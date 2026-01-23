@@ -20,6 +20,24 @@ public class CountdownUI : MonoBehaviour
 
     public IEnumerator StartCountdown()
     {
+        var doc = GetComponent<UIDocument>();
+        VisualElement loadingbar = doc.rootVisualElement.Q<VisualElement>("LoadingBar");
+        Label title = doc.rootVisualElement.Q<Label>("game-title");
+        title.text = GameManager.Instance.CurrentGameData.GameName;
+        // add loadingbar of 5seconds before countdown starts
+        float loadTime = 5f;
+        float timer1 = 0f;
+        while (timer1 < loadTime)
+        {
+            timer1 += Time.deltaTime;
+            float progress = timer1 / loadTime;
+            loadingbar.style.width = Length.Percent(progress * 100f);
+            yield return null;
+        }
+
+        doc.rootVisualElement.Q<VisualElement>("stand").style.display = DisplayStyle.None;
+        doc.rootVisualElement.Q<VisualElement>("Container").style.display = DisplayStyle.Flex;
+
 
         // 3... 2... 1...
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);

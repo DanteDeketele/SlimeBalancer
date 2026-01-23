@@ -34,10 +34,8 @@ public class BalanceQuest : BaseGame
     public void FixedUpdate()
     {   
         Vector3 rotation = GameManager.InputManager.InputEulerRotation;
-        rotation.x *= 1.5f;
-        rotation.z *= 1.5f;
         Quaternion quaternion = Quaternion.Euler(rotation.x, 0, rotation.z);
-        quaternion = Quaternion.Lerp(player.transform.rotation, quaternion, Time.deltaTime);
+        quaternion = Quaternion.Lerp(player.transform.rotation, quaternion, Time.deltaTime * 15f);
         playerRigidbody.rotation = quaternion;
     }
 
