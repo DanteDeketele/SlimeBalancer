@@ -312,7 +312,7 @@ void loop()
         int startIndex = 0;
         int endIndex = incoming.indexOf(">>");
 
-        if ((endIndex != -1) && (endIndex < 25) && (incoming.length() > 4))
+        if ((endIndex != -1) && (endIndex < 256) && (incoming.length() > 4))
         {
           while (endIndex != -1 && partIndex < 10)
           {
