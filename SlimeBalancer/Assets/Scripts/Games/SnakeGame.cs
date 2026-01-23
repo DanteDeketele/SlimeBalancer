@@ -37,6 +37,7 @@ public class SnakeGame : BaseGame
     private float waveDuration = 0.5f; // Duration of the wave effect
     private float waveScaleFactor = 1.3f; // How much the segments scale up during the wave
     private bool isWaveActive = false; // Tracks if the wave effect is active
+    private bool canMove = true; // Boolean to track if the snake can move
 
     public override void StartGame()
     {
@@ -62,9 +63,10 @@ public class SnakeGame : BaseGame
     public override void UpdateGame()
     {
         Vector2 input = GameManager.InputManager.InputVector;
-        if (input.magnitude > 0.4f)
+        if (input.magnitude > 0.2f && canMove)
         {
             OnInput(input);
+            canMove = false; // Prevent further moves until the next cell is reached
         }
 
         cellProgress += MoveSpeed * Time.deltaTime;
@@ -130,7 +132,6 @@ public class SnakeGame : BaseGame
             }
         }
 
-
         player.transform.position = Vector3.Lerp(cellStart, cellEnd, cellProgress);
         player.transform.rotation = Quaternion.Lerp(
             player.transform.rotation,
@@ -162,6 +163,8 @@ public class SnakeGame : BaseGame
 
             while (positionHistory.Count > snakeSegments.Count + 2)
                 positionHistory.Dequeue();
+
+            canMove = true; // Allow movement again after completing the cell
         }
 
         if (Mathf.Abs(player.transform.position.x - 0.5f) > PlayAreaSize.x / 2 ||
