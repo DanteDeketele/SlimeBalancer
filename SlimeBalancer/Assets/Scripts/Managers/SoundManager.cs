@@ -44,6 +44,9 @@ public class SoundManager : BaseManager
 
     public bool IsMusicOn = true;
 
+    //Balance Quest Game
+    public AudioClip BalanceQuestMainTheme;
+
 
     //Volume control
 

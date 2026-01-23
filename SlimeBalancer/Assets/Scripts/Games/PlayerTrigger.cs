@@ -9,6 +9,8 @@ public class PlayerTrigger : MonoBehaviour
     public SlimeCollider.SlimeColor slimeColor;
     private TiltGame tiltGame;
 
+    
+
     public ParticleSystem ParticleEffect;
 
     private List<GameObject> collidedSlimes = new List<GameObject>();
@@ -47,7 +49,8 @@ public class PlayerTrigger : MonoBehaviour
          
         }
     }
-  
+
+ 
 
 
 }
