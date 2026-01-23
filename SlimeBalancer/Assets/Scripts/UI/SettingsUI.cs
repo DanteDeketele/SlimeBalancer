@@ -13,6 +13,8 @@ public class SettingsUI : MonoBehaviour
     private Label volumeLabel;
     private Label musicLabel;
     private Label boardOnlineLabel;
+    private VisualElement BatteryIcon;
+    private Label BatteryPercentage;
     public Texture2D ControlDownIcon;
 
     float timer = 0f;
@@ -55,6 +57,9 @@ public class SettingsUI : MonoBehaviour
 
         boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
         boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
+
+        BatteryIcon = root.Q<VisualElement>("BatteryIcon");
+        BatteryPercentage = root.Q<Label>("BatteryPercentage");
 
         gameListContainer = root.Q<VisualElement>("Carousel");
         Debug.Log($"Game List Container Children: {gameListContainer.childCount}");
@@ -413,7 +418,13 @@ public class SettingsUI : MonoBehaviour
             Color color;
             ColorUtility.TryParseHtmlString("#" + colorHex, out color);
             boardOnlineCircle.style.backgroundColor = new StyleColor(color);
-            boardOnlineLabel.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+            boardOnlineLabel.text = "Bord Online";
+            BatteryPercentage.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+            int icons = GameManager.Instance.BatteryIcons.Length;
+            int level = Mathf.Clamp(GameManager.InputManager.BatteryLevel, 0, 100);
+            int index = Mathf.FloorToInt((level / 100f) * (icons - 1));
+            Texture2D batteryLowIcon = GameManager.Instance.BatteryIcons[index];
+            BatteryIcon.style.backgroundImage = new StyleBackground(batteryLowIcon);
         }
         else
         {
@@ -422,6 +433,8 @@ public class SettingsUI : MonoBehaviour
             ColorUtility.TryParseHtmlString("#" + colorHex, out color);
             boardOnlineCircle.style.backgroundColor = new StyleColor(color);
             boardOnlineLabel.text = "Bord Offline";
+            BatteryPercentage.text = "--%";
+            BatteryIcon.style.backgroundImage = GameManager.Instance.BatteryIcons[0];
         }
     }
 }

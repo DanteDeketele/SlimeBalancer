@@ -14,6 +14,8 @@ public class MainMenuUI : MonoBehaviour
     private Label boardOnlineLabel;
     public Texture2D SettingsIcon;
     public Texture2D ControlDownIcon;
+    private VisualElement BatteryIcon;
+    private Label BatteryPercentage;
 
     float timer = 0f;
     public float scrollDelay = 0.5f;
@@ -32,6 +34,12 @@ public class MainMenuUI : MonoBehaviour
 
         boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
         boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
+
+
+
+        BatteryIcon = root.Q<VisualElement>("BatteryIcon");
+        BatteryPercentage = root.Q<Label>("BatteryPercentage");
+
 
         GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
 
@@ -352,7 +360,13 @@ public class MainMenuUI : MonoBehaviour
             Color color;
             ColorUtility.TryParseHtmlString("#" + colorHex, out color);
             boardOnlineCircle.style.backgroundColor = new StyleColor(color);
-            boardOnlineLabel.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+            boardOnlineLabel.text = "Bord Online";
+            BatteryPercentage.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+            int icons = GameManager.Instance.BatteryIcons.Length;
+            int level = Mathf.Clamp(GameManager.InputManager.BatteryLevel, 0, 100);
+            int index = Mathf.FloorToInt((level / 100f) * (icons - 1));
+            Texture2D batteryLowIcon = GameManager.Instance.BatteryIcons[index];
+            BatteryIcon.style.backgroundImage = new StyleBackground(batteryLowIcon);
         }
         else
         {
@@ -361,6 +375,8 @@ public class MainMenuUI : MonoBehaviour
             ColorUtility.TryParseHtmlString("#" + colorHex, out color);
             boardOnlineCircle.style.backgroundColor = new StyleColor(color);
             boardOnlineLabel.text = "Bord Offline";
+            BatteryPercentage.text = "--%";
+            BatteryIcon.style.backgroundImage = GameManager.Instance.BatteryIcons[0];
         }
     }
 }
