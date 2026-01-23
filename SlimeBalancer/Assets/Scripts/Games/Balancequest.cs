@@ -37,7 +37,7 @@ public class BalanceQuest : BaseGame
         rotation.x *= 1.5f;
         rotation.z *= 1.5f;
         Quaternion quaternion = Quaternion.Euler(rotation.x, 0, rotation.z);
-        quaternion = Quaternion.Lerp(player.transform.rotation, quaternion, Time.deltaTime * 15);
+        quaternion = Quaternion.Lerp(player.transform.rotation, quaternion, Time.deltaTime);
         playerRigidbody.rotation = quaternion;
     }
 

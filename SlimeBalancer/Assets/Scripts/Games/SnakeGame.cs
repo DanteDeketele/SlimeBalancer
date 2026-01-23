@@ -63,7 +63,7 @@ public class SnakeGame : BaseGame
     public override void UpdateGame()
     {
         Vector2 input = GameManager.InputManager.InputVector;
-        if (input.magnitude > 0.2f && canMove)
+        if (input.magnitude > 0.4f && canMove)
         {
             OnInput(input);
             canMove = false; // Prevent further moves until the next cell is reached
