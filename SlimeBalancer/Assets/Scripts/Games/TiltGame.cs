@@ -13,6 +13,8 @@ public class TiltGame : BaseGame
     private Rigidbody playerRigidbody;
 
 
+
+
     public override void Awake()
     {
         playerRigidbody = player.GetComponent<Rigidbody>();
@@ -25,7 +27,25 @@ public class TiltGame : BaseGame
         base.StartGame();
         LedBasedOnPipe();
         spawnSlime();
+        ChangeDelayBasedOnDifficulty();
+    }
 
+    public void ChangeDelayBasedOnDifficulty()
+    {
+        switch (GameManager.CurrentDifficulty)
+        {
+            case GameManager.Difficulty.Easy:
+                Delay = 7f;
+                break;
+
+            case GameManager.Difficulty.Medium:
+                Delay = 5f;
+                break;
+
+            case GameManager.Difficulty.Hard:
+                Delay = 3f;
+                break;
+        }
     }
 
     public void FixedUpdate()
