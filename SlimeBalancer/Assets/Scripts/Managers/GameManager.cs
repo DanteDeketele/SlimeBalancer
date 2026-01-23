@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class GameManager : MonoBehaviour
     public static string GameSceneNameToSkipTo = "";
     private BaseGame _currentGame;
     private GameData _currentGameData;
+
+    public Texture2D[] BatteryIcons;
 
     public enum Difficulty
     {
