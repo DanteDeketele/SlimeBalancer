@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.InputSystem;
 
 public class ConnectingUI : MonoBehaviour
 {
@@ -29,7 +30,7 @@ public class ConnectingUI : MonoBehaviour
         }
 
         // if space is pressed continue without connection saying "Continuing without board connection" and make it orange
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Keyboard.current.spaceKey.wasPressedThisFrame)
         {
             string colorHex = "ffa500";
             Color color;
