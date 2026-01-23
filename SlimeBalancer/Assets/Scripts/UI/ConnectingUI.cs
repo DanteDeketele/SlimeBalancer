@@ -27,6 +27,17 @@ public class ConnectingUI : MonoBehaviour
             BoardOnlineLabel.text = "Bord Online";
             StartCoroutine(Wait(2f));
         }
+
+        // if space is pressed continue without connection saying "Continuing without board connection" and make it orange
+        if (Input.GetKeyDown(KeyCode.Space))
+        {
+            string colorHex = "ffa500";
+            Color color;
+            ColorUtility.TryParseHtmlString("#" + colorHex, out color);
+            ConnectionColor.style.backgroundColor = new StyleColor(color);
+            BoardOnlineLabel.text = "Continuing without board connection";
+            StartCoroutine(Wait(2f));
+        }
     }
 
     private IEnumerator Wait(float seconds)
