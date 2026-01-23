@@ -51,7 +51,7 @@ public class SnakeGame : BaseGame
 
         positionHistory.Enqueue(startCell);
 
-        SpawnSlime();
+        SpawnMoreSlimeBasedOnDifficulty();
     }
 
     public void TriggerWaveEffect()
@@ -292,6 +292,26 @@ public class SnakeGame : BaseGame
         GameManager.SoundManager.ChangeVolumeMusic(GameManager.SoundManager.SnakeMainTheme, 0.5f);
         GameManager.SoundManager.PlaySound(GameManager.SoundManager.SnakeWallHitSound);
         base.EndGame(won);
+    }
+
+    public void SpawnMoreSlimeBasedOnDifficulty()
+    {
+        int slimeCount = 3; // Default for Easy
+
+        switch (GameManager.CurrentDifficulty)
+        {
+            case GameManager.Difficulty.Medium:
+                slimeCount = 2;
+                break;
+            case GameManager.Difficulty.Hard:
+                slimeCount = 1;
+                break;
+        }
+
+        for (int i = 0; i < slimeCount; i++)
+        {
+            SpawnSlime();
+        }
     }
 
 #if UNITY_EDITOR

@@ -1,5 +1,7 @@
 using UnityEngine;
 using System.Collections;
+using System;
+using System.Runtime.InteropServices;
 
 
 public class BalanceQuest : BaseGame
@@ -7,14 +9,14 @@ public class BalanceQuest : BaseGame
     public GameObject player;
 
     public GameObject[] PrefabSlime;
-    private GameObject Slime; 
+    private GameObject Slime;
 
     private float timer;
 
     [SerializeField] private float Delay = 5f;
     private Rigidbody playerRigidbody;
 
-    
+
 
 
     public override void Awake()
@@ -32,7 +34,7 @@ public class BalanceQuest : BaseGame
     }
 
     public void FixedUpdate()
-    {   
+    {
         Vector3 rotation = GameManager.InputManager.InputEulerRotation;
         Quaternion quaternion = Quaternion.Euler(rotation.x, 0, rotation.z);
         quaternion = Quaternion.Lerp(player.transform.rotation, quaternion, Time.deltaTime * 15f);
@@ -76,7 +78,23 @@ public class BalanceQuest : BaseGame
             playerposition.y + heightAbovePlayer,
             playerposition.z
         );
-        Slime = Instantiate(PrefabSlime[Random.Range(0, PrefabSlime.Length)], spawnPoint, Quaternion.identity, transform);
+        //write a switch case to spawn different slime based on difficulty
+       switch (GameManager.CurrentDifficulty)
+        {
+            case GameManager.Difficulty.Easy:
+                Slime = Instantiate(PrefabSlime[0], spawnPoint, Quaternion.identity, transform);
+                break;
+
+            case GameManager.Difficulty.Medium:
+                Slime = Instantiate(PrefabSlime[1], spawnPoint, Quaternion.identity, transform);
+                break;
+
+            case GameManager.Difficulty.Hard:
+                Slime = Instantiate(PrefabSlime[2], spawnPoint, Quaternion.identity, transform);
+                break;
+        }
+
+
 
 
     }

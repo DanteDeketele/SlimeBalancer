@@ -32,6 +32,7 @@ public class SkiGame : BaseGame
     }
     public override void StartGame()
     {
+        ChangeSpeedBasedOnDifficulty();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.white);
 
         base.StartGame();
@@ -180,6 +181,7 @@ public class SkiGame : BaseGame
                     GameManager.ScoreManager.AddScore(10);
                     GameManager.SoundManager.PlaySound(GameManager.SoundManager.SkiGameScoreSound);
                     StartCoroutine(GameManager.InputManager.LedBlink(new Color(48f/255f, 213f/255f, 150f/255f), 2, .25f, BluetoothClient.BoardSide.All, Color.white));
+                    ChangeSpeedByScore(GameManager.ScoreManager.Score);
                 }
                 else
                 {
@@ -193,6 +195,32 @@ public class SkiGame : BaseGame
 
         // _camera.rotation = GameManager.InputManager.InputRotation;
         _camera.rotation = Quaternion.Lerp(_camera.rotation, Quaternion.Euler(GameManager.InputManager.InputRotation.eulerAngles.x + 30, 0, GameManager.InputManager.InputRotation.eulerAngles.z), Time.deltaTime * 2f);
+    }
+
+    public void ChangeSpeedBasedOnDifficulty()
+    {
+        switch (GameManager.CurrentDifficulty)
+        {
+            case GameManager.Difficulty.Easy:
+                Speed = 3f;
+                break;
+
+            case GameManager.Difficulty.Medium:
+                Speed = 5f;
+                break;
+
+            case GameManager.Difficulty.Hard:
+                Speed = 7f;
+                break;
+        }
+    }
+
+    public void ChangeSpeedByScore(int score)
+    {
+        if (score % 50 == 0)
+        {
+            Speed += 1f;
+        }
     }
 
     public override void EndGame(bool won = false)
