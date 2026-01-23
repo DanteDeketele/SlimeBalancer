@@ -17,7 +17,20 @@ public class GameManager : MonoBehaviour
         Medium,
         Hard
     }
-    public static Difficulty CurrentDifficulty = Difficulty.Medium;
+    public static Difficulty CurrentDifficulty{
+        get
+        {
+            if (!PlayerPrefs.HasKey("GameDifficulty"))
+            {
+                PlayerPrefs.SetInt("GameDifficulty", (int)Difficulty.Medium);
+            }
+            return (Difficulty)PlayerPrefs.GetInt("GameDifficulty");
+        }
+        set
+        {
+            PlayerPrefs.SetInt("GameDifficulty", (int)value);
+        }
+    }
     public GameData CurrentGameData => _currentGameData;
 
     [System.Serializable]
