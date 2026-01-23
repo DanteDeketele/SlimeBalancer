@@ -44,6 +44,8 @@ public class InputManager : BaseManager
 
     private void Awake()
     {
+        Cursor.visible = false;
+
         // 3. Find the specific map, then the specific action
         InputActionMap map = InputSystem.actions.FindActionMap(actionMapName);
         if (map == null)

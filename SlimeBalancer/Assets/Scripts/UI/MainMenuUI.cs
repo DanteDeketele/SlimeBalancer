@@ -40,7 +40,7 @@ public class MainMenuUI : MonoBehaviour
         {
             var gameEntry = gameContainerTemplate.CloneTree();
             gameEntry.Q<Label>("game-title").text = gameData.GameName;
-            gameEntry.Q<Label>("game-genre").text = "Test";
+            gameEntry.Q<Label>("game-genre").text = gameData.genre;
             gameEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(gameData.GameLogo);
             gameListContainer.Add(gameEntry);
         }

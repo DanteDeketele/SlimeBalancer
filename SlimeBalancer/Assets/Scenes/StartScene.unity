@@ -296,7 +296,7 @@ MonoBehaviour:
     SceneName: BalanceQuest
     genre: Rustig
     Explination: []
-    GameLogo: {fileID: 2800000, guid: 7b2ca8dfc9c51a1469a5a4360154d56b, type: 3}
+    GameLogo: {fileID: 2800000, guid: 111ece9e77fcd2d4c8a971b47030d98c, type: 3}
 --- !u!1 &790449841
 GameObject:
   m_ObjectHideFlags: 0
