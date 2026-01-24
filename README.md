@@ -91,6 +91,53 @@ A Unity-based interactive gaming platform that uses a physical balance board con
    - Open the main scene from `Assets/Scenes/`
    - Press Play in Unity Editor or build the executable
 
+### 3. Windows Setup Wizard (Alternative Installation)
+
+For Windows users, a convenient setup wizard is available in the `SetupWizzard` folder that automates the game installation process.
+
+#### Features
+
+- **Guided Installation**: Easy-to-use wizard interface with custom branding
+- **Multiple Installation Modes**:
+  - Standard Install/Update
+  - Clean Install (removes old version first)
+  - Uninstall Only
+- **Desktop Integration**:
+  - Optional desktop shortcut creation
+  - Optional startup with Windows
+- **Bluetooth Setup Instructions**: Built-in guidance for connecting the ESP32 balance board
+
+#### Using the Setup Wizard
+
+1. **Building the Installer**:
+   - Install [Inno Setup](https://jrsoftware.org/isinfo.php)
+   - Open `SetupWizzard/Setup.iss` in Inno Setup Compiler
+   - Update `MyBuildPath` (line 8) to point to your Unity build output folder
+   - Compile the script to generate `SlimeBalancer_Setup.exe`
+
+2. **Running the Installer**:
+   - Double-click `SlimeBalancer_Setup.exe` (or use the pre-built one in `SetupWizzard/Output/`)
+   - Follow the wizard steps:
+     - Choose installation mode (Install, Clean Install, or Uninstall)
+     - Review Bluetooth connection instructions
+     - Select installation directory
+     - Configure desktop shortcuts and startup options
+   - The wizard will install the game and optionally launch it
+
+3. **Connecting Your ESP32 Board**:
+   - Power on the ESP32 balance board (LEDs will turn RED)
+   - Ensure Bluetooth is enabled on your computer
+   - Launch the installed game
+   - The game will automatically scan for "SlimeBalancer" device
+   - When connected, the board LEDs will turn TEAL/GREEN
+
+#### Customizing the Setup Wizard
+
+The setup wizard can be customized by editing `SetupWizzard/Setup.iss`:
+- **Branding**: Replace `logoIcon.ico`, `logoIcon.bmp`, and `sidebarImage.bmp` with your own images
+- **App Details**: Modify `MyAppName`, `MyAppVersion`, and `MyAppPublisher` constants
+- **Installation Options**: Adjust default installation directory and available options
+
 ## Usage
 
 ### Starting the System
@@ -228,6 +275,12 @@ SlimeBalancer/
 │   │   ├── Materials/             # 3D materials
 │   │   └── Textures/              # Textures and sprites
 │   └── ProjectSettings/           # Unity project settings
+│
+├── SetupWizzard/                   # Windows installer (Inno Setup)
+│   ├── Setup.iss                  # Installer script
+│   ├── Output/                    # Compiled installer output
+│   │   └── SlimeBalancer_Setup.exe
+│   └── *.ico, *.bmp               # Branding assets
 │
 └── README.md                       # This file
 ```
