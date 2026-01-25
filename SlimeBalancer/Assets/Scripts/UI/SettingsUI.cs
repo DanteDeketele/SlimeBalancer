@@ -13,6 +13,8 @@ public class SettingsUI : MonoBehaviour
     private Label volumeLabel;
     private Label musicLabel;
     private Label boardOnlineLabel;
+    private VisualElement BatteryIcon;
+    private Label BatteryPercentage;
     public Texture2D ControlDownIcon;
 
     float timer = 0f;
@@ -33,6 +35,20 @@ public class SettingsUI : MonoBehaviour
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
 
+        Label difficultyLabel = root.Q<Label>("DifficultyLabel");
+        switch (GameManager.CurrentDifficulty)
+        {
+            case GameManager.Difficulty.Easy:
+                difficultyLabel.text = "Makkelijk";
+                break;
+            case GameManager.Difficulty.Medium:
+                difficultyLabel.text = "Gemiddeld";
+                break;
+            case GameManager.Difficulty.Hard:
+                difficultyLabel.text = "Moeilijk";
+                break;
+        }
+
         volumeLabel = root.Q<Label>("VolumeLabel");
         volumeLabel.text = volumeLevel.ToString();
 
@@ -41,6 +57,9 @@ public class SettingsUI : MonoBehaviour
 
         boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
         boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
+
+        BatteryIcon = root.Q<VisualElement>("BatteryIcon");
+        BatteryPercentage = root.Q<Label>("BatteryPercentage");
 
         gameListContainer = root.Q<VisualElement>("Carousel");
         Debug.Log($"Game List Container Children: {gameListContainer.childCount}");
@@ -65,9 +84,9 @@ public class SettingsUI : MonoBehaviour
 
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            if (selectedGameIndex < 4)
+            if (selectedGameIndex < 5)
             {
-                selectedGameIndex = Mathf.Min(4, selectedGameIndex + 1);
+                selectedGameIndex = Mathf.Min(5, selectedGameIndex + 1);
                 GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
                 UpdateSelectedGame();
                 BeginScroll();
@@ -76,7 +95,7 @@ public class SettingsUI : MonoBehaviour
 
         GameManager.InputManager.OnUp.AddListener(() =>
         {
-            if (selectedGameIndex == 1) // Edit Volume
+            if (selectedGameIndex == 2) // Edit Volume
             {
                 if (volumeLevel < 5)
                 {
@@ -100,7 +119,40 @@ public class SettingsUI : MonoBehaviour
                     GameManager.InputManager.OnRight.RemoveAllListeners();
                     GameManager.InputManager.OnDown.RemoveAllListeners();
                     break;
-                case 1: // Edit Volume
+                case 1:
+                    // Edit Difficulty
+                    GameManager.Difficulty currentDifficulty = GameManager.CurrentDifficulty;
+                    
+                    if (currentDifficulty == GameManager.Difficulty.Easy)
+                    {
+                        currentDifficulty = GameManager.Difficulty.Medium;
+                    }
+                    else if (currentDifficulty == GameManager.Difficulty.Medium)
+                    {
+                        currentDifficulty = GameManager.Difficulty.Hard;
+                    }
+                    else if (currentDifficulty == GameManager.Difficulty.Hard)
+                    {
+                        currentDifficulty = GameManager.Difficulty.Easy;
+                    }
+
+                    GameManager.CurrentDifficulty = currentDifficulty;
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                    Label difficultyLabel = root.Q<Label>("DifficultyLabel");
+                    switch (currentDifficulty)
+                    {
+                        case GameManager.Difficulty.Easy:
+                            difficultyLabel.text = "Makkelijk";
+                            break;
+                        case GameManager.Difficulty.Medium:
+                            difficultyLabel.text = "Gemiddeld";
+                            break;
+                        case GameManager.Difficulty.Hard:
+                            difficultyLabel.text = "Moeilijk";
+                            break;
+                    }
+                    break;
+                case 2: // Edit Volume
                     if (volumeLevel > 0)
                     {
                         volumeLevel -= 1;
@@ -109,13 +161,13 @@ public class SettingsUI : MonoBehaviour
                         GameManager.SoundManager.SetVolumeInt(volumeLevel);
                     }
                     break;
-                case 2: // Toggle Music
+                case 3: // Toggle Music
                     GameManager.SoundManager.ToggleMusic();
                     musicLabel.text = GameManager.SoundManager.IsMusicOn ? "Aan" : "Uit";
 
                     GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                     break;
-                case 3: // Delete History
+                case 4: // Delete History
                     GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                     // Delete PlayerPrefs history for each game
                     var data = GameManager.Instance.AvailableGames;
@@ -129,7 +181,7 @@ public class SettingsUI : MonoBehaviour
                         }
                     }
                     break;
-                case 4: // Quit Game
+                case 5: // Quit Game
                     Application.Quit();
                     break;
                 default:
@@ -257,15 +309,18 @@ public class SettingsUI : MonoBehaviour
                             instructionLabel.text = "Druk om terug te gaan";
                             break;
                         case 1:
-                            instructionLabel.text = "Druk om volume aan te passen";
+                            instructionLabel.text = "Druk moeilijkheid aan te passen";
                             break;
                         case 2:
-                            instructionLabel.text = "Druk om muziek aan/uit te zetten";
+                            instructionLabel.text = "Druk om volume aan te passen";
                             break;
                         case 3:
-                            instructionLabel.text = "Druk om geschiedenis te verwijderen";
+                            instructionLabel.text = "Druk om muziek aan/uit te zetten";
                             break;
                         case 4:
+                            instructionLabel.text = "Druk om geschiedenis te verwijderen";
+                            break;
+                        case 5:
                             instructionLabel.text = "Druk om het spel te verlaten";
                             break;
                     }
@@ -363,7 +418,13 @@ public class SettingsUI : MonoBehaviour
             Color color;
             ColorUtility.TryParseHtmlString("#" + colorHex, out color);
             boardOnlineCircle.style.backgroundColor = new StyleColor(color);
-            boardOnlineLabel.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+            boardOnlineLabel.text = "Bord Online";
+            BatteryPercentage.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+            int icons = GameManager.Instance.BatteryIcons.Length;
+            int level = Mathf.Clamp(GameManager.InputManager.BatteryLevel, 0, 100);
+            int index = Mathf.FloorToInt((level / 100f) * (icons - 1));
+            Texture2D batteryLowIcon = GameManager.Instance.BatteryIcons[index];
+            BatteryIcon.style.backgroundImage = new StyleBackground(batteryLowIcon);
         }
         else
         {
@@ -372,6 +433,8 @@ public class SettingsUI : MonoBehaviour
             ColorUtility.TryParseHtmlString("#" + colorHex, out color);
             boardOnlineCircle.style.backgroundColor = new StyleColor(color);
             boardOnlineLabel.text = "Bord Offline";
+            BatteryPercentage.text = "--%";
+            BatteryIcon.style.backgroundImage = GameManager.Instance.BatteryIcons[0];
         }
     }
 }

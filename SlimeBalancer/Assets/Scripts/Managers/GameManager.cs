@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
 
 public class GameManager : MonoBehaviour
 {
@@ -11,13 +12,28 @@ public class GameManager : MonoBehaviour
     private BaseGame _currentGame;
     private GameData _currentGameData;
 
+    public Texture2D[] BatteryIcons;
+
     public enum Difficulty
     {
         Easy,
         Medium,
         Hard
     }
-    public static Difficulty CurrentDifficulty = Difficulty.Medium;
+    public static Difficulty CurrentDifficulty{
+        get
+        {
+            if (!PlayerPrefs.HasKey("GameDifficulty"))
+            {
+                PlayerPrefs.SetInt("GameDifficulty", (int)Difficulty.Medium);
+            }
+            return (Difficulty)PlayerPrefs.GetInt("GameDifficulty");
+        }
+        set
+        {
+            PlayerPrefs.SetInt("GameDifficulty", (int)value);
+        }
+    }
     public GameData CurrentGameData => _currentGameData;
 
     [System.Serializable]
