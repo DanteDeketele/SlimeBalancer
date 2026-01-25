@@ -272,10 +272,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   BatteryIcons:
-  - {fileID: 2800000, guid: afe4afc59ca1bf44caec39b5bae47f62, type: 3}
-  - {fileID: 2800000, guid: 6390ce08ab953ed47a329cd49e057f93, type: 3}
-  - {fileID: 2800000, guid: 2ecd9b79bae73754abb8b997c1dea4e7, type: 3}
-  - {fileID: 2800000, guid: d4eac3ad7ca04594393cecebc6fb8bcb, type: 3}
+  - {fileID: 2800000, guid: bb31f17ac922bb94d8ed4831c7aa806a, type: 3}
+  - {fileID: 2800000, guid: 060cfaff0cebaf6478eac20da12b61b6, type: 3}
+  - {fileID: 2800000, guid: aaa89658f42eaf149a50a0d60e6061bf, type: 3}
+  - {fileID: 2800000, guid: 01bf03c04ce9eb3449a88a2059cb5fd9, type: 3}
   AvailableGames:
   - GameName: Slime Ski
     SceneName: skie
