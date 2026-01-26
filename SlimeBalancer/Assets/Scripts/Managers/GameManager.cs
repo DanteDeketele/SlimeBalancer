@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour
     private GameData _currentGameData;
 
     public Texture2D[] BatteryIcons;
+    public static int LastSelectedGameIndex = 0;
 
     public enum Difficulty
     {
