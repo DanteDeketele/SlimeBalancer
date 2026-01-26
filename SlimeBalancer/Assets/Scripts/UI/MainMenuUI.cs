@@ -59,7 +59,10 @@ public class MainMenuUI : MonoBehaviour
         settingsEntry.Q<Label>("game-genre").text = "Instellingen";
         settingsEntry.Q<Label>("game-genre").style.color = new StyleColor(Color.white);
         // solid color for settings icon background
-        settingsEntry.Q<VisualElement>("game-icon").style.backgroundColor = new StyleColor(Color.lightBlue);
+        string colorHex = "30D5C8";
+        Color color;
+        ColorUtility.TryParseHtmlString("#" + colorHex, out color);
+        settingsEntry.Q<VisualElement>("game-icon").style.backgroundColor = new StyleColor(color);
         settingsEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(); // clear any existing background image
         settingsEntry.Q<VisualElement>("game-icon").style.justifyContent = Justify.Center;
         // Add Icon with 70% width and height into the game-icon element
