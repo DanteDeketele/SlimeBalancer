@@ -28,6 +28,7 @@ public class BalanceQuest : BaseGame
     public override void StartGame()
     {
         GameManager.SoundManager.PlaySound(GameManager.SoundManager.BalanceQuestMainTheme, true, true);
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, new Color(48f / 255f, 213f / 255f, 150f / 255f));
         base.StartGame();
         spawnSlime();
 
@@ -51,6 +52,7 @@ public class BalanceQuest : BaseGame
         {
             Correct();
             timer = 0f;
+            StartCoroutine(GameManager.InputManager.LedBlink(new Color(48f / 255f, 213f / 255f, 150f / 255f), 2, .15f, BluetoothClient.BoardSide.All, new Color(48f / 255f, 213f / 255f, 150f / 255f)));
         }
 
     }
