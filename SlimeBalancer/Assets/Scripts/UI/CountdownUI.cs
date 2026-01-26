@@ -27,7 +27,7 @@ public class CountdownUI : MonoBehaviour
         VisualElement logo = doc.rootVisualElement.Q<VisualElement>("background");
         logo.style.backgroundImage = new StyleBackground(GameManager.Instance.CurrentGameData.GameLogo);
         // add loadingbar of 5seconds before countdown starts
-        float loadTime = 5f;
+        float loadTime = 8f;
         float timer1 = 0f;
         while (timer1 < loadTime)
         {

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Point = System.Drawing.Point;
 
 public class SnakeGame : BaseGame
 {
@@ -22,6 +23,7 @@ public class SnakeGame : BaseGame
 
     private List<GameObject> snakeSegments = new();
     private Queue<Vector3> positionHistory = new();
+    private HashSet<Point> occupiedPositions = new HashSet<Point>();
 
     // Pending segments to add after the head moves to the next cell
     private List<GameObject> pendingSegments = new List<GameObject>();
@@ -50,6 +52,7 @@ public class SnakeGame : BaseGame
         cellProgress = 0f;
 
         positionHistory.Enqueue(startCell);
+        occupiedPositions.Add(new Point((int)startCell.x, (int)startCell.z));
 
         SpawnMoreSlimeBasedOnDifficulty();
     }
@@ -146,6 +149,7 @@ public class SnakeGame : BaseGame
             cellEnd = cellStart + lastMoveDirection;
 
             positionHistory.Enqueue(cellStart);
+            occupiedPositions.Add(new Point((int)cellStart.x, (int)cellStart.z));
 
             foreach (var seg in pendingSegments)
             {
@@ -155,14 +159,17 @@ public class SnakeGame : BaseGame
                     : positionHistory.Peek(); // If no segments, use the tail position
 
                 seg.transform.position = tailPos;
+                occupiedPositions.Add(new Point((int)tailPos.x, (int)tailPos.z));
                 snakeSegments.Add(seg);
             }
 
             // Clear pending segments after adding them
             pendingSegments.Clear();
 
-            while (positionHistory.Count > snakeSegments.Count + 2)
-                positionHistory.Dequeue();
+            while (positionHistory.Count > snakeSegments.Count + 2){
+                Vector3 removedPosition = positionHistory.Dequeue();
+                occupiedPositions.Remove(new Point((int)removedPosition.x, (int)removedPosition.z));
+            }
 
             canMove = true; // Allow movement again after completing the cell
         }
@@ -271,7 +278,7 @@ public class SnakeGame : BaseGame
                 0.5f,
                 Mathf.Round(Random.Range(bounds.min.z, bounds.max.z))
             );
-        } while (positionHistory.Contains(spawn));
+        } while (occupiedPositions.Contains(new Point((int)spawn.x, (int)spawn.z)));
 
         GameObject slime = Instantiate(SlimePrefab, spawn, Quaternion.identity, transform);
         slime.tag = "Slimes";

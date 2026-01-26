@@ -18,7 +18,7 @@ public class SnakeCollider : MonoBehaviour
             Debug.Log("Slime hit");
             other.gameObject.SetActive(false);
             GameManager.ScoreManager.AddScore(10);
-            snakeGame.MoveSpeed += 0.1f;
+            snakeGame.MoveSpeed += 0.01f;
             snakeGame.GrowSnake(other.gameObject);
             snakeGame.SpawnSlime();
             
