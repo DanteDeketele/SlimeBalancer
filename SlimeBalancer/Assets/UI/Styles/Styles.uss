@@ -47,18 +47,18 @@
 
 .mario-label {
     font-size: 150px;
-    color: rgb(66, 228, 174);
+    color: rgb(255, 255, 255);
     -unity-text-align: middle-center;
-    -unity-text-outline-width: 4px;
+    -unity-text-outline-width: 5px;
     -unity-text-outline-color: rgb(0, 0, 0);
-    opacity: 0;
-    scale: 0 0;
 }
 
 .mario-label.go-state {
-    color: rgb(0, 255, 255);
-    font-size: 250px;
+    color: rgb(255, 255, 255);
+    font-size: 200px;
     scale: 1.25 1.25;
+    -unity-text-outline-width: 5px;
+    -unity-text-outline-color: rgb(0, 0, 0);
 }
 
 * {
@@ -114,4 +114,36 @@ Button:focus {
 .selected .gameTitle {
     font-size: 32px;
     -unity-font-style: bold;
+}
+
+.info-text {
+    flex-shrink: 1;
+    flex-grow: 1;
+    white-space: normal;
+    font-size: 20px;
+}
+
+.focused {
+    border-left-color: rgb(0, 0, 0);
+    border-right-color: rgb(0, 0, 0);
+    border-top-color: rgb(0, 0, 0);
+    border-bottom-color: rgb(0, 0, 0);
+}
+
+.disabled {
+    opacity: 0.44;
+}
+
+.info-text {
+    margin-top: 32px;
+    margin-right: 32px;
+    margin-bottom: 32px;
+    margin-left: 32px;
+    font-size: 22px;
+    max-width: 550px;
+    align-self: center;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 0;
 }

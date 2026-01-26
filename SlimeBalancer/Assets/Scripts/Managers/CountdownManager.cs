@@ -19,6 +19,7 @@ public class CountdownManager : BaseManager
             GameObject uiInstance = Instantiate(CountdownUI, transform);
             _countdownUIInstance = uiInstance.GetComponent<CountdownUI>();
         }
+        GameManager.SoundManager.StopSound(GameManager.SoundManager.mainTheme);
         _countdownUIInstance.gameObject.SetActive(true);
 
         yield return _countdownUIInstance.StartCountdown();

@@ -14,11 +14,18 @@ public class SnakeCollider : MonoBehaviour
     {
         if (other.CompareTag("Slimes"))
         {
+            if (other.gameObject.activeSelf == false) return;
             Debug.Log("Slime hit");
+            other.gameObject.SetActive(false);
             GameManager.ScoreManager.AddScore(10);
-            snakeGame.MoveSpeed += 0.2f;
-            Destroy(other.gameObject);
+            snakeGame.MoveSpeed += 0.01f;
+            snakeGame.GrowSnake(other.gameObject);
             snakeGame.SpawnSlime();
+            
+        }else if (other.CompareTag("SnakeSegment"))
+        {
+            Debug.Log("Hit own body");
+            snakeGame.EndGame(false);
         }
     }
 

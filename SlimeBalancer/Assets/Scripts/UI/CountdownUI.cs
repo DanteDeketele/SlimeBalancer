@@ -8,11 +8,10 @@ public class CountdownUI : MonoBehaviour
     private Label _label;
 
     [Header("Settings")]
-    [SerializeField] private float _startScale = 3.5f; // Start HUGE
-    [SerializeField] private float _slamDuration = 0.25f; // How fast it hits
+    [SerializeField] private float _slamDuration = 0.5f; // How fast it hits
     [SerializeField] private AnimationCurve _slamCurve = AnimationCurve.EaseInOut(0, 0, 1, 1);
 
-    private void Awake()
+    private void OnEnable()
     {
         var doc = GetComponent<UIDocument>();
         _label = doc.rootVisualElement.Q<Label>("CountdownLabel");
@@ -21,17 +20,38 @@ public class CountdownUI : MonoBehaviour
 
     public IEnumerator StartCountdown()
     {
+        var doc = GetComponent<UIDocument>();
+        VisualElement loadingbar = doc.rootVisualElement.Q<VisualElement>("LoadingBar");
+        Label title = doc.rootVisualElement.Q<Label>("game-title");
+        title.text = GameManager.Instance.CurrentGameData.GameName;
+        VisualElement logo = doc.rootVisualElement.Q<VisualElement>("background");
+        logo.style.backgroundImage = new StyleBackground(GameManager.Instance.CurrentGameData.GameLogo);
+        // add loadingbar of 5seconds before countdown starts
+        float loadTime = 8f;
+        float timer1 = 0f;
+        while (timer1 < loadTime)
+        {
+            timer1 += Time.deltaTime;
+            float progress = timer1 / loadTime;
+            loadingbar.style.width = Length.Percent(progress * 100f);
+            yield return null;
+        }
+
+        doc.rootVisualElement.Q<VisualElement>("stand").style.display = DisplayStyle.None;
+        doc.rootVisualElement.Q<VisualElement>("Container").style.display = DisplayStyle.Flex;
+
+
         // 3... 2... 1...
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         for (int i = 3; i > 0; i--)
         {
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.CountdownBeepSound);
             // 1. Setup the number
             _label.RemoveFromClassList("go-state"); // Ensure styling is correct
             _label.text = i.ToString();
-            _label.style.opacity = 1;
+            _label.style.opacity = 0;
 
             // 2. The "Slam" Animation
-            // We manually animate scale from _startScale down to 1
             float timer = 0f;
             while (timer < _slamDuration)
             {
@@ -39,14 +59,11 @@ public class CountdownUI : MonoBehaviour
                 float progress = timer / _slamDuration;
 
                 // Evaluate curve for that "Impact" feel
-                float scaleVal = Mathf.Lerp(_startScale, 1f, _slamCurve.Evaluate(progress));
+                float val = Mathf.Lerp(0, 1f, _slamCurve.Evaluate(progress));
 
-                _label.style.scale = new Scale(new Vector2(scaleVal, scaleVal));
+                _label.style.opacity = val;
                 yield return null;
             }
-
-            // Ensure it lands perfectly on 1
-            _label.style.scale = new Scale(Vector2.one);
 
             // 3. Wait on screen (The moment of anticipation)
             yield return new WaitForSeconds(0.6f);
@@ -59,23 +76,16 @@ public class CountdownUI : MonoBehaviour
         GameManager.CountdownManager.OnCountdownFinished.Invoke();
 
         // --- GO! ---
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.CountdownGoSound);
         _label.text = "GO!";
         _label.AddToClassList("go-state");
         _label.style.opacity = 1;
-        _label.style.scale = new Scale(new Vector2(1.5f, 1.5f)); // Start slightly bigger
 
-        // Optional: Shake the 'GO' text slightly
-        float goTimer = 0;
-        while (goTimer < 1.0f)
-        {
-            goTimer += Time.deltaTime;
-            // Simple wobble
-            float wobble = Mathf.Sin(Time.time * 50) * 5f;
-            _label.style.rotate = new Rotate(wobble);
-            yield return null;
-        }
+        yield return new WaitForSeconds(0.8f);
 
         // Cleanup
         _label.style.opacity = 0;
+
+        yield return new WaitForSeconds(0.5f);
     }
 }

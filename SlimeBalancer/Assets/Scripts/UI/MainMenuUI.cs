@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -11,6 +10,12 @@ public class MainMenuUI : MonoBehaviour
     private int selectedGameIndex = 0;
 
     private VisualElement gameListContainer;
+    private VisualElement boardOnlineCircle;
+    private Label boardOnlineLabel;
+    public Texture2D SettingsIcon;
+    public Texture2D ControlDownIcon;
+    private VisualElement BatteryIcon;
+    private Label BatteryPercentage;
 
     float timer = 0f;
     public float scrollDelay = 0.5f;
@@ -22,9 +27,19 @@ public class MainMenuUI : MonoBehaviour
 
     public void Awake()
     {
+        selectedGameIndex = GameManager.LastSelectedGameIndex;
+        GameManager.SoundManager.StopAllMusic();
+        GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
 
+        boardOnlineCircle = root.Q<VisualElement>("BoardOnlineCircle");
+        boardOnlineLabel = root.Q<Label>("BoardOnlineLabel");
+
+
+
+        BatteryIcon = root.Q<VisualElement>("BatteryIcon");
+        BatteryPercentage = root.Q<Label>("BatteryPercentage");
 
 
         GameManager.GameData[] games = GameManager.Instance.AvailableGames.ToArray();
@@ -34,10 +49,32 @@ public class MainMenuUI : MonoBehaviour
         {
             var gameEntry = gameContainerTemplate.CloneTree();
             gameEntry.Q<Label>("game-title").text = gameData.GameName;
-            gameEntry.Q<Label>("game-genre").text = "Test";
+            gameEntry.Q<Label>("game-genre").text = gameData.genre;
             gameEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(gameData.GameLogo);
             gameListContainer.Add(gameEntry);
         }
+
+        // Add Settings entry
+        var settingsEntry = gameContainerTemplate.CloneTree();
+        settingsEntry.Q<Label>("game-title").text = "Instellingen";
+        settingsEntry.Q<Label>("game-genre").text = "Instellingen";
+        settingsEntry.Q<Label>("game-genre").style.color = new StyleColor(Color.white);
+        // solid color for settings icon background
+        string colorHex = "30D5C8";
+        Color color;
+        ColorUtility.TryParseHtmlString("#" + colorHex, out color);
+        settingsEntry.Q<VisualElement>("game-icon").style.backgroundColor = new StyleColor(color);
+        settingsEntry.Q<VisualElement>("game-icon").style.backgroundImage = new StyleBackground(); // clear any existing background image
+        settingsEntry.Q<VisualElement>("game-icon").style.justifyContent = Justify.Center;
+        // Add Icon with 70% width and height into the game-icon element
+        VisualElement iconContainer = new VisualElement();
+        iconContainer.style.width = Length.Percent(80);
+        iconContainer.style.height = Length.Percent(80);
+        iconContainer.style.alignSelf = Align.Center;
+        iconContainer.style.backgroundImage = new StyleBackground(SettingsIcon);
+        settingsEntry.Q<VisualElement>("game-icon").Add(iconContainer);
+
+        gameListContainer.Add(settingsEntry);
 
         var icon = gameListContainer[1].Q<VisualElement>("game-icon");
 
@@ -48,23 +85,50 @@ public class MainMenuUI : MonoBehaviour
 
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
-            selectedGameIndex = Mathf.Max(0, selectedGameIndex - 1);
-            UpdateSelectedGame();
-            BeginScroll();
+            if (selectedGameIndex > 0)
+            {
+                selectedGameIndex = Mathf.Max(0, selectedGameIndex - 1);
+                GameManager.LastSelectedGameIndex = selectedGameIndex;
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
+                UpdateSelectedGame();
+                BeginScroll();
+            }
         });
 
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            selectedGameIndex = Mathf.Min(games.Length - 1, selectedGameIndex + 1);
-            UpdateSelectedGame();
-            BeginScroll();
+            if (selectedGameIndex < games.Length)
+            {
+                selectedGameIndex = Mathf.Min(games.Length - 1 + 1, selectedGameIndex + 1);
+                GameManager.LastSelectedGameIndex = selectedGameIndex;
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
+                UpdateSelectedGame();
+                BeginScroll();
+            }
         });
 
         GameManager.InputManager.OnDown.AddListener(() =>
         {
-            var selectedGame = games[selectedGameIndex];
-            Debug.Log($"Selected game: {selectedGame.GameName}");
-            GameManager.Instance.LoadGame(selectedGame.SceneName);
+            if (selectedGameIndex == games.Length)
+            {
+                Debug.Log("Opening Settings Menu...");
+                // Open Settings Menu
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+
+                GameManager.SceneManager.LoadScene(GameManager.SceneManager.SettingsSceneName);
+                // remove listeners to prevent multiple loads
+                GameManager.InputManager.OnLeft.RemoveAllListeners();
+                GameManager.InputManager.OnRight.RemoveAllListeners();
+                GameManager.InputManager.OnDown.RemoveAllListeners();
+                return;
+            }
+            else
+            {
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                var selectedGame = games[selectedGameIndex];
+                Debug.Log($"Selected game: {selectedGame.GameName}");
+                GameManager.Instance.LoadInfo(selectedGame.SceneName);
+            }
             // remove listeners to prevent multiple loads
             GameManager.InputManager.OnLeft.RemoveAllListeners();
             GameManager.InputManager.OnRight.RemoveAllListeners();
@@ -80,7 +144,8 @@ public class MainMenuUI : MonoBehaviour
             // 1. Get the width directly from the event (it's faster and guaranteed not to be NaN)
             actualWidth = evt.newRect.width;
             Debug.Log($"Calculated Width: {actualWidth}");
-        }else
+        }
+        else
         {
             // Fallback: Get the width from the element directly
             actualWidth = gameListContainer[1].Q<VisualElement>("GameContainer").resolvedStyle.width;
@@ -144,10 +209,113 @@ public class MainMenuUI : MonoBehaviour
             if (i == selectedGameIndex)
             {
                 gameEntry.AddToClassList("selected");
+
+                if (i != games.Length)
+                {
+                    VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
+                    if (scoreSection != null)
+                    {
+                        scoreSection.style.opacity = 1f;
+                    }
+                    Label score = gameEntry.Q<Label>("game-score");
+                    if (score != null)
+                    {
+                        score.text = GameManager.ScoreManager.GetHighScore(games[i].SceneName).ToString();
+                    }
+                }else
+                {
+                    VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
+                    if (scoreSection != null)
+                    {
+                        scoreSection.style.opacity = 0f;
+                    }
+                }
+
+                // Add a position abstract ino label next to the icon alligned to the top
+                VisualElement container = gameEntry.Q<VisualElement>("InfoContainer");
+                if (container != null)
+                {
+                    for (int j = 0; j < container.childCount; j++)
+                    {
+                        var child = container[j];
+                        child.style.opacity = 1f;
+                    }
+                }
+                else
+                {
+                    container = new VisualElement();
+                    container.name = "InfoContainer";
+                    // info container should be positioned next to the game entry
+                    container.style.position = Position.Absolute;
+                    container.style.top = 0;
+                    container.style.left = Length.Percent(100);
+                    container.style.width = Length.Pixels(240);
+                    container.style.flexGrow = 0;
+                    container.style.marginLeft = Length.Pixels(-20);
+                    gameEntry.Add(container);
+
+                    Label instructionLabel = new Label("Druk om te spelen");
+                    instructionLabel.name = "InstructionLabel";
+                    instructionLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    instructionLabel.style.fontSize = 20;
+                    instructionLabel.style.color = new StyleColor(Color.black);
+                    instructionLabel.style.width = Length.Percent(100);
+                    instructionLabel.style.unityTextAlign = TextAnchor.UpperCenter;
+                    instructionLabel.style.whiteSpace = WhiteSpace.Normal;
+                    instructionLabel.style.marginBottom = Length.Pixels(0);
+                    instructionLabel.style.marginLeft = Length.Pixels(0);
+                    instructionLabel.style.marginRight = Length.Pixels(0);
+                    instructionLabel.style.paddingRight = Length.Pixels(0);
+                    instructionLabel.style.paddingLeft = Length.Pixels(0);
+                    instructionLabel.style.paddingBottom = Length.Pixels(0);
+
+                    if (i == games.Length)
+                    {
+                        instructionLabel.text = "Druk om instellingen te openen";
+                    }
+
+                    container.Add(instructionLabel);
+
+                    VisualElement ControlIcon = new VisualElement();
+                    ControlIcon.name = "ControlIcon";
+                    ControlIcon.style.width = Length.Pixels(70);
+                    ControlIcon.style.height = Length.Pixels(50);
+                    ControlIcon.style.backgroundImage = new StyleBackground(ControlDownIcon);
+                    ControlIcon.style.backgroundSize = new StyleBackgroundSize(new BackgroundSize(BackgroundSizeType.Contain));
+                    ControlIcon.style.alignSelf = Align.Center;
+
+                    container.Add(ControlIcon);
+
+
+                    // add transition for opacity
+                    for (int j = 0; j < container.childCount; j++)
+                    {
+                        var child = container[j];
+                        child.style.opacity = 1f;
+                    }
+                }
+
             }
             else
             {
                 gameEntry.RemoveFromClassList("selected");
+
+                VisualElement scoreSection = gameEntry.Q<VisualElement>("game-score-section");
+                if (scoreSection != null)
+                {
+                    scoreSection.style.opacity = 0f;
+                }
+
+                // Set the opacity of the position abstract info text and backgrounds to 0
+                VisualElement container = gameEntry.Q<VisualElement>("InfoContainer");
+                if (container != null)
+                {
+                    for (int j = 0; j < container.childCount; j++)
+                    {
+                        var child = container[j];
+                        child.style.opacity = 0f;
+                    }
+                }
             }
         }
     }
@@ -190,6 +358,31 @@ public class MainMenuUI : MonoBehaviour
             actualScreenWidth = Screen.width;
 
             OnGeometryCalculated();
+        }
+
+        if (GameManager.InputManager.IsConnected)
+        {
+            string colorHex = "30d5c8";
+            Color color;
+            ColorUtility.TryParseHtmlString("#" + colorHex, out color);
+            boardOnlineCircle.style.backgroundColor = new StyleColor(color);
+            boardOnlineLabel.text = "Bord Online";
+            BatteryPercentage.text = GameManager.InputManager.BatteryLevel.ToString() + "%";
+            int icons = GameManager.Instance.BatteryIcons.Length;
+            int level = Mathf.Clamp(GameManager.InputManager.BatteryLevel, 0, 100);
+            int index = Mathf.FloorToInt((level / 100f) * (icons - 1));
+            Texture2D batteryLowIcon = GameManager.Instance.BatteryIcons[index];
+            BatteryIcon.style.backgroundImage = new StyleBackground(batteryLowIcon);
+        }
+        else
+        {
+            string colorHex = "ff5b63";
+            Color color;
+            ColorUtility.TryParseHtmlString("#" + colorHex, out color);
+            boardOnlineCircle.style.backgroundColor = new StyleColor(color);
+            boardOnlineLabel.text = "Bord Offline";
+            BatteryPercentage.text = "--%";
+            BatteryIcon.style.backgroundImage = GameManager.Instance.BatteryIcons[0];
         }
     }
 }

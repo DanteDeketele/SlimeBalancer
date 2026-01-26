@@ -23,18 +23,20 @@ public class SkiGame : BaseGame
     public void Start()
     {        
         _floorDirection = Floor.transform.forward;
-        _camera = Camera.main.transform;
+        _camera = Camera.main.transform; 
+        _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation, transform);
+
 
         // Pre-spawn flags (and obstacles) up to SpawnAheadDistance before the run starts
         PreSpawnAhead();
     }
     public override void StartGame()
     {
-        _floorClone = Instantiate(Floor, Floor.transform.position + _floorDirection * 400f, Floor.transform.rotation, transform);
-
+        ChangeSpeedBasedOnDifficulty();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.white);
 
         base.StartGame();
+        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SlimeSkieMainTheme, true, true);
     }
 
     private void PreSpawnAhead()
@@ -54,15 +56,26 @@ public class SkiGame : BaseGame
             // Spawn obstacles around this segment distance
             if (ObstaclePrefabs != null && ObstaclePrefabs.Length > 0)
             {
+                int maxSnowmen = 3;
+                int snowmenCount = 0;
                 int obsCount = Random.Range(5, 100);
                 for (int j = 0; j < obsCount; j++)
                 {
                     float xpos = Random.Range(-60, 60) + Player.position.x;
-                    if (Mathf.Abs(flagPositionX - xpos) > 13f)
+
+                    int index = Random.Range(0, ObstaclePrefabs.Length);
+                    if (index == 1) // 1 is snowman
                     {
-                        var prefab = ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)];
+                        if (snowmenCount >= maxSnowmen)
+                        {
+                            continue; // skip spawning more snowmen
+                        }
+                        snowmenCount++;
+                    }
+                    if (Mathf.Abs(flagPositionX - xpos) > 13f || index == 1) // 1 is snowman    
+                    {
                         GameObject obstacle = Instantiate(
-                            prefab,
+                            ObstaclePrefabs[index],
                         _floorDirection * (segDistance + Random.Range(0, 20)) + Vector3.right * xpos,
                         Quaternion.Euler(0, Random.Range(0, 360), 0), transform);
 
@@ -101,9 +114,11 @@ public class SkiGame : BaseGame
                 obstacle.transform.position += -_floorDirection * Speed * Time.deltaTime;
                 if (obstacle.transform.position.z < 0f)
                 {
-                    if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < 2f)
+                    float radius = obstacle.GetComponent<SphereCollider>().radius;
+                    if (Mathf.Abs(obstacle.transform.position.x - Player.position.x) < radius + 0.5f) // 0.5f is player radius
                     {
                         // Hit obstacle
+                        GameManager.SoundManager.PlaySound(GameManager.SoundManager.SkiGameCrashSound);
                         EndGame(false);
                     }
 
@@ -123,14 +138,27 @@ public class SkiGame : BaseGame
             flagPositionX = flag.transform.position.x;
             _flags.Add(flag);
 
+            int maxSnowmen = 3;
+            int snowmenCount = 0;
+
             // Spawn obstacles further ahead around the flag spawn distance
             for (int i = 0; i < Random.Range(5, 100); i++)
             {
                 float xPos = Random.Range(-60, 60) + Player.position.x;
-                if (Mathf.Abs(flagPositionX - xPos) > 13f)
+                int index = Random.Range(0, ObstaclePrefabs.Length);
+                
+                if (index == 1) // 1 is snowman
+                {
+                    if (snowmenCount >= maxSnowmen)
+                    {
+                        continue; // skip spawning more snowmen
+                    }
+                    snowmenCount++;
+                }
+                if (Mathf.Abs(flagPositionX - xPos) > 13f || index == 1) // 1 is snowman    
                 {
                     GameObject obstacle = Instantiate(
-                        ObstaclePrefabs[Random.Range(0, ObstaclePrefabs.Length)],
+                        ObstaclePrefabs[index],
                         _floorDirection * (SpawnAheadDistance + Random.Range(0, 20)) + Vector3.right * xPos,
                         Quaternion.identity, transform);
                 
@@ -151,6 +179,9 @@ public class SkiGame : BaseGame
                 if (Mathf.Abs(flag.transform.position.x - Player.position.x) < 3f)
                 {
                     GameManager.ScoreManager.AddScore(10);
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.SkiGameScoreSound);
+                    StartCoroutine(GameManager.InputManager.LedBlink(new Color(48f/255f, 213f/255f, 150f/255f), 2, .25f, BluetoothClient.BoardSide.All, Color.white));
+                    ChangeSpeedByScore(GameManager.ScoreManager.Score);
                 }
                 else
                 {
@@ -166,9 +197,36 @@ public class SkiGame : BaseGame
         _camera.rotation = Quaternion.Lerp(_camera.rotation, Quaternion.Euler(GameManager.InputManager.InputRotation.eulerAngles.x + 30, 0, GameManager.InputManager.InputRotation.eulerAngles.z), Time.deltaTime * 2f);
     }
 
+    public void ChangeSpeedBasedOnDifficulty()
+    {
+        switch (GameManager.CurrentDifficulty)
+        {
+            case GameManager.Difficulty.Easy:
+                Speed = 3f;
+                break;
+
+            case GameManager.Difficulty.Medium:
+                Speed = 5f;
+                break;
+
+            case GameManager.Difficulty.Hard:
+                Speed = 7f;
+                break;
+        }
+    }
+
+    public void ChangeSpeedByScore(int score)
+    {
+        if (score % 50 == 0)
+        {
+            Speed += 1f;
+        }
+    }
+
     public override void EndGame(bool won = false)
     {
         base.EndGame(won);
+        GameManager.SoundManager.ChangeVolumeMusic(GameManager.SoundManager.SlimeSkieMainTheme, 0.5f);
     }
 
 

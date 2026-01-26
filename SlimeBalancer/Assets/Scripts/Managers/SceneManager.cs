@@ -9,6 +9,10 @@ public class SceneManager : BaseManager
     public string MainMenuSceneName = "MainMenu";
     public string EndScreen = "EndScene";
     public string InfoSceneName = "InfoScene";
+    public string WaitingSceneName = "WaitingScene";
+    public string SettingsSceneName = "SettingsMenu";
+    public string SplashScreen = "SplashScreen";
+    public string ConnectingSceneName = "ConnectingScene";
     private string activeSceneName;
 
     private List<string> _additiveScenes = new List<string>();
@@ -16,6 +20,7 @@ public class SceneManager : BaseManager
     public void LoadScene(string sceneName)
     {
         StartCoroutine(LoadSceneCoroutine(sceneName));
+       
     }
 
     public IEnumerator LoadSceneCoroutine(string sceneName)
@@ -59,7 +64,12 @@ public class SceneManager : BaseManager
         Scene loadedScene = USM.GetSceneByName(sceneName);
         USM.SetActiveScene(loadedScene);
         activeSceneName = sceneName;
-
+        if(activeSceneName == "MainMenu" || activeSceneName == "InfoScene" || activeSceneName == "SettingsMenu")
+        {
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.mainTheme, true, true);
+        }
+       
+      
         // Hide loading screen
         GameManager.LoadingscreenManager.HideLoadingScreen();
         Debug.Log($"Scene '{sceneName}' loaded successfully.");

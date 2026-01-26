@@ -1,5 +1,18 @@
 <ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
     <ui:VisualElement style="flex-grow: 1; background-color: rgb(255, 255, 255); padding-top: 16px; padding-right: 16px; padding-bottom: 16px; padding-left: 16px;">
-        <ui:Label text="Game Info" />
+        <ui:Label text="Game: ..." name="game-title" style="font-size: 22px; -unity-font-style: bold; -unity-text-align: upper-center;" />
+        <ui:VisualElement style="flex-grow: 0; flex-direction: row; justify-content: center; -unity-text-align: upper-center; text-overflow: clip; white-space: normal; flex-basis: 50%; flex-wrap: nowrap; padding-top: 16px; padding-right: 16px; padding-bottom: 16px; padding-left: 16px; align-self: flex-end; align-items: center; align-content: flex-start; width: 100%;">
+            <ui:Label text="Stuur links en rechts om tussen de vlaggen door te gaan en punten te verdienen. Hoe langer je blijft skiën, hoe hoger je score!" name="info1" class="info-text" />
+        </ui:VisualElement>
+        <ui:VisualElement style="flex-grow: 0; background-image: url(&quot;project://database/Assets/Videos/VideoRenderTexture.renderTexture?fileID=8400000&amp;guid=f72c4480087a98848a6c010215968895&amp;type=2#VideoRenderTexture&quot;); height: 270px; width: 480px; align-items: center; align-self: center; margin-top: 16px; margin-right: 16px; margin-bottom: 16px; margin-left: 16px; flex-shrink: 0; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;" />
+        <ui:VisualElement style="flex-grow: 1; flex-shrink: 0; height: 169px;">
+            <ui:Label text="Leun het balanceboard naar achter&#10;om te starten" style="align-self: center; font-size: 18px; -unity-text-align: upper-center;" />
+            <ui:VisualElement style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Textures/naar%20benedenbalanceboard.png?fileID=2800000&amp;guid=0365b325dfd21f94f9bdb2cc618c7005&amp;type=3#naar benedenbalanceboard&quot;); -unity-background-scale-mode: scale-to-fit; margin-top: 8px; margin-right: 16px; margin-bottom: 16px; margin-left: 16px;" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+    <ui:VisualElement style="flex-grow: 1; position: absolute; bottom: 32px; right: 32px; flex-direction: row;">
+        <ui:VisualElement style="flex-grow: 1; background-image: url(&quot;project://database/Assets/Textures/BackGray.png?fileID=2800000&amp;guid=bc8231da668d94b458519e7fcf8101e6&amp;type=3#BackGray&quot;); -unity-background-scale-mode: scale-to-fit; width: 55px; margin-right: 8px;" />
+        <ui:Label text="Terug" style="font-size: 18px;" />
     </ui:VisualElement>
 </ui:UXML>

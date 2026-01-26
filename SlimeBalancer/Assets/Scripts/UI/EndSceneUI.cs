@@ -3,25 +3,29 @@ using UnityEngine.UIElements;
 public class EndSceneUI : MonoBehaviour
 {
     private VisualElement root;
-    private Button restartButton;
-    private Button mainMenuButton;
+    private VisualElement restartButton;
+    private VisualElement mainMenuButton;
     private Label scoreLabel;
     private Label highScoreLabel;
 
-    private bool restartSelected = false;
+    private bool restartSelected = true;
 
     private Vector2 lastInput = Vector2.zero;
+    private bool inputInUse = false;
+    private float inputDelay = 2f; // seconds
+    private float timer = 0f;
 
     private void OnEnable()
     {
         var uiDocument = GetComponent<UIDocument>();
         root = uiDocument.rootVisualElement;
-        restartButton = root.Q<Button>("RestartButton");
-        mainMenuButton = root.Q<Button>("MainMenuButton");
+        restartButton = root.Q<VisualElement>("RestartButton");
+        mainMenuButton = root.Q<VisualElement>("MainMenuButton");
+        restartButton.AddToClassList("focused");
+        restartButton.AddToClassList("disabled");
+        mainMenuButton.AddToClassList("disabled");
         scoreLabel = root.Q<Label>("ScoreLabel");
         highScoreLabel = root.Q<Label>("HighScoreLabel");
-        restartButton.clicked += OnRestartButtonClicked;
-        mainMenuButton.clicked += OnMainMenuButtonClicked;
 
         // Set score and high score labels
         int finalScore = GameManager.ScoreManager.Score;
@@ -34,42 +38,66 @@ public class EndSceneUI : MonoBehaviour
 
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
-            restartButton.Focus();
+            if (!inputInUse) return;
+            restartButton.AddToClassList("focused");
+            mainMenuButton.RemoveFromClassList("focused");
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
             restartSelected = true;
         });
         GameManager.InputManager.OnRight.AddListener(() =>
         {
-            mainMenuButton.Focus();
+            if (!inputInUse) return;
+            mainMenuButton.AddToClassList("focused");
+            restartButton.RemoveFromClassList("focused");
+            GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
             restartSelected = false;
         });
         GameManager.InputManager.OnDown.AddListener(() =>
         {
+            if (!inputInUse) return;
             if (restartSelected)
             {
                 OnRestartButtonClicked();
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                
             }
             else
             {
                 OnMainMenuButtonClicked();
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                
             }
         });
 
     }
 
+    private void Update()
+    {
+        timer += Time.deltaTime;
+        if (timer >= inputDelay)
+        {
+            inputInUse = true;
+            mainMenuButton.RemoveFromClassList("disabled");
+            restartButton.RemoveFromClassList("disabled");
+        }
+    }
 
     private void OnDisable()
     {
-        restartButton.clicked -= OnRestartButtonClicked;
-        mainMenuButton.clicked -= OnMainMenuButtonClicked;
+        GameManager.InputManager.OnLeft.RemoveAllListeners();
+        GameManager.InputManager.OnRight.RemoveAllListeners();
+        GameManager.InputManager.OnDown.RemoveAllListeners();
     }
 
     private void OnRestartButtonClicked()
     {
         GameManager.Instance.LoadGame(GameManager.Instance.CurrentGameData.SceneName);
+        GameManager.SoundManager.StopAllMusic();
     }
 
     private void OnMainMenuButtonClicked()
     {
         GameManager.SceneManager.LoadScene(GameManager.SceneManager.MainMenuSceneName);
+        GameManager.SoundManager.StopAllMusic();
     }
 }

@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Experimental.GlobalIllumination;
+using UnityEngine.Video;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +12,30 @@ public class GameManager : MonoBehaviour
     public static string GameSceneNameToSkipTo = "";
     private BaseGame _currentGame;
     private GameData _currentGameData;
+
+    public Texture2D[] BatteryIcons;
+    public static int LastSelectedGameIndex = 0;
+
+    public enum Difficulty
+    {
+        Easy,
+        Medium,
+        Hard
+    }
+    public static Difficulty CurrentDifficulty{
+        get
+        {
+            if (!PlayerPrefs.HasKey("GameDifficulty"))
+            {
+                PlayerPrefs.SetInt("GameDifficulty", (int)Difficulty.Medium);
+            }
+            return (Difficulty)PlayerPrefs.GetInt("GameDifficulty");
+        }
+        set
+        {
+            PlayerPrefs.SetInt("GameDifficulty", (int)value);
+        }
+    }
     public GameData CurrentGameData => _currentGameData;
 
     [System.Serializable]
@@ -21,6 +47,7 @@ public class GameManager : MonoBehaviour
         [TextArea]
         public string[] Explination;
         public Texture2D GameLogo;
+        public VideoClip TutorialVideo;
     }
 
     [Header("Data")]
@@ -37,6 +64,18 @@ public class GameManager : MonoBehaviour
         }
     }
     private static ScoreManager _scoreManager;
+
+    public static SoundManager SoundManager
+    {
+        get {
+            if (_soundManager == null)
+            {
+                Debug.LogError("SoundManager is not initialized!");
+            }
+            return _soundManager; 
+        }
+    }
+    private static SoundManager _soundManager;
     public static InputManager InputManager
     {
         get {
@@ -86,7 +125,6 @@ public class GameManager : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -102,6 +140,9 @@ public class GameManager : MonoBehaviour
             {
                 case ScoreManager scoreManager:
                     _scoreManager = scoreManager;
+                    break;
+                case SoundManager soundManager:
+                    _soundManager = soundManager;
                     break;
                 case InputManager inputManager:
                     _inputManager = inputManager;
@@ -132,23 +173,32 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            SceneManager.LoadScene(SceneManager.MainMenuSceneName);
+            SceneManager.LoadScene(SceneManager.SplashScreen);
         }
+    }
+
+    public void LoadInfo(string sceneName)
+    {
+        Time.timeScale = 1f;
+        _currentGameData = AvailableGames.Find(g => g.SceneName == sceneName);
+        StartCoroutine(LoadInfoScreen(sceneName));
+    }
+
+    public IEnumerator LoadInfoScreen(string sceneName)
+    {
+        InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
+        yield return SceneManager.LoadSceneCoroutine(SceneManager.InfoSceneName);
+
     }
 
     public void LoadGame(string sceneName)
     {
         Time.timeScale = 1f;
-        StartCoroutine(LoadGameCoroutine(sceneName));
+        StartCoroutine(LoadGameAsync(sceneName));
     }
 
-    public IEnumerator LoadGameCoroutine(string sceneName)
+    public IEnumerator LoadGameAsync(string sceneName)
     {
-        InputManager.SetLightingEffect(InputManager.LightingEffect.Custom, Color.blue);
-        yield return SceneManager.LoadSceneCoroutine(SceneManager.InfoSceneName);
-
-        yield return new WaitForSeconds(2f);
-
         yield return SceneManager.LoadSceneCoroutine(sceneName);
 
 
