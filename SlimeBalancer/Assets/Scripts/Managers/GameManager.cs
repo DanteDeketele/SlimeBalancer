@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Experimental.GlobalIllumination;
+using UnityEngine.Video;
 
 public class GameManager : MonoBehaviour
 {
@@ -45,6 +46,7 @@ public class GameManager : MonoBehaviour
         [TextArea]
         public string[] Explination;
         public Texture2D GameLogo;
+        public VideoClip TutorialVideo;
     }
 
     [Header("Data")]

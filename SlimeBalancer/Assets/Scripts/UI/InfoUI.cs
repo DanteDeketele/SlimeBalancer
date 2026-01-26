@@ -1,12 +1,17 @@
 ﻿using UnityEngine;
 using UnityEngine.UIElements;
+using UnityEngine.Video;
 
 public class InfoUI : MonoBehaviour
 {
     private VisualElement root;
     private Label infoLabel;
+    private VideoPlayer videoPlayer;
     private void OnEnable()
     {
+        videoPlayer = GameObject.FindFirstObjectByType<VideoPlayer>();
+        videoPlayer.clip = GameManager.Instance.CurrentGameData.TutorialVideo;
+
         GameManager.InputManager.OnDown.AddListener(Next);
         GameManager.InputManager.OnUp.AddListener(Back);
 

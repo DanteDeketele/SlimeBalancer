@@ -133,3 +133,17 @@ Button:focus {
 .disabled {
     opacity: 0.44;
 }
+
+.info-text {
+    margin-top: 32px;
+    margin-right: 32px;
+    margin-bottom: 32px;
+    margin-left: 32px;
+    font-size: 22px;
+    max-width: 550px;
+    align-self: center;
+    align-content: center;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 0;
+}
