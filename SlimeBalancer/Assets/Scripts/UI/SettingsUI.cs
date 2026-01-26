@@ -16,6 +16,7 @@ public class SettingsUI : MonoBehaviour
     private VisualElement BatteryIcon;
     private Label BatteryPercentage;
     public Texture2D ControlDownIcon;
+    public Texture2D ControlUpIcon;
 
     float timer = 0f;
     public float scrollDelay = 0.5f;
@@ -274,6 +275,58 @@ public class SettingsUI : MonoBehaviour
                         child.style.opacity = 1f;
                     }
                 }
+                else if (i == 2)
+                {
+                    // for volume, an up icon with + next to it, below a down icon with a -
+                    container = new VisualElement();
+                    container.name = "InfoContainer";
+                    // info container should be positioned next to the game entry
+                    container.style.position = Position.Absolute;
+                    container.style.top = 0;
+                    container.style.left = Length.Percent(100);
+                    container.style.width = Length.Pixels(240);
+                    container.style.flexGrow = 0;
+                    container.style.marginLeft = Length.Pixels(-20);
+                    gameEntry.Add(container);
+                    VisualElement row1 = new VisualElement();
+                    row1.style.flexDirection = FlexDirection.Row;
+                    row1.style.justifyContent = Justify.Center;
+                    container.Add(row1);
+                    VisualElement upIcon = new VisualElement();
+                    upIcon.name = "UpIcon";
+                    upIcon.style.width = Length.Pixels(70);
+                    upIcon.style.height = Length.Pixels(50);
+                    upIcon.style.backgroundImage = new StyleBackground(ControlUpIcon);
+                    upIcon.style.backgroundSize = new StyleBackgroundSize(new BackgroundSize(BackgroundSizeType.Contain));
+                    row1.Add(upIcon);
+                    Label plusLabel = new Label("+");
+                    plusLabel.name = "PlusLabel";
+                    plusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    plusLabel.style.fontSize = 20;
+                    plusLabel.style.color = new StyleColor(Color.black);
+                    plusLabel.style.alignSelf = Align.Center;
+                    plusLabel.style.marginLeft = Length.Pixels(8);
+                    row1.Add(plusLabel);
+                    VisualElement row2 = new VisualElement();
+                    row2.style.flexDirection = FlexDirection.Row;
+                    row2.style.justifyContent = Justify.Center;
+                    container.Add(row2);
+                    VisualElement downIcon = new VisualElement();
+                    downIcon.name = "DownIcon";
+                    downIcon.style.width = Length.Pixels(70);
+                    downIcon.style.height = Length.Pixels(50);
+                    downIcon.style.backgroundImage = new StyleBackground(ControlDownIcon);
+                    downIcon.style.backgroundSize = new StyleBackgroundSize(new BackgroundSize(BackgroundSizeType.Contain));
+                    row2.Add(downIcon);
+                    Label minusLabel = new Label("-");
+                    minusLabel.name = "MinusLabel";
+                    minusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+                    minusLabel.style.fontSize = 20;
+                    minusLabel.style.color = new StyleColor(Color.black);
+                    minusLabel.style.alignSelf = Align.Center;
+                    minusLabel.style.marginLeft = Length.Pixels(8);
+                    row2.Add(minusLabel);
+                }
                 else
                 {
                     container = new VisualElement();
@@ -298,9 +351,11 @@ public class SettingsUI : MonoBehaviour
                     instructionLabel.style.marginBottom = Length.Pixels(0);
                     instructionLabel.style.marginLeft = Length.Pixels(0);
                     instructionLabel.style.marginRight = Length.Pixels(0);
+                    instructionLabel.style.paddingTop = Length.Pixels(0);
                     instructionLabel.style.paddingRight = Length.Pixels(0);
                     instructionLabel.style.paddingLeft = Length.Pixels(0);
                     instructionLabel.style.paddingBottom = Length.Pixels(0);
+                    instructionLabel.style.marginTop = Length.Pixels(0);
 
                     int index = selectedGameIndex; // Capture the current index for the lambda
                     switch (index)
@@ -311,14 +366,11 @@ public class SettingsUI : MonoBehaviour
                         case 1:
                             instructionLabel.text = "Druk moeilijkheid aan te passen";
                             break;
-                        case 2:
-                            instructionLabel.text = "Druk om volume aan te passen";
-                            break;
                         case 3:
                             instructionLabel.text = "Druk om muziek aan/uit te zetten";
                             break;
                         case 4:
-                            instructionLabel.text = "Druk om geschiedenis te verwijderen";
+                            instructionLabel.text = "Druk om scores te verwijderen";
                             break;
                         case 5:
                             instructionLabel.text = "Druk om het spel te verlaten";

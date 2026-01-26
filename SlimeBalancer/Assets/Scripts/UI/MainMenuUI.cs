@@ -27,6 +27,7 @@ public class MainMenuUI : MonoBehaviour
 
     public void Awake()
     {
+        selectedGameIndex = GameManager.LastSelectedGameIndex;
         GameManager.SoundManager.StopAllMusic();
         GameManager.InputManager.SetLightingEffect(InputManager.LightingEffect.Rainbow);
         var uiDocument = GetComponent<UIDocument>();
@@ -87,6 +88,7 @@ public class MainMenuUI : MonoBehaviour
             if (selectedGameIndex > 0)
             {
                 selectedGameIndex = Mathf.Max(0, selectedGameIndex - 1);
+                GameManager.LastSelectedGameIndex = selectedGameIndex;
                 GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
                 UpdateSelectedGame();
                 BeginScroll();
@@ -98,6 +100,7 @@ public class MainMenuUI : MonoBehaviour
             if (selectedGameIndex < games.Length)
             {
                 selectedGameIndex = Mathf.Min(games.Length - 1 + 1, selectedGameIndex + 1);
+                GameManager.LastSelectedGameIndex = selectedGameIndex;
                 GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
                 UpdateSelectedGame();
                 BeginScroll();

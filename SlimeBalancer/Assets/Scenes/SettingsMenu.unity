@@ -188,6 +188,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SettingsUI
   ControlDownIcon: {fileID: 2800000, guid: 0365b325dfd21f94f9bdb2cc618c7005, type: 3}
+  ControlUpIcon: {fileID: 2800000, guid: 68176d068f4dee34c89f5d58da5ad836, type: 3}
   scrollDelay: 0.5
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
