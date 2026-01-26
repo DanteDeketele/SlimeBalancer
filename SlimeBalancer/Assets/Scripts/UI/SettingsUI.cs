@@ -105,6 +105,37 @@ public class SettingsUI : MonoBehaviour
                     GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
                     GameManager.SoundManager.SetVolumeInt(volumeLevel);
                 }
+            }else if (selectedGameIndex == 1) // Edit Difficulty
+            {
+                GameManager.Difficulty currentDifficulty = GameManager.CurrentDifficulty;
+                
+                if (currentDifficulty == GameManager.Difficulty.Easy)
+                {
+                    currentDifficulty = GameManager.Difficulty.Medium;
+                }
+                else if (currentDifficulty == GameManager.Difficulty.Medium)
+                {
+                    currentDifficulty = GameManager.Difficulty.Hard;
+                }
+                else if (currentDifficulty == GameManager.Difficulty.Hard)
+                {
+                    currentDifficulty = GameManager.Difficulty.Easy;
+                }
+                GameManager.CurrentDifficulty = currentDifficulty;
+                GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                Label difficultyLabel = root.Q<Label>("DifficultyLabel");
+                switch (currentDifficulty)
+                {
+                    case GameManager.Difficulty.Easy:
+                        difficultyLabel.text = "Gemakkelijk";
+                        break;
+                    case GameManager.Difficulty.Medium:
+                        difficultyLabel.text = "Gemiddeld";
+                        break;
+                    case GameManager.Difficulty.Hard:
+                        difficultyLabel.text = "Moeilijk";
+                        break;
+                }
             }
         });
 
@@ -126,15 +157,15 @@ public class SettingsUI : MonoBehaviour
                     
                     if (currentDifficulty == GameManager.Difficulty.Easy)
                     {
-                        currentDifficulty = GameManager.Difficulty.Medium;
+                        currentDifficulty = GameManager.Difficulty.Hard;
                     }
                     else if (currentDifficulty == GameManager.Difficulty.Medium)
                     {
-                        currentDifficulty = GameManager.Difficulty.Hard;
+                        currentDifficulty = GameManager.Difficulty.Easy;
                     }
                     else if (currentDifficulty == GameManager.Difficulty.Hard)
                     {
-                        currentDifficulty = GameManager.Difficulty.Easy;
+                        currentDifficulty = GameManager.Difficulty.Medium;
                     }
 
                     GameManager.CurrentDifficulty = currentDifficulty;
@@ -275,7 +306,7 @@ public class SettingsUI : MonoBehaviour
                         child.style.opacity = 1f;
                     }
                 }
-                else if (i == 2)
+                else if (i == 2 || i == 1)
                 {
                     // for volume, an up icon with + next to it, below a down icon with a -
                     container = new VisualElement();
@@ -362,9 +393,6 @@ public class SettingsUI : MonoBehaviour
                     {
                         case 0:
                             instructionLabel.text = "Druk om terug te gaan";
-                            break;
-                        case 1:
-                            instructionLabel.text = "Druk om moeilijkheid aan te passen";
                             break;
                         case 3:
                             instructionLabel.text = "Druk om muziek aan/uit te zetten";
