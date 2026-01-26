@@ -214,7 +214,8 @@ public class SettingsUI : MonoBehaviour
                     }
                     break;
                 case 5: // Quit Game
-                    Application.Quit();
+                    GameManager.SoundManager.PlaySound(GameManager.SoundManager.GameSelectSound);
+                    GameManager.SceneManager.LoadScene(GameManager.SceneManager.QuitSceneName);
                     break;
                 default:
                     Debug.LogWarning("No action assigned for this selection.");

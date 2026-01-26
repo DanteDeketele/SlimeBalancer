@@ -13,6 +13,7 @@ public class SceneManager : BaseManager
     public string SettingsSceneName = "SettingsMenu";
     public string SplashScreen = "SplashScreen";
     public string ConnectingSceneName = "ConnectingScene";
+    public string QuitSceneName = "QuitScene";
     private string activeSceneName;
 
     private List<string> _additiveScenes = new List<string>();

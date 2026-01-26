@@ -1,0 +1,17 @@
+<ui:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Assets/UI/Styles/Styles.uss?fileID=7433441132597879392&amp;guid=bb6e5deda7c1f8c44a435136348cfff4&amp;type=3#Styles" />
+    <ui:VisualElement style="flex-grow: 1; background-color: rgb(255, 255, 255); align-items: center; justify-content: center;">
+        <ui:VisualElement style="flex-grow: 0; white-space: normal; font-size: 20px; align-items: center; justify-content: center; -unity-text-align: upper-center;">
+            <ui:Label text="Ben je zeker dat je het spel wilt afsluiten?" style="font-size: 22px; -unity-font-style: bold;" />
+            <ui:Label text="Schakel je bord uit na het afsluiten." />
+            <ui:VisualElement style="flex-grow: 1; flex-direction: row; flex-basis: auto; justify-content: space-between; padding-top: 0; padding-right: 0; padding-bottom: 0; padding-left: 0; align-content: stretch; align-self: stretch; align-items: flex-start; transition-duration: 0.5s; margin-top: 16px;">
+                <ui:VisualElement name="Return" class="focused" style="flex-grow: 1; border-top-width: 4px; border-right-width: 4px; border-bottom-width: 4px; border-left-width: 4px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;">
+                    <ui:Label text="Terug" selectable="false" focusable="false" style="margin-top: 16px; margin-right: 16px; margin-bottom: 16px; margin-left: 16px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;" />
+                </ui:VisualElement>
+                <ui:VisualElement name="Quit" style="flex-grow: 1; border-top-width: 4px; border-right-width: 4px; border-bottom-width: 4px; border-left-width: 4px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;">
+                    <ui:Label text="Sluit het spel af" selectable="false" focusable="false" style="margin-top: 16px; margin-right: 8px; margin-bottom: 16px; margin-left: 8px; border-top-left-radius: 16px; border-top-right-radius: 16px; border-bottom-right-radius: 16px; border-bottom-left-radius: 16px;" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
