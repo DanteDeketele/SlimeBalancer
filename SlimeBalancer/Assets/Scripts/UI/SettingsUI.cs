@@ -143,7 +143,7 @@ public class SettingsUI : MonoBehaviour
                     switch (currentDifficulty)
                     {
                         case GameManager.Difficulty.Easy:
-                            difficultyLabel.text = "Makkelijk";
+                            difficultyLabel.text = "Gemakkelijk";
                             break;
                         case GameManager.Difficulty.Medium:
                             difficultyLabel.text = "Gemiddeld";
@@ -364,7 +364,7 @@ public class SettingsUI : MonoBehaviour
                             instructionLabel.text = "Druk om terug te gaan";
                             break;
                         case 1:
-                            instructionLabel.text = "Druk moeilijkheid aan te passen";
+                            instructionLabel.text = "Druk om moeilijkheid aan te passen";
                             break;
                         case 3:
                             instructionLabel.text = "Druk om muziek aan/uit te zetten";
