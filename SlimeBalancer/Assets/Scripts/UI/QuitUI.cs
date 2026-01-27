@@ -29,7 +29,7 @@ public class QuitUI : MonoBehaviour
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
             if (!inputInUse) return;
-            if (!restartSelected) return;
+            if (restartSelected) return;
             returnButton.AddToClassList("focused");
             quitButton.RemoveFromClassList("focused");
             GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
@@ -38,7 +38,7 @@ public class QuitUI : MonoBehaviour
         GameManager.InputManager.OnRight.AddListener(() =>
         {
             if (!inputInUse) return;
-            if (restartSelected == false) return;
+            if (!restartSelected) return;
             quitButton.AddToClassList("focused");
             returnButton.RemoveFromClassList("focused");
             GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);

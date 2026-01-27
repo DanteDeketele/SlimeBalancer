@@ -39,7 +39,7 @@ public class EndSceneUI : MonoBehaviour
         GameManager.InputManager.OnLeft.AddListener(() =>
         {
             if (!inputInUse) return;
-            if (!restartSelected) return;
+            if (restartSelected) return;
             restartButton.AddToClassList("focused");
             mainMenuButton.RemoveFromClassList("focused");
             GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
@@ -48,7 +48,7 @@ public class EndSceneUI : MonoBehaviour
         GameManager.InputManager.OnRight.AddListener(() =>
         {
             if (!inputInUse) return;
-            if (restartSelected == false) return;
+            if (!restartSelected) return;
             mainMenuButton.AddToClassList("focused");
             restartButton.RemoveFromClassList("focused");
             GameManager.SoundManager.PlaySound(GameManager.SoundManager.UISelectSound);
