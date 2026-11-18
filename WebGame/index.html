@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SlimeBalancer</title>
+  <link rel="icon" href="assets/img/slime-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    { "imports": { "three": "./js/vendor/three.module.min.js", "three/addons/": "./js/vendor/addons/" } }
+  </script>
+</head>
+<body data-screen="splash">
+  <div id="bg"></div>
+  <canvas id="gl"></canvas>
+  <div id="flash"></div>
+
+  <div id="hud"><div id="score">0</div></div>
+
+  <section class="screen" id="screen-splash">
+    <img class="splash-slime" src="assets/img/slime-icon.png" alt="">
+    <img class="splash-wordmark" src="assets/img/wordmark.png" alt="SlimeBalancer">
+    <p class="splash-hint">Klik, druk op Enter of kantel je puck naar je toe om te beginnen</p>
+  </section>
+
+  <section class="screen menu-screen" id="screen-menu">
+    <header class="menu-header"><img src="assets/img/wordmark.png" alt="SlimeBalancer"></header>
+    <main class="menu-main"><div class="carousel" id="carousel"></div></main>
+    <footer class="menu-footer">
+      <div class="board-status"><i></i><span class="board-label">Geen dock</span></div>
+      <div class="controls">
+        <img src="assets/img/board-left.png" alt=""><span>Links</span>
+        <img src="assets/img/board-down.png" alt=""><span>Ok</span>
+        <img src="assets/img/board-right.png" alt=""><span>Rechts</span>
+      </div>
+    </footer>
+  </section>
+
+  <section class="screen menu-screen" id="screen-settings">
+    <header class="menu-header"><img src="assets/img/wordmark.png" alt="SlimeBalancer"></header>
+    <main class="menu-main"><div class="carousel" id="settings-carousel"></div></main>
+    <footer class="menu-footer">
+      <div class="board-status"><i></i><span class="board-label">Geen dock</span></div>
+      <div class="controls">
+        <img src="assets/img/board-left.png" alt=""><span>Links</span>
+        <img src="assets/img/board-down.png" alt=""><span>Ok / lager</span>
+        <img src="assets/img/back.png" alt=""><span>Hoger</span>
+        <img src="assets/img/board-right.png" alt=""><span>Rechts</span>
+      </div>
+    </footer>
+  </section>
+
+  <section class="screen info-screen" id="screen-info">
+    <div class="info-card">
+      <div class="info-copy">
+        <h1 id="info-title">Game</h1>
+        <div id="info-text"></div>
+        <button class="info-start" id="info-start" type="button"><img src="assets/img/board-down.png" alt=""><span>Kantel je puck naar je toe om te starten</span></button>
+        <button class="info-back" id="info-back" type="button"><img src="assets/img/back-gray.png" alt=""><span>Terug</span></button>
+      </div>
+      <video id="info-video" muted loop playsinline></video>
+    </div>
+  </section>
+
+  <section class="screen countdown-screen" id="screen-countdown">
+    <div class="cd-poster" id="cd-poster">
+      <img id="cd-logo" alt="">
+      <h1 id="cd-title">Game</h1>
+      <p>Neem je puck vast.<br>Hou je klaar...</p>
+      <div class="cd-rail"><div class="cd-bar" id="cd-bar"></div></div>
+    </div>
+  </section>
+  <div class="cd-number" id="cd-number"></div>
+
+  <section class="screen" id="screen-game"></section>
+
+  <section class="screen end-screen" id="screen-end">
+    <div class="end-card">
+      <h1>Game Over</h1>
+      <p id="end-score">Score: 0</p>
+      <p id="end-high">High Score: 0</p>
+      <div class="end-buttons">
+        <button type="button" class="end-button" id="end-restart">Opnieuw spelen</button>
+        <button type="button" class="end-button" id="end-menu">Terug naar menu</button>
+      </div>
+      <div class="controls">
+        <img src="assets/img/board-left.png" alt=""><span>Links</span>
+        <img src="assets/img/board-down.png" alt=""><span>Ok</span>
+        <img src="assets/img/board-right.png" alt=""><span>Rechts</span>
+      </div>
+    </div>
+  </section>
+
+  <div id="toast" role="status"></div>
+  <noscript>SlimeBalancer needs JavaScript and WebGL.</noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
