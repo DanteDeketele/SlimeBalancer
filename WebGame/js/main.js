@@ -8,6 +8,7 @@ import { tickSlimes } from "./slime.js";
 import { SkiGame } from "./games/ski.js";
 import { TiltGame } from "./games/tilt.js";
 import { SnakeGame } from "./games/snake.js";
+import { SnakeIoGame } from "./games/snakeio.js";
 import { BalanceGame } from "./games/balance.js";
 
 // Unity GameManager.AvailableGames, in the same order with the same texts.
@@ -23,6 +24,11 @@ const GAMES = [
       "Maar pas op! Bomen en sneeuwmannen blokkeren de piste, raak je er één, dan is het spel voorbij.",
     ],
     Game: SkiGame,
+    duo: {
+      mode: "versus",
+      genre: "Race",
+      text: ["Twee skiërs op dezelfde piste, elk met een eigen helft van het scherm. Stuur door de vlaggen voor punten.", "Wie botst, ligt eruit. Wie het langst blijft skiën wint, en daarna telt de score."],
+    },
   },
   {
     id: "Tilt_It",
@@ -32,6 +38,11 @@ const GAMES = [
     video: "assets/video/tilt.mp4",
     text: ["Verschillende kleuren slimes vallen naar beneden! Bestuur het bord en zorg ervoor dat de slimes in de juiste buis terecht komen met het overeenkomstige kleur."],
     Game: TiltGame,
+    duo: {
+      mode: "coop",
+      genre: "Samen",
+      text: ["Samen één bord! Speler 1 kantelt links en rechts, speler 2 kantelt naar voren en naar achteren.", "Werk samen om elke slime in de buis met zijn eigen kleur te krijgen."],
+    },
   },
   {
     id: "Snake",
@@ -41,6 +52,12 @@ const GAMES = [
     video: "assets/video/snake.mp4",
     text: ["Beweeg over het veld om andere slimes aan te tikken en achter jou te plaatsen. Word zo lang mogelijk zonder tegen de muur of jezelf te botsen."],
     Game: SnakeGame,
+    duo: {
+      mode: "versus",
+      genre: "Duel",
+      Game: SnakeIoGame,
+      text: ["Twee slangen glijden vrij over het veld en draaien mee met je puck. Eet slimedruppels om langer te worden.", "Bots je met je kop tegen de muur of de andere slang, dan spat je uit elkaar en wint de ander. Snij je tegenstander de weg af!"],
+    },
   },
   {
     id: "BalanceQuest",
@@ -50,6 +67,11 @@ const GAMES = [
     video: "assets/video/balance.mp4",
     text: ["Hou zo lang mogelijk de slime op het bord zonder hem ervan af te laten vallen.", "Hoe langer op het bord, hoe meer punten!"],
     Game: BalanceGame,
+    duo: {
+      mode: "coop",
+      genre: "Samen",
+      text: ["Samen één bord! Speler 1 kantelt links en rechts, speler 2 kantelt naar voren en naar achteren.", "Hou de slime samen zo lang mogelijk op het bord."],
+    },
   },
 ];
 
@@ -58,6 +80,22 @@ const DIFFICULTY_LABEL = { easy: "Makkelijk", medium: "Gemiddeld", hard: "Moeili
 
 const $ = (sel) => document.querySelector(sel);
 const params = new URLSearchParams(location.search);
+
+// Player colours. The site passes each puck's colour (?colors=30d5c8,ff8a3d) in the
+// same order as its player list; without it we use teal and orange.
+const DEFAULT_COLORS = ["#30d5c8", "#ff8a3d"];
+const PLAYER_COLORS = (params.get("colors") || "")
+  .split(",")
+  .map((c) => c.trim().replace(/^#/, ""))
+  .filter((c) => /^[0-9a-f]{6}$/i.test(c))
+  .map((c) => `#${c}`);
+const playerColor = (i) => PLAYER_COLORS[i] || DEFAULT_COLORS[i];
+document.documentElement.style.setProperty("--p1", playerColor(0));
+document.documentElement.style.setProperty("--p2", playerColor(1));
+if (params.get("players") === "1" || params.get("players") === "2") store.set("players", Number(params.get("players")));
+const playerCount = () => (store.get("players", 1) === 2 ? 2 : 1);
+const duo = () => playerCount() === 2;
+const scoreKey = (game) => (duo() ? `${game.id}.duo` : game.id);
 
 // ---------- renderer ----------
 const canvas = $("#gl");
@@ -98,6 +136,8 @@ const state = {
 
 const difficulty = () => store.get("difficulty", "medium");
 const highScore = (id) => store.get(`highscore.${id}`, 0);
+const gameGenre = (g) => (duo() ? g.duo.genre : g.genre);
+const gameText = (g) => (duo() ? g.duo.text : g.text);
 input.invertY = store.get("invertY", false);
 
 function show(name) {
@@ -127,7 +167,7 @@ function showSplash() {
 function buildCarousel() {
   const list = $("#carousel");
   list.innerHTML = "";
-  GAMES.forEach((g, i) => list.append(card({ title: g.name, genre: g.genre, img: g.logo, index: i })));
+  GAMES.forEach((g, i) => list.append(card({ title: g.name, genre: gameGenre(g), img: g.logo, index: i })));
   list.append(card({ title: "Instellingen", genre: "Instellingen", icon: "assets/img/settings.png", index: GAMES.length }));
 }
 
@@ -156,8 +196,14 @@ function renderMenu() {
   cards.forEach((c, i) => {
     c.classList.toggle("selected", i === state.menuIndex);
     const score = c.querySelector(".game-score b");
-    if (i < GAMES.length) score.textContent = highScore(GAMES[i].id);
+    if (i < GAMES.length) {
+      score.textContent = highScore(scoreKey(GAMES[i]));
+      c.querySelector(".game-genre").textContent = gameGenre(GAMES[i]);
+    }
   });
+  const toggle = $("#players-toggle");
+  toggle.classList.toggle("is-duo", duo());
+  toggle.querySelector(".players-label").textContent = duo() ? "2 spelers" : "1 speler";
   const sel = cards[state.menuIndex];
   const track = $("#carousel");
   if (sel) {
@@ -194,6 +240,14 @@ function showMenu() {
     }
   });
   onInput("down", menuConfirm);
+  onInput("up", togglePlayers);
+  $("#players-toggle").onclick = togglePlayers;
+}
+
+function togglePlayers() {
+  store.set("players", duo() ? 1 : 2);
+  audio.play("select");
+  renderMenu();
 }
 
 // ---------- info ----------
@@ -201,8 +255,8 @@ function showInfo(game) {
   state.gameData = game;
   show("info");
   audio.playMusic("menu");
-  $("#info-title").textContent = `Game: ${game.name}`;
-  $("#info-text").innerHTML = game.text.map((t) => `<p>${t}</p>`).join("");
+  $("#info-title").textContent = `Game: ${game.name}${duo() ? (game.duo.mode === "coop" ? " · samen" : " · duel") : ""}`;
+  $("#info-text").innerHTML = gameText(game).map((t) => `<p>${t}</p>`).join("") + (duo() ? playersLegend() : "");
   const video = $("#info-video");
   video.src = game.video;
   video.play().catch(() => {});
@@ -220,6 +274,10 @@ function showInfo(game) {
   onInput("up", back);
   $("#info-start").onclick = start;
   $("#info-back").onclick = back;
+}
+
+function playersLegend() {
+  return `<div class="players-legend"><span><i style="background:${playerColor(0)}"></i>Speler 1 · puck 1 of WASD</span><span><i style="background:${playerColor(1)}"></i>Speler 2 · puck 2 of pijltjes</span></div>`;
 }
 
 // ---------- settings ----------
@@ -335,16 +393,47 @@ const ctx = {
   get score() {
     return state.score;
   },
-  addScore(n) {
-    state.score += n;
-    $("#score").textContent = state.score;
-    $("#score").classList.remove("pop");
-    void $("#score").offsetWidth;
-    $("#score").classList.add("pop");
-    if (state.score > highScore(state.gameData.id)) store.set(`highscore.${state.gameData.id}`, state.score);
+  get playerCount() {
+    return playerCount();
   },
-  gameOver() {
-    if (state.active) endGame();
+  get mode() {
+    return duo() ? state.gameData.duo.mode : "solo";
+  },
+  playerColor,
+  scores: [0, 0],
+  // Board tilt for Tilt It / Balancequest. Together: player 1 steers left/right,
+  // player 2 forward/back.
+  boardInput() {
+    if (ctx.mode === "coop") return { x: input.players[0].x, y: input.players[1].y };
+    return input.vector;
+  },
+  // Points for the whole game (solo, co-op), or for one player in a duel.
+  addScore(n, player = null) {
+    let el = $("#score");
+    let total;
+    if (player === null) {
+      state.score += n;
+      total = state.score;
+      el.textContent = total;
+    } else {
+      ctx.scores[player] += n;
+      total = ctx.scores[player];
+      state.score = Math.max(...ctx.scores);
+      el = document.querySelector(`#score-p${player + 1} b`);
+      el.textContent = total;
+    }
+    el.classList.remove("pop");
+    void el.offsetWidth;
+    el.classList.add("pop");
+    const key = scoreKey(state.gameData);
+    if (total > highScore(key)) store.set(`highscore.${key}`, total);
+  },
+  playerOut(player) {
+    document.querySelector(`#score-p${player + 1}`).classList.add("is-out");
+  },
+  // result: { winner } for a duel (null = draw)
+  gameOver(result = {}) {
+    if (state.active) endGame(result);
   },
   // Stand-in for the board's LED strip: a short coloured glow around the screen.
   flash(color) {
@@ -360,13 +449,20 @@ async function startGame(game) {
   disposeGame();
   state.gameData = game;
   state.score = 0;
+  ctx.scores = [0, 0];
   state.active = false;
   state.timeScale = 1;
   $("#score").textContent = "0";
+  document.querySelectorAll(".score-player").forEach((el) => {
+    el.classList.remove("is-out");
+    el.querySelector("b").textContent = "0";
+  });
+  document.body.dataset.mode = duo() ? game.duo.mode : "solo";
   show("countdown");
   audio.stopMusic();
   document.body.dataset.bg = "";
-  $("#cd-title").textContent = `Game: ${game.name}`;
+  $("#cd-title").textContent = `Game: ${game.name}${duo() ? (game.duo.mode === "coop" ? " · samen" : " · duel") : ""}`;
+  $("#cd-players").innerHTML = duo() ? playersLegend() : "";
   $("#cd-logo").src = game.logo;
   $("#cd-poster").hidden = false;
   $("#cd-number").textContent = "";
@@ -374,7 +470,8 @@ async function startGame(game) {
   bar.style.transition = "none";
   bar.style.width = "0%";
 
-  const instance = new game.Game(ctx);
+  const Game = duo() && game.duo.Game ? game.duo.Game : game.Game;
+  const instance = new Game(ctx);
   const loading = instance.load();
   const loadSeconds = params.has("fast") ? 0.2 : 4;
   let skipped = false;
@@ -415,15 +512,25 @@ async function startGame(game) {
   label.textContent = "";
 }
 
-function endGame() {
+function endGame(result = {}) {
   state.active = false;
   state.timeScale = 0.5; // Unity slows time down behind the game over screen
   audio.duckMusic(0.5);
   audio.play("gameOver", { delayUntilQuiet: true });
   ctx.flash(0xff3b3b);
   show("end");
-  $("#end-score").textContent = `Score: ${state.score}`;
-  $("#end-high").textContent = `High Score: ${highScore(state.gameData.id)}`;
+  const mode = duo() ? state.gameData.duo.mode : "solo";
+  $("#end-title").textContent = "Game Over";
+  $("#end-title").style.color = "";
+  if (mode === "versus") {
+    const w = result.winner;
+    $("#end-title").textContent = w === null || w === undefined ? "Gelijkspel!" : `Speler ${w + 1} wint!`;
+    if (w !== null && w !== undefined) $("#end-title").style.color = playerColor(w);
+    $("#end-score").innerHTML = `<span class="end-p" style="--c:${playerColor(0)}">Speler 1: ${ctx.scores[0]}</span> <span class="end-p" style="--c:${playerColor(1)}">Speler 2: ${ctx.scores[1]}</span>`;
+  } else {
+    $("#end-score").textContent = mode === "coop" ? `Samen: ${state.score}` : `Score: ${state.score}`;
+  }
+  $("#end-high").textContent = `High Score: ${highScore(scoreKey(state.gameData))}`;
   state.endChoice = 0;
   state.endReadyAt = performance.now() + 2000;
   renderEnd();
@@ -511,7 +618,8 @@ function frame(now) {
   tickSlimes(now / 1000);
   if (state.game) {
     state.game.update(dt * state.timeScale, state.active);
-    renderer.render(state.game.scene, state.game.camera);
+    if (state.game.render) state.game.render(renderer);
+    else renderer.render(state.game.scene, state.game.camera);
   }
   requestAnimationFrame(frame);
 }

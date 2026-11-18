@@ -27,6 +27,24 @@ scores, plus a new *Kantelrichting* switch to flip forward/back tilt).
 
 The board LED strip feedback from the Unity build is shown as a coloured glow around the screen.
 
+## 2 players (local only)
+
+Tilt up on the main menu (or press Escape / click *Spelers*) to switch between 1 and 2
+players. Both players sit at the same screen; nothing goes over the network.
+
+- **Player 1:** first puck (dock left stick), D-pad, WASD.
+- **Player 2:** second puck (dock right stick), face buttons, a second gamepad, arrow keys.
+
+| Game | 2-player mode |
+| --- | --- |
+| Skie | Race, split screen. The last skier standing wins. |
+| Tilt It | Together on one board: player 1 tilts left/right, player 2 forward/back. |
+| Snake | Duel, slither.io style: the snakes glide freely and turn towards the tilt. Eat drops to grow; hit the wall or the other snake and the other player wins. |
+| Balancequest | Together on one board, like Tilt It. |
+
+The site can pass the puck colours with `?colors=e53935,2a9df4`; otherwise player 1 is
+teal and player 2 orange.
+
 ## Run locally
 
 It is plain static files (ES modules, no build step). Serve the folder and open it:
@@ -38,16 +56,17 @@ python3 -m http.server 8080
 ```
 
 Handy URL options: `?game=skie|Tilt_It|Snake|BalanceQuest` jumps straight into a game,
+`&players=2` starts it in 2-player mode,
 and `&fast` skips the loading poster (used for automated checks).
 
 ## Publish on the SlimeBalancer Duo site
 
 ```
-./build-zip.sh 1.0.0      # writes dist/slimebalancer-web-1.0.0.zip
+./build-zip.sh 1.1.0      # writes dist/slimebalancer-web-1.1.0.zip
 ```
 
 Then on the site: **Admin → Firmware updates → Publish a new release**, Type *Web game ZIP*,
-version `1.0.0`, pick the ZIP. It shows up under **Games** and runs in the full-screen
+version `1.1.0`, pick the ZIP. It shows up under **Games** and runs in the full-screen
 player. Hosting stays on the free Static Web App and the existing storage account; the
 ZIP is about 11 MB.
 
@@ -55,6 +74,8 @@ ZIP is about 11 MB.
 
 - `js/main.js` — screens and flow (Unity GameManager, MainMenuUI, InfoUI, CountdownUI, EndSceneUI, SettingsUI)
 - `js/input.js` — gamepad + keyboard (Unity InputManager: 0.85 press / 0.5 release thresholds)
+- `js/duo.js` — 2-player helpers (coloured board edges for co-op)
+- `js/games/snakeio.js` — the 2-player Snake duel (free steering)
 - `js/audio.js` — music and effects (Unity SoundManager)
 - `js/physics.js` — spheres rolling on a tilting board (stands in for Unity's rigidbodies)
 - `js/slime.js` — slime material (after SlimeShader: fresnel side colour + wobble)
