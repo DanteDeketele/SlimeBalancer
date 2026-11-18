@@ -15,7 +15,11 @@
   <canvas id="gl"></canvas>
   <div id="flash"></div>
 
-  <div id="hud"><div id="score">0</div></div>
+  <div id="hud">
+    <div id="score">0</div>
+    <div class="score-player" id="score-p1"><i></i><span>Speler 1</span><b>0</b></div>
+    <div class="score-player" id="score-p2"><i></i><span>Speler 2</span><b>0</b></div>
+  </div>
 
   <section class="screen" id="screen-splash">
     <img class="splash-slime" src="assets/img/slime-icon.png" alt="">
@@ -25,13 +29,17 @@
 
   <section class="screen menu-screen" id="screen-menu">
     <header class="menu-header"><img src="assets/img/wordmark.png" alt="SlimeBalancer"></header>
-    <main class="menu-main"><div class="carousel" id="carousel"></div></main>
+    <main class="menu-main">
+      <button type="button" class="players-toggle" id="players-toggle"><img src="assets/img/back.png" alt=""><span class="players-dots"><i></i><i></i></span><span class="players-label">1 speler</span></button>
+      <div class="carousel" id="carousel"></div>
+    </main>
     <footer class="menu-footer">
       <div class="board-status"><i></i><span class="board-label">Geen dock</span></div>
       <div class="controls">
         <img src="assets/img/board-left.png" alt=""><span>Links</span>
         <img src="assets/img/board-down.png" alt=""><span>Ok</span>
         <img src="assets/img/board-right.png" alt=""><span>Rechts</span>
+        <img src="assets/img/back.png" alt=""><span>Spelers</span>
       </div>
     </footer>
   </section>
@@ -67,6 +75,7 @@
       <img id="cd-logo" alt="">
       <h1 id="cd-title">Game</h1>
       <p>Neem je puck vast.<br>Hou je klaar...</p>
+      <div id="cd-players"></div>
       <div class="cd-rail"><div class="cd-bar" id="cd-bar"></div></div>
     </div>
   </section>
@@ -76,7 +85,7 @@
 
   <section class="screen end-screen" id="screen-end">
     <div class="end-card">
-      <h1>Game Over</h1>
+      <h1 id="end-title">Game Over</h1>
       <p id="end-score">Score: 0</p>
       <p id="end-high">High Score: 0</p>
       <div class="end-buttons">

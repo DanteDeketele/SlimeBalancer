@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { makeSlime, Splashes } from "../slime.js";
 import { Ball, BoardWorld, smoothRotation, tiltTarget } from "../physics.js";
 import { loadTexture } from "../assets.js";
+import { addAxisStrips } from "../duo.js";
 
 // Unity enum order: Green, Blue, Red, Yellow
 const COLORS = {
@@ -64,6 +65,7 @@ export class TiltGame {
     plank.castShadow = true;
     this.board.add(plank);
     s.add(this.board);
+    addAxisStrips(this.board, 3, this.ctx);
     this.world = new BoardWorld(this.board, 3, 0.1, 3);
 
     for (const p of PIPES) s.add(makePipe(COLORS[p.color].main, p.x, p.z));
@@ -97,7 +99,7 @@ export class TiltGame {
   }
 
   update(dt, active) {
-    const input = this.ctx.input.vector;
+    const input = this.ctx.boardInput();
     // Unity multiplies the tilt by 1.5 here: up to 27 degrees.
     smoothRotation(this.board, tiltTarget(active ? input : { x: 0, y: 0 }, 18 * 1.5), dt);
     this.world.step(dt);

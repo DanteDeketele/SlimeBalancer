@@ -6,6 +6,7 @@ import * as THREE from "three";
 import { makeSlime, Splashes } from "../slime.js";
 import { Ball, BoardWorld, smoothRotation, tiltTarget } from "../physics.js";
 import { loadTexture } from "../assets.js";
+import { addAxisStrips } from "../duo.js";
 
 export class BalanceGame {
   constructor(ctx) {
@@ -46,6 +47,7 @@ export class BalanceGame {
     plank.castShadow = true;
     this.board.add(plank);
     s.add(this.board);
+    addAxisStrips(this.board, 5, this.ctx);
     this.world = new BoardWorld(this.board, 5, 0.1, 5);
     this.splashes = new Splashes(s);
     this.fireflies = makeFireflies(s);
@@ -63,7 +65,7 @@ export class BalanceGame {
   }
 
   update(dt, active) {
-    smoothRotation(this.board, tiltTarget(active ? this.ctx.input.vector : { x: 0, y: 0 }, 18), dt);
+    smoothRotation(this.board, tiltTarget(active ? this.ctx.boardInput() : { x: 0, y: 0 }, 18), dt);
     this.world.step(dt);
     const b = this.slime;
     if (b) {

@@ -15,6 +15,11 @@ const listeners = { up: [], down: [], left: [], right: [], any: [] };
 
 export const input = {
   vector: { x: 0, y: 0 },
+  // Per player, for the 2-player games. Player 1: the first puck (left stick or
+  // D-pad) and WASD. Player 2: the second puck (right stick or face buttons, or a
+  // second gamepad) and the arrow keys. The dock's "Auto" mapping puts player slot 1
+  // on the left stick and the others on the right stick.
+  players: [{ x: 0, y: 0 }, { x: 0, y: 0 }],
   source: "keyboard",
   gamepadName: "",
   lastActivity: performance.now(),
@@ -96,6 +101,47 @@ function gamepadVector() {
   return best;
 }
 
+function pick(list) {
+  let best = { x: 0, y: 0 };
+  let bestMag = 0;
+  for (const c of list) {
+    const v = { x: shape(c.x), y: shape(c.y) };
+    const mag = Math.hypot(v.x, v.y);
+    if (mag > bestMag) {
+      best = v;
+      bestMag = mag;
+    }
+  }
+  return best;
+}
+
+function playerVectors() {
+  const pads = connectedGamepads();
+  const p1 = [];
+  const p2 = [];
+  pads.forEach((pad, i) => {
+    const b = (n) => (pad.buttons[n] ? pad.buttons[n].value : 0);
+    const left = pad.axes.length >= 2 ? { x: pad.axes[0], y: -pad.axes[1] } : null;
+    const right = pad.axes.length >= 4 ? { x: pad.axes[2], y: -pad.axes[3] } : null;
+    const dpad = pad.buttons.length >= 16 ? { x: b(15) - b(14), y: b(12) - b(13) } : null;
+    const face = pad.buttons.length >= 4 ? { x: b(1) - b(2), y: b(3) - b(0) } : null;
+    if (i === 0) {
+      p1.push(left, dpad);
+      p2.push(right, face);
+    } else if (i === 1) {
+      p2.push(left, dpad);
+    }
+  });
+  const k = (a, b2, c, d) => ({ x: (keys.has(d) ? 1 : 0) - (keys.has(c) ? 1 : 0), y: (keys.has(a) ? 1 : 0) - (keys.has(b2) ? 1 : 0) });
+  p1.push(k("w", "s", "a", "d"), k("z", "s", "q", "d"));
+  p2.push(k("arrowup", "arrowdown", "arrowleft", "arrowright"));
+  return [p1, p2].map((list) => {
+    const v = pick(list.filter(Boolean));
+    if (input.invertY) v.y = -v.y;
+    return { x: Math.max(-1, Math.min(1, v.x)), y: Math.max(-1, Math.min(1, v.y)) };
+  });
+}
+
 export function connectedGamepads() {
   const pads = navigator.getGamepads ? navigator.getGamepads() : [];
   return [...pads].filter((p) => p && p.connected);
@@ -117,6 +163,9 @@ export function updateInput() {
   if (input.invertY) y = -y;
   input.vector.x = x;
   input.vector.y = y;
+  const [a, b] = playerVectors();
+  Object.assign(input.players[0], a);
+  Object.assign(input.players[1], b);
 
   if (Math.hypot(x - last.x, y - last.y) > 0.1) input.lastActivity = performance.now();
 
