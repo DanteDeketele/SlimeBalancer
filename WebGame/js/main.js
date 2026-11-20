@@ -20,14 +20,14 @@ const GAMES = [
     logo: "assets/img/logo-ski.jpg",
     video: "assets/video/ski.mp4",
     text: [
-      "Stuur links en rechts om tussen de vlaggen door te gaan en punten te verdienen. Hoe langer je blijft skiën, hoe hoger je score!",
+      "Stuur links en rechts om tussen de vlaggen door te gaan en punten te verdienen. Kantel naar voren om sneller te gaan, naar achteren om af te remmen.",
       "Maar pas op! Bomen en sneeuwmannen blokkeren de piste, raak je er één, dan is het spel voorbij.",
     ],
     Game: SkiGame,
     duo: {
       mode: "versus",
       genre: "Race",
-      text: ["Twee skiërs op dezelfde piste, elk met een eigen helft van het scherm. Stuur door de vlaggen voor punten.", "Wie botst, ligt eruit. Wie het langst blijft skiën wint, en daarna telt de score."],
+      text: ["Twee skiërs op dezelfde piste, elk met een eigen helft van het scherm. Stuur door de vlaggen voor punten. Kantel naar voren om je tegenstander voorbij te steken, naar achteren om te remmen.", "Wie botst, ligt eruit. Wie het langst blijft skiën wint, en daarna telt de score."],
     },
   },
   {
@@ -36,7 +36,7 @@ const GAMES = [
     genre: "Puzzle",
     logo: "assets/img/logo-tilt.jpg",
     video: "assets/video/tilt.mp4",
-    text: ["Verschillende kleuren slimes vallen naar beneden! Bestuur het bord en zorg ervoor dat de slimes in de juiste buis terecht komen met het overeenkomstige kleur."],
+    text: ["Verschillende kleuren slimes vallen naar beneden! Bestuur het bord en zorg ervoor dat de slimes in de juiste buis terecht komen met het overeenkomstige kleur.", "Valt een slime in de verkeerde buis, dan verlies je een hartje."],
     Game: TiltGame,
     duo: {
       mode: "coop",
@@ -50,7 +50,7 @@ const GAMES = [
     genre: "Klassieker",
     logo: "assets/img/logo-snake.jpg",
     video: "assets/video/snake.mp4",
-    text: ["Beweeg over het veld om andere slimes aan te tikken en achter jou te plaatsen. Word zo lang mogelijk zonder tegen de muur of jezelf te botsen."],
+    text: ["Kantel je puck en je slime glijdt vrij over het veld in die richting. Tik andere slimes aan om ze achter je te plaatsen.", "Tegen de muur bots je gewoon terug. Word zo lang mogelijk zonder in je eigen staart te rijden!"],
     Game: SnakeGame,
     duo: {
       mode: "versus",
@@ -65,7 +65,7 @@ const GAMES = [
     genre: "Rustig",
     logo: "assets/img/logo-balance.jpg",
     video: "assets/video/balance.mp4",
-    text: ["Hou zo lang mogelijk de slime op het bord zonder hem ervan af te laten vallen.", "Hoe langer op het bord, hoe meer punten!"],
+    text: ["Hou zo lang mogelijk de slime op het bord zonder hem ervan af te laten vallen.", "Hoe langer op het bord, hoe meer punten! Valt hij eraf, dan verlies je een hartje."],
     Game: BalanceGame,
     duo: {
       mode: "coop",
@@ -428,6 +428,16 @@ const ctx = {
     const key = scoreKey(state.gameData);
     if (total > highScore(key)) store.set(`highscore.${key}`, total);
   },
+  // Hearts in the corner (Tilt It, Balancequest). null hides them.
+  setLives(left, total = left) {
+    const el = $("#lives");
+    el.hidden = left === null;
+    if (left === null) return;
+    el.innerHTML = Array.from({ length: total }, (_, i) => `<i class="${i < left ? "" : "lost"}">♥</i>`).join("");
+    el.classList.remove("pop");
+    void el.offsetWidth;
+    el.classList.add("pop");
+  },
   playerOut(player) {
     document.querySelector(`#score-p${player + 1}`).classList.add("is-out");
   },
@@ -453,6 +463,7 @@ async function startGame(game) {
   state.active = false;
   state.timeScale = 1;
   $("#score").textContent = "0";
+  ctx.setLives(null);
   document.querySelectorAll(".score-player").forEach((el) => {
     el.classList.remove("is-out");
     el.querySelector("b").textContent = "0";

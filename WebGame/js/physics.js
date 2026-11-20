@@ -46,6 +46,7 @@ export class BoardWorld {
     board.updateMatrixWorld(true);
     this.prevMatrix.copy(board.matrixWorld);
     this.balls = [];
+    this.drag = 0.25; // rolling resistance per second; higher = slimes roll slower
   }
 
   step(dt, substeps = 4) {
@@ -118,7 +119,7 @@ export class BoardWorld {
     rel.copy(b.vel).sub(vs);
     const vnn = rel.dot(n);
     rel.addScaledVector(n, -vnn);
-    b.vel.addScaledVector(rel, -Math.min(1, 0.25 * h));
+    b.vel.addScaledVector(rel, -Math.min(1, this.drag * h));
     if (n.y > 0.3) b.normal = n.clone();
     b.touched = true;
   }

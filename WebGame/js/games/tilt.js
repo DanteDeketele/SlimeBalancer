@@ -1,6 +1,9 @@
 // Tilt It (Unity: TiltGame.cs, PipeTrigger.cs, PlayerTrigger.cs, Tilt_It.unity).
 // Coloured slimes drop onto a 6x6 wooden board. Tilt the board so each slime rolls
-// off into the pipe of its own colour. Right colour: +10. Wrong pipe: game over.
+// off into the pipe of its own colour. Right colour: +10. Wrong pipe costs a heart.
+// Made easier for puck tilt: a gentler board (13 degrees), slimes that roll slower,
+// wide pipes, and a slime that leaves the board on a side always drops into that
+// side's pipe, even off a corner.
 import * as THREE from "three";
 import { makeSlime, Splashes } from "../slime.js";
 import { Ball, BoardWorld, smoothRotation, tiltTarget } from "../physics.js";
@@ -23,8 +26,9 @@ const PIPES = [
   { color: "yellow", x: 0, z: 4.5 },
 ];
 const PIPE_Y = -5.47;
-const PIPE_INNER = 2.05;
-const PIPE_OUTER = 2.55;
+const PIPE_INNER = 2.5;
+const PIPE_OUTER = 2.82;
+const MAX_TILT = 13; // degrees (Unity: 27)
 
 export class TiltGame {
   constructor(ctx) {
@@ -36,7 +40,9 @@ export class TiltGame {
     // Unity camera: (0, 34.1, -13.5), pitched 69.6 degrees down.
     this.camera.position.set(0, 34.1, 13.5);
     this.camera.lookAt(0, 0, 0.8);
-    this.delay = { easy: 7, medium: 5, hard: 3 }[ctx.difficulty];
+    this.delay = { easy: 11, medium: 9, hard: 7 }[ctx.difficulty];
+    this.lives = { easy: 5, medium: 3, hard: 2 }[ctx.difficulty];
+    this.maxLives = this.lives;
     this.timer = 0;
     this.slimes = [];
   }
@@ -67,6 +73,7 @@ export class TiltGame {
     s.add(this.board);
     addAxisStrips(this.board, 3, this.ctx);
     this.world = new BoardWorld(this.board, 3, 0.1, 3);
+    this.world.drag = 1.4;
 
     for (const p of PIPES) s.add(makePipe(COLORS[p.color].main, p.x, p.z));
     this.splashes = new Splashes(s);
@@ -74,6 +81,7 @@ export class TiltGame {
   }
 
   start() {
+    this.ctx.setLives(this.lives, this.maxLives);
     this.spawn();
   }
 
@@ -81,7 +89,7 @@ export class TiltGame {
     const keys = Object.keys(COLORS);
     const color = keys[Math.floor(Math.random() * keys.length)];
     const mesh = makeSlime(COLORS[color].main, { side: COLORS[color].side });
-    const pos = new THREE.Vector3((Math.random() * 2 - 1), 12, (Math.random() * 2 - 1));
+    const pos = new THREE.Vector3((Math.random() - 0.5) * 0.8, 12, (Math.random() - 0.5) * 0.8);
     const ball = new Ball(pos, 0.5);
     ball.color = color;
     ball.mesh = mesh;
@@ -101,7 +109,7 @@ export class TiltGame {
   update(dt, active) {
     const input = this.ctx.boardInput();
     // Unity multiplies the tilt by 1.5 here: up to 27 degrees.
-    smoothRotation(this.board, tiltTarget(active ? input : { x: 0, y: 0 }, 18 * 1.5), dt);
+    smoothRotation(this.board, tiltTarget(active ? input : { x: 0, y: 0 }, MAX_TILT), dt);
     this.world.step(dt);
 
     for (const ball of [...this.world.balls]) {
@@ -116,14 +124,17 @@ export class TiltGame {
       const v = ball.vel;
       ball.mesh.rotation.x += v.z * dt * 1.5;
       ball.mesh.rotation.z -= v.x * dt * 1.5;
-      if (!ball.scored && ball.pos.y < PIPE_Y + 1.2) {
-        for (const p of PIPES) {
-          if (Math.hypot(ball.pos.x - p.x, ball.pos.z - p.z) < PIPE_INNER) {
-            ball.scored = true;
-            if (!active) break;
-            if (p.color === ball.color) this.correct(ball);
+      // Off the board: the side it left on picks the pipe, and it is guided in.
+      if (!ball.pipe && ball.touched && ball.pos.y < -1) ball.pipe = pipeFor(ball.pos);
+      if (ball.pipe && !ball.scored) {
+        const k = Math.min(1, dt * 4);
+        ball.vel.x += ((ball.pipe.x - ball.pos.x) * 3 - ball.vel.x) * k;
+        ball.vel.z += ((ball.pipe.z - ball.pos.z) * 3 - ball.vel.z) * k;
+        if (ball.pos.y < PIPE_Y + 1.2) {
+          ball.scored = true;
+          if (active) {
+            if (ball.pipe.color === ball.color) this.correct(ball);
             else this.wrong(ball);
-            break;
           }
         }
       }
@@ -132,7 +143,9 @@ export class TiltGame {
 
     if (active) {
       this.timer += dt;
-      if (this.timer >= this.delay) {
+      // nothing left on the board: the next slime comes sooner
+      const onBoard = this.world.balls.some((b) => !b.pipe);
+      if (this.timer >= this.delay || (!onBoard && this.timer >= 1.5)) {
         this.spawn();
         this.timer = 0;
       }
@@ -147,9 +160,20 @@ export class TiltGame {
     this.splashes.burst(new THREE.Vector3(ball.pos.x, PIPE_Y + 1, ball.pos.z), COLORS[ball.color].main, 18, 4);
   }
 
-  wrong() {
-    this.ctx.gameOver();
+  wrong(ball) {
+    this.lives--;
+    this.ctx.setLives(this.lives, this.maxLives);
+    this.ctx.audio.play("crash");
+    this.ctx.flash(0xff3b3b);
+    this.splashes.burst(new THREE.Vector3(ball.pos.x, PIPE_Y + 1, ball.pos.z), COLORS[ball.color].main, 10, 3);
+    if (this.lives <= 0) this.ctx.gameOver();
   }
+}
+
+// The pipe on the side of the board the slime fell off.
+function pipeFor(pos) {
+  if (Math.abs(pos.x) > Math.abs(pos.z)) return PIPES[pos.x > 0 ? 0 : 1];
+  return PIPES[pos.z < 0 ? 2 : 3];
 }
 
 function makePipe(color, x, z) {

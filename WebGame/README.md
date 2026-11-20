@@ -6,10 +6,14 @@ the original art and audio:
 
 | Game | How to play (same as Unity) |
 | --- | --- |
-| **Slime Ski** | Steer left and right through the flag gates (+10). Every 50 points it gets faster. Hit a tree or snowman and it's over. Start speed 3 / 5 / 7 by difficulty. |
-| **Tilt It** | Coloured slimes drop on a 6x6 board. Tilt it (up to 27°) so each slime rolls into the pipe of its colour (+10). Wrong pipe ends the game. A new slime every 7 / 5 / 3 s. |
-| **Snake** | Move cell by cell on a 22x12 field, only sideways turns. Touch slimes to add them to your tail (+10, a bit faster). Wall or own tail ends it. 3 / 2 / 1 slimes on the field. |
-| **Balancequest** | Keep the slime on the 10x10 board (tilts up to 18°). +10 every 5 s. Small / medium / big slime by difficulty. |
+| **Slime Ski** | Steer left and right through the flag gates (+10). Lean forward to go faster (up to 170 %), back to brake (down to 45 %); in a race each skier has their own speed. Every 50 points it gets faster. Hit a tree or snowman and it's over. Start speed 3 / 5 / 7 by difficulty. |
+| **Tilt It** | Coloured slimes drop on a 6x6 board. Tilt it (up to 13°) so each slime rolls into the pipe of its colour (+10). A slime that leaves the board on a side always drops into that side's pipe. Wrong pipe costs a heart (5 / 3 / 2 hearts). A new slime every 11 / 9 / 7 s, or sooner when the board is empty. |
+| **Snake** | The slime glides freely and turns towards the tilt (no grid). Touch slimes to add them to your tail (+10, a bit faster). Walls bounce you back; only your own tail ends it. 4 / 3 / 2 slimes on the field, speed 1.8 / 2.3 / 2.9. |
+| **Balancequest** | Keep the slime on the 10x10 board (tilts up to 9°). +10 every 5 s. Falling off costs a heart (5 / 3 / 2) and a new slime drops in. Small / medium / big slime by difficulty. |
+
+The games are tuned easier than the Unity build, because a tilted puck is less precise
+than a keyboard: gentler board tilt, slower slimes, wider pipes, hearts instead of
+instant game over, and a free-steering Snake.
 
 Menus follow the Unity scenes: game carousel with high scores, info screen with the
 tutorial video, a loading poster and 3-2-1-GO countdown, game over with *Opnieuw spelen*

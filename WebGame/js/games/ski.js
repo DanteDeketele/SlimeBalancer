@@ -1,6 +1,7 @@
 // Slime Ski (Unity: SkiGame.cs, Skie.unity).
 // Ski down an endless slope. Steer left and right through the flag gates (+10).
 // Every 50 points the slope gets faster. Hit a tree or a snowman and it's over.
+// Lean the puck forward to ski faster, back to brake (each skier has their own speed).
 //
 // 2 players (race): both skiers on the same slope, split screen. A skier who hits
 // something is out; the last one still skiing wins.
@@ -13,6 +14,9 @@ const GATE = 20; // a flag gate every 20 m
 const TREE_RADIUS = 2.06; // Unity Tree prefab SphereCollider
 const SNOWMAN_RADIUS = 0.56; // Unity "Tree 1" (snowman) prefab SphereCollider
 const PLAYER_RADIUS = 0.5;
+// Forward/back lean scales the speed: full lean back = 45 %, full lean forward = 170 %.
+const LEAN_SLOW = 0.55;
+const LEAN_FAST = 0.7;
 const MAX_TREES = 1400;
 const POLE_GEO = new THREE.CylinderGeometry(0.06, 0.06, 2.2, 10);
 const POLE_MAT = new THREE.MeshStandardMaterial({ color: 0x2b2e33, roughness: 0.5 });
@@ -24,7 +28,7 @@ export class SkiGame {
     this.background = "ski";
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(60, 16 / 9, 0.1, 400);
-    this.speed = { easy: 3, medium: 5, hard: 7 }[ctx.difficulty];
+    const speed = { easy: 3, medium: 5, hard: 7 }[ctx.difficulty];
     this.race = ctx.mode === "versus";
     const count = this.race ? 2 : 1;
     this.skiers = Array.from({ length: count }, (_, i) => ({
@@ -34,10 +38,13 @@ export class SkiGame {
       camera: i === 0 ? this.camera : new THREE.PerspectiveCamera(60, 16 / 9, 0.1, 400),
       pitch: 12,
       roll: 0,
+      d: 0, // metres down the slope; the world stays put and the skiers move forward
+      base: speed, // slope speed, rises over time and every 50 points
+      speed,
+      lean: 1,
     }));
-    this.travelled = 0;
     this.flagX = 0;
-    this.flagDistance = 0;
+    this.nextGate = 0;
     this.flags = [];
     this.obstacles = [];
   }
@@ -57,13 +64,16 @@ export class SkiGame {
   }
 
   render(renderer) {
-    if (!this.race) return renderer.render(this.scene, this.camera);
+    if (!this.race) {
+      this.follow(this.skiers[0]);
+      return renderer.render(this.scene, this.camera);
+    }
     const size = renderer.getSize(new THREE.Vector2());
     const half = Math.floor(size.x / 2);
     renderer.setScissorTest(true);
     this.skiers.forEach((sk, i) => {
       // floor and mountains follow whoever is looking
-      this.backdrop.position.x = sk.x;
+      this.follow(sk);
       renderer.setViewport(i * half, 0, half, size.y);
       renderer.setScissor(i * half, 0, half, size.y);
       renderer.render(this.scene, sk.camera);
@@ -170,12 +180,28 @@ export class SkiGame {
     this.placeCamera(0);
   }
 
+  // Snow floor and far backdrop travel with whoever is looking.
+  follow(sk) {
+    this.backdrop.position.set(sk.x, 0, -sk.d);
+    this.floor.position.z = -sk.d;
+    this.snow.offset.y = (sk.d / 10) % 1;
+  }
+
+  get front() {
+    return Math.max(...this.skiers.map((s) => s.d));
+  }
+
+  get back() {
+    return Math.min(...this.skiers.map((s) => s.d));
+  }
+
   preSpawn() {
     const segments = Math.floor(SPAWN_AHEAD / GATE);
     for (let i = 1; i <= segments; i++) this.spawnSegment(i * GATE, true);
-    this.flagDistance = (segments + 1) * GATE;
+    this.nextGate = (segments + 1) * GATE;
   }
 
+  // distanceAhead: metres from the start of the slope
   spawnSegment(distanceAhead, pre) {
     const flagX = this.flagX + (Math.random() * 20 - 10);
     this.flagX = flagX;
@@ -272,10 +298,16 @@ export class SkiGame {
       const k = Math.min(1, dt * 2);
       sk.pitch += (12 + v.y * 9 - sk.pitch) * k;
       sk.roll += (-v.x * 9 - sk.roll) * k;
-      sk.camera.position.set(sk.x, 1.7, 0.6);
+      sk.camera.position.set(sk.x, 1.7, 0.6 - sk.d);
+      // a slightly wider view when going fast
+      const fov = 60 + (sk.lean - 1) * 12;
+      if (Math.abs(sk.camera.fov - fov) > 0.05) {
+        sk.camera.fov = fov;
+        sk.camera.updateProjectionMatrix();
+      }
       sk.camera.rotation.set(-THREE.MathUtils.degToRad(sk.pitch), 0, THREE.MathUtils.degToRad(sk.roll), "YXZ");
       if (sk.avatar) {
-        sk.avatar.position.set(sk.x, 0, 0.6);
+        sk.avatar.position.set(sk.x, 0, 0.6 - sk.d);
         sk.avatar.rotation.z = THREE.MathUtils.degToRad(sk.roll) * 0.6;
         sk.avatar.visible = sk.alive;
       }
@@ -289,52 +321,59 @@ export class SkiGame {
   }
 
   step(dt) {
-    for (const sk of this.skiers) if (sk.alive) sk.x += this.inputFor(sk).x * dt * 5;
-    this.speed += dt * 0.01;
-    const move = this.speed * dt;
-    this.travelled += move;
+    for (const sk of this.skiers) {
+      if (!sk.alive) continue;
+      const v = this.inputFor(sk);
+      sk.x += v.x * dt * 5;
+      sk.base += dt * 0.01;
+      const lean = v.y >= 0 ? 1 + v.y * LEAN_FAST : 1 + v.y * LEAN_SLOW;
+      sk.lean += (lean - sk.lean) * Math.min(1, dt * 3);
+      sk.speed = sk.base * sk.lean;
+      const prev = sk.d;
+      sk.d += sk.speed * dt;
+      this.pass(sk, prev);
+    }
 
-    // scroll the snow and keep the backdrop with the player
-    this.snow.offset.y = (this.travelled / 10) % 1;
-    this.backdrop.position.x = this.playerX;
+    while (this.front > this.nextGate - SPAWN_AHEAD) {
+      this.spawnSegment(this.nextGate, false);
+      this.nextGate += GATE;
+    }
 
+    // drop what every skier has left behind
+    const behind = this.back - 2;
     for (let i = this.obstacles.length - 1; i >= 0; i--) {
       const ob = this.obstacles[i];
-      ob.z += move;
-      if (ob.mesh) ob.mesh.position.z = ob.z;
-      if (ob.z > 0) {
-        for (const sk of this.skiers) {
-          if (sk.alive && Math.abs(ob.x - sk.x) < ob.radius + PLAYER_RADIUS) this.crash(sk);
-        }
+      if (-ob.z < behind) {
         if (ob.mesh) this.scene.remove(ob.mesh);
         this.obstacles.splice(i, 1);
       }
     }
-
-    while (this.travelled > this.flagDistance - SPAWN_AHEAD) {
-      this.flagDistance += GATE;
-      this.spawnSegment(SPAWN_AHEAD, false);
+    for (let i = this.flags.length - 1; i >= 0; i--) {
+      if (-this.flags[i].position.z < behind) {
+        this.scene.remove(this.flags[i]);
+        this.flags.splice(i, 1);
+      }
     }
 
     if (this.crashedThisStep) this.checkEnd();
+  }
 
-    for (let i = this.flags.length - 1; i >= 0; i--) {
-      const flag = this.flags[i];
-      flag.position.z += move;
-      if (flag.position.z > 0) {
-        let faster = false;
-        for (const sk of this.skiers) {
-          if (!sk.alive || Math.abs(flag.position.x - sk.x) >= 3) continue;
-          this.ctx.addScore(10, this.race ? sk.index : null);
-          this.ctx.audio.play("ui");
-          this.ctx.flash(this.race ? this.ctx.playerColor(sk.index) : 0x30d596);
-          const score = this.race ? this.ctx.scores[sk.index] : this.ctx.score;
-          if (score % 50 === 0) faster = true;
-        }
-        if (faster) this.speed += 1;
-        this.scene.remove(flag);
-        this.flags.splice(i, 1);
+  // Everything this skier went past since the last frame: obstacles and gates.
+  pass(sk, prev) {
+    const crossed = (z) => -z > prev && -z <= sk.d;
+    for (const ob of this.obstacles) {
+      if (crossed(ob.z) && Math.abs(ob.x - sk.x) < ob.radius + PLAYER_RADIUS) {
+        this.crash(sk);
+        return;
       }
+    }
+    for (const flag of this.flags) {
+      if (!crossed(flag.position.z) || Math.abs(flag.position.x - sk.x) >= 3) continue;
+      this.ctx.addScore(10, this.race ? sk.index : null);
+      this.ctx.audio.play("ui");
+      this.ctx.flash(this.race ? this.ctx.playerColor(sk.index) : 0x30d596);
+      const score = this.race ? this.ctx.scores[sk.index] : this.ctx.score;
+      if (score % 50 === 0) sk.base += 1;
     }
   }
 
