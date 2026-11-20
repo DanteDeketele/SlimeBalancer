@@ -1,7 +1,9 @@
 // Balancequest (Unity: Balancequest.cs, BalanceQuest.unity).
 // One slime drops onto a 10x10 board by a moonlit lake. Keep it on the board:
-// every 5 seconds it stays on gives +10. If it falls off, the game is over.
-// Difficulty picks the slime: small (easy), medium or big (hard).
+// every 5 seconds it stays on gives +10. Falling off costs a heart and a new slime
+// drops in; with no hearts left the game is over. Made easier for puck tilt: the
+// board tilts at most 9 degrees (Unity: 18) and the slime slides slower.
+// Difficulty picks the slime: small (easy), medium or big (hard), and the hearts.
 import * as THREE from "three";
 import { makeSlime, Splashes } from "../slime.js";
 import { Ball, BoardWorld, smoothRotation, tiltTarget } from "../physics.js";
@@ -21,6 +23,8 @@ export class BalanceGame {
     this.size = { easy: 1, medium: 2, hard: 3 }[ctx.difficulty];
     this.timer = 0;
     this.delay = 5;
+    this.lives = { easy: 5, medium: 3, hard: 2 }[ctx.difficulty];
+    this.maxLives = this.lives;
   }
 
   async load() {
@@ -49,11 +53,17 @@ export class BalanceGame {
     s.add(this.board);
     addAxisStrips(this.board, 5, this.ctx);
     this.world = new BoardWorld(this.board, 5, 0.1, 5);
+    this.world.drag = 1.2;
     this.splashes = new Splashes(s);
     this.fireflies = makeFireflies(s);
   }
 
   start() {
+    this.ctx.setLives(this.lives, this.maxLives);
+    this.drop();
+  }
+
+  drop() {
     const mesh = makeSlime(0x7fd6ff, { side: 0xd8fbff, eyes: true });
     mesh.scale.setScalar(this.size);
     const ball = new Ball(new THREE.Vector3(0, 10, 0), 0.5 * this.size);
@@ -65,7 +75,7 @@ export class BalanceGame {
   }
 
   update(dt, active) {
-    smoothRotation(this.board, tiltTarget(active ? this.ctx.boardInput() : { x: 0, y: 0 }, 18), dt);
+    smoothRotation(this.board, tiltTarget(active ? this.ctx.boardInput() : { x: 0, y: 0 }, 9), dt);
     this.world.step(dt);
     const b = this.slime;
     if (b) {
@@ -79,11 +89,9 @@ export class BalanceGame {
         this.splashes.burst(b.pos.clone(), 0x7fd6ff, 16, 3);
         this.ctx.audio.play("splat");
       }
-      if (active && b.pos.y < -10) {
-        this.ctx.gameOver();
-      }
+      if (active && b.pos.y < -10) this.fell(b);
     }
-    if (active) {
+    if (active && this.slime?.touched) {
       this.timer += dt;
       if (this.timer >= this.delay) {
         this.timer = 0;
@@ -94,6 +102,21 @@ export class BalanceGame {
     }
     this.splashes.update(dt);
     this.fireflies(dt);
+  }
+
+  fell(b) {
+    this.scene.remove(b.mesh);
+    this.world.balls.splice(this.world.balls.indexOf(b), 1);
+    this.slime = null;
+    this.lives--;
+    this.ctx.setLives(this.lives, this.maxLives);
+    this.ctx.audio.play("crash");
+    this.ctx.flash(0xff3b3b);
+    this.timer = 0;
+    if (this.lives <= 0) return this.ctx.gameOver();
+    // level the board, then a new slime drops in the middle
+    this.board.quaternion.identity();
+    this.drop();
   }
 }
 
